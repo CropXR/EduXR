@@ -22,13 +22,13 @@ def test_crosses():
     
     resilient_population = get_resilient_population()
     # Now check if it indeed contains the snps
-    resilient_population.show_snps_at_location('SNP_12')
+    resilient_population.show_snp_at_location('SNP_12')
 
     agricultural_population = get_agricultural_population()
 
     # check difference in phenotypes
-    resilient_population.show_phenotypes()
-    agricultural_population.show_phenotypes()
+    resilient_population.show_all_phenotypes()
+    agricultural_population.show_all_phenotypes()
     
     new_population = perform_cross_between(resilient_population, agricultural_population, n_offspring=10)
 
@@ -40,4 +40,4 @@ def test_crosses():
 
     backcross_2 = perform_cross_between(selected_back1_population, agricultural_population, n_offspring=10)
     selected_back2_population = backcross_2.select_plants_with_snp_at_location(12, desired_allele=1)
-    selected_back2_population.show_phenotypes()
+    selected_back2_population.show_all_phenotypes()

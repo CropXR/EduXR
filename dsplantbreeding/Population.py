@@ -26,21 +26,26 @@ class PlantPopulation:
         phenotype_dict['Salt Resistance'] = phenotype
 
         # Simulate phenotype: yield is particularly influenced by snp 1-10 and 20-25
-        pos_yield_phenotype = self._snps[[f"SNP_{i}" for i in range(0,10)]].sum(axis=1) * 2 + np.random.normal(0, .5, self.n_plants)
-        neg_yield_phenotype = self._snps[[f"SNP_{i}" for i in range(20,23)]].sum(axis=1) * -1 + np.random.normal(0, .5, self.n_plants)
+        pos_yield_phenotype = self._snps[[f"SNP_{i}" for i in range(0,10)]].sum(axis=1) * 2 + np.random.normal(0, 1, self.n_plants)
+        neg_yield_phenotype = self._snps[[f"SNP_{i}" for i in range(20,23)]].sum(axis=1) * -1 + np.random.normal(0, 1, self.n_plants)
 
         phenotype_dict['Yield'] = pos_yield_phenotype + neg_yield_phenotype
         
         return pd.DataFrame.from_dict(phenotype_dict)
 
     def show_size(self):
-        print(f"{self.name} has {len(self._snps)} plants and {self._snps.shape[1]} SNPs.")
+        n_plants = len(self._snps)
+        plant_word = "plant" if n_plants == 1 else "plants"
+        print(f"{self.name} has {n_plants} {plant_word} and {self._snps.shape[1]} SNPs.")
 
-    def show_snps_at_location(self, snp_name):
+    def show_snp_at_location(self, snp_name):
         print(self._snps[snp_name].values)
 
-    def show_phenotypes(self):
+    def show_all_phenotypes(self):
         print(self._phenotypes)
+
+    def show_phenotype(self, name: str):
+        print(self._phenotypes[name])
 
     def head(self):
         df = self._snps.copy()
@@ -49,7 +54,6 @@ class PlantPopulation:
 
     def show_manhattan_plot(self, to_phenotype: str):
         phenotype_to_correlate_to = self._phenotypes[to_phenotype]
-        # TODO check if this implementation is correct
         p_values = self._snps.apply(lambda col: pearsonr(col, phenotype_to_correlate_to)[1], axis=0)
         neg_log_p = -np.log10(p_values)
         plt.figure(figsize=(10, 4))

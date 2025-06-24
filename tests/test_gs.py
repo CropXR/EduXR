@@ -20,6 +20,6 @@ def test_gs():
     f2 = perform_cross_between(selected_f1, selected_f1, n_offspring=10)
 
     # Now select plants based on highest values
-    f2.show_phenotypes()
+    f2.show_all_phenotypes()
     # This allows us to maximise for traits that are controlled by many genes.
 

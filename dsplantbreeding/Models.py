@@ -1,4 +1,4 @@
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 import matplotlib.pyplot as plt
 
 
@@ -13,7 +13,7 @@ class GenomicSelectionModel:
     def fit(self):
         X = self.population._snps.values
         y = self.target_phenotype
-        self.model = LinearRegression()
+        self.model = Ridge(alpha=1.0)  
         self.model.fit(X, y)
 
     def show_genomic_selection_snp_weights(self):
