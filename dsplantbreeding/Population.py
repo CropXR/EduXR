@@ -48,9 +48,7 @@ class PlantPopulation:
         print(self._phenotypes[name])
 
     def head(self):
-        df = self._snps.copy()
-        df['phenotype'] = self._phenotypes()
-        print(df.head())
+        print(pd.concat((self._snps, self._phenotypes), axis=1).head())
 
     def show_manhattan_plot(self, to_phenotype: str):
         phenotype_to_correlate_to = self._phenotypes[to_phenotype]
