@@ -1,0 +1,7 @@
+.vscode/
+*.pyc
+__pycache__/
+.pytest_cache/
+.idea/
+notebooks/.ipynb_checkpoints/
+.coverage
