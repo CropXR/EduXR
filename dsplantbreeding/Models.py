@@ -11,7 +11,7 @@ class GenomicSelectionModel:
         self.fit()
     
     def fit(self):
-        X = self.population._snps.values
+        X = self.population._markers.values
         y = self.target_phenotype
         self.model = Ridge(alpha=1.0)  
         self.model.fit(X, y)
@@ -19,13 +19,13 @@ class GenomicSelectionModel:
     def show_genomic_selection_snp_weights(self):
         plt.figure(figsize=(10, 4))
         plt.bar(range(len(self.model.coef_)), self.model.coef_)
-        plt.title("SNP Weights (Regression Coefficients)")
-        plt.xlabel("SNP index")
+        plt.title("Marker Weights (Regression Coefficients)")
+        plt.xlabel("Marker index")
         plt.ylabel("Weight")
         plt.show()
 
     def predicted_vs_actual_training_population(self):
-        y_pred = self.model.predict(self.population._snps.values)
+        y_pred = self.model.predict(self.population._markers.values)
         plt.scatter(self.target_phenotype, y_pred)
         plt.xlabel("Actual phenotype")
         plt.ylabel("Predicted phenotype")
@@ -35,4 +35,4 @@ class GenomicSelectionModel:
         plt.show()
 
     def predict_phenotypes(self, population):
-        return self.model.predict(population._snps.values)
+        return self.model.predict(population._markers.values)
