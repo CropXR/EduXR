@@ -75,9 +75,6 @@ class PlantPopulation:
         new_markers = self._markers[mask].reset_index(drop=True)
         return PlantPopulation(new_markers, name=f"Selected@Marker{marker_index}")
 
-    def show_genetic_composition(self):
-        pass
-
     def sample_plants(self, n_offspring):
         return self._markers.sample(n_offspring, replace=True).reset_index(drop=True)
 
