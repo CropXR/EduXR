@@ -18,3 +18,6 @@ def perform_cross_between(p1: PlantPopulation, p2: PlantPopulation, n_offspring=
     offspring_df = pd.DataFrame(offspring_dict)
 
     return PlantPopulation(offspring_df, name=name)
+
+def make_stress_pulse(start, end):
+    return lambda t: 1.0 if start < t < end else 0.0

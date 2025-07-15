@@ -22,14 +22,14 @@ class PlantPopulation:
         np.random.seed(12345)
         phenotype_dict = dict()
         # Simulate phenotype: Marker_12 has strong effect
-        phenotype = self._markers["Marker_12"] * 2 + np.random.normal(0, .1, self.n_plants)
-        phenotype_dict['Salt Resistance'] = phenotype
+        phenotype = 30 + self._markers["Marker_12"] * 50 + np.random.normal(0, 5, self.n_plants)
+        phenotype_dict['Salt Resistance (% survival)'] = phenotype
 
-        # Simulate phenotype: yield is particularly influenced by marker 1-10 and 20-25
+        # Simulate phenotype: yield is particularly influenced by marker 1-10 and 20-23
         pos_yield_phenotype = self._markers[[f"Marker_{i}" for i in range(0,10)]].sum(axis=1) * 2 + np.random.normal(0, 1, self.n_plants)
         neg_yield_phenotype = self._markers[[f"Marker_{i}" for i in range(20,23)]].sum(axis=1) * -1 + np.random.normal(0, 1, self.n_plants)
 
-        phenotype_dict['Yield'] = pos_yield_phenotype + neg_yield_phenotype
+        phenotype_dict['Yield (Kg/Ha)'] = pos_yield_phenotype + neg_yield_phenotype
         
         return pd.DataFrame.from_dict(phenotype_dict)
 
