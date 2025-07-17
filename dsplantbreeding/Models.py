@@ -4,6 +4,7 @@ import numpy as np
 import networkx as nx
 import sympy as sp
 from scipy.integrate import odeint
+import tensorflow as tf
 
 
 class GenomicSelectionModel:
@@ -177,3 +178,25 @@ class GRNModel:
         plt.axis("off")
         plt.tight_layout()
         plt.show()
+
+def train_dl_model(train_dataset, validation_dataset, epochs=2, batch_size=32):
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(64, 64, 3)),
+        tf.keras.layers.MaxPooling2D(4, 4),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dense(1, activation='sigmoid') # Sigmoid for binary classification
+    ])
+    model.compile(loss='binary_crossentropy',
+                optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+                metrics=['accuracy', tf.keras.metrics.Precision(), tf.keras.metrics.Recall(), tf.keras.metrics.AUC()])
+    model.summary()
+
+    batched_train = train_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    batched_val = validation_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    history = model.fit(
+        batched_train,
+        epochs=epochs,
+        validation_data=batched_val
+    )
+    return model
