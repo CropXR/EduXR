@@ -25,6 +25,7 @@ def perform_cross_between(p1: PlantPopulation, p2: PlantPopulation, n_offspring=
 
     return PlantPopulation(offspring_df, name=name)
 
+
 def make_stress_pulse(start, end):
     return lambda t: 1.0 if start < t < end else 0.0
 
@@ -39,11 +40,13 @@ def decrease_brightness_on_label(target_label):
         return img, label
     return fn
 
+
 def augment_image(image, label):
     image = tf.image.random_flip_left_right(image)
     image = tf.image.random_brightness(image, max_delta=0.3)
     image = tf.image.random_contrast(image, lower=0.9, upper=1.1)
     return image, label
+
 
 def count_labels_in_dataset(dataset):
     label_counter = Counter()
@@ -117,7 +120,7 @@ def get_true_labels_and_probs(model, dataset, batch_size=32):
         true_labels.extend(labels.numpy())
         predicted_probs.extend(probs)
 
-    return true_labels, predicted_probs
+    return np.ndarray(true_labels), np.ndarray(predicted_probs)
 
 
 def show_auroc(model, dataset):
