@@ -1,7 +1,7 @@
 from collections import Counter
 
 from matplotlib import pyplot as plt
-from sklearn.metrics import auc, roc_curve, confusion_matrix
+from sklearn.metrics import confusion_matrix
 import seaborn as sns
 from dsplantbreeding.Population import PlantPopulation
 import pandas as pd
@@ -56,11 +56,13 @@ def count_labels_in_dataset(dataset):
     print(label_counter)
 
 
-def show_confusion_matrix_with_examples(my_model, dataset, batch_size=64, max_per_category=4):
+def show_classification_examples(my_model, dataset, batch_size=32, max_per_category=4):
     true_labels = []
     predictions = []
     raw_probs = []
     image_store = []
+    # Classify each prediction into TP, FP, FN, TN
+    buckets = {'TP': [], 'FP': [], 'FN': [], 'TN': []}
 
     # Collect predictions and true labels
     for images, labels in dataset.batch(batch_size):
@@ -72,19 +74,7 @@ def show_confusion_matrix_with_examples(my_model, dataset, batch_size=64, max_pe
         raw_probs.extend(probs)
         image_store.extend(images.numpy())
 
-    # Confusion matrix
-    cm = confusion_matrix(true_labels, predictions)
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                xticklabels=['Healthy (0)', 'Infected (1)'],
-                yticklabels=['Healthy (0)', 'Infected (1)'])
-    plt.xlabel('Predicted Label')
-    plt.ylabel('True Label')
-    plt.title('Confusion Matrix')
-    plt.show()
-
-    # Classify each prediction into TP, FP, FN, TN
-    buckets = {'TP': [], 'FP': [], 'FN': [], 'TN': []}
+    # Very inefficient having to loop again but works for now
     for true, pred, prob, img in zip(true_labels, predictions, raw_probs, image_store):
         if true == 1 and pred == 1:
             buckets['TP'].append((img, true, pred, prob))
@@ -121,29 +111,6 @@ def get_true_labels_and_probs(model, dataset, batch_size=32):
         predicted_probs.extend(probs)
 
     return np.array(true_labels), np.array(predicted_probs)
-
-
-def show_auroc(model, dataset):
-    # Prepare data for AUROC curve
-    true_labels, predicted_probs = get_true_labels_and_probs(model, dataset)
-
-    # Calculate the ROC curve and AUC
-    fpr, tpr, thresholds = roc_curve(true_labels, predicted_probs)
-    roc_auc = auc(fpr, tpr)
-
-    # Plot the AUROC curve
-    plt.figure()
-    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver Operating Characteristic (AUROC) Curve')
-    plt.legend(loc="lower right")
-    plt.show()
-
-    print(f"AUROC on validation set: {roc_auc:.4f}")
 
 
 def preview_images(my_dataset):
