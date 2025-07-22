@@ -120,7 +120,7 @@ def get_true_labels_and_probs(model, dataset, batch_size=32):
         true_labels.extend(labels.numpy())
         predicted_probs.extend(probs)
 
-    return np.ndarray(true_labels), np.ndarray(predicted_probs)
+    return np.array(true_labels), np.array(predicted_probs)
 
 
 def show_auroc(model, dataset):
