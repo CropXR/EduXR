@@ -11,3 +11,7 @@
 
 ## Practical 2 
 [![Open in colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CropXR/EduXR/blob/main/notebooks/W2_practical_2_Mechanistic_model.ipynb)
+
+# Week 3
+## Practical 1
+[![Open in colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CropXR/EduXR/blob/main/notebooks/W3_practical_1_deep_learning.ipynb)
