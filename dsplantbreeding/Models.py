@@ -20,7 +20,7 @@ class GenomicSelectionModel:
         self.model = Ridge(alpha=1.0)  
         self.model.fit(X, y)
 
-    def show_genomic_selection_snp_weights(self):
+    def show_genomic_selection_marker_weights(self):
         plt.figure(figsize=(10, 4))
         plt.bar(range(len(self.model.coef_)), self.model.coef_)
         plt.title("Marker Weights (Regression Coefficients)")
