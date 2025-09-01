@@ -7,5 +7,5 @@ notebooks/.ipynb_checkpoints/
 .coverage
 planning.md
 *.egg-info/
-*.obo
-*.gaf
+notebooks/*.obo
+notebooks/*.gaf
