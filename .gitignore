@@ -9,3 +9,4 @@ planning.md
 *.egg-info/
 notebooks/*.obo
 notebooks/*.gaf
+notebooks/biotic_transcriptomics.txt
