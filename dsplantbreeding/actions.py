@@ -93,7 +93,7 @@ def show_classification_examples(my_model, dataset, batch_size=32, max_per_categ
             plt_idx = row_idx * max_per_category + col_idx + 1
             plt.subplot(4, max_per_category, plt_idx)
             plt.imshow(img)
-            plt.title(f"{category}\nTrue:{true} Predicted:{pred}\nProb:{prob:.2f}")
+            plt.title(f"{category}\nTrue:{true} Predicted:{pred}\nScore:{prob:.2f}")
             plt.axis("off")
 
     plt.suptitle("Example Predictions by Confusion Matrix Category", fontsize=16)
