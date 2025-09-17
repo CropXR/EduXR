@@ -56,7 +56,7 @@ def count_labels_in_dataset(dataset):
     print(label_counter)
 
 
-def show_classification_examples(my_model, dataset, batch_size=32, max_per_category=4):
+def show_classification_examples(my_model, dataset, batch_size=32, max_per_category=4, threshold=0.5):
     true_labels = []
     predictions = []
     raw_probs = []
@@ -67,7 +67,7 @@ def show_classification_examples(my_model, dataset, batch_size=32, max_per_categ
     # Collect predictions and true labels
     for images, labels in dataset.batch(batch_size):
         probs = my_model.predict(images, verbose=0).flatten()
-        preds = (probs > 0.5).astype(int)
+        preds = (probs > threshold).astype(int)
 
         true_labels.extend(labels.numpy())
         predictions.extend(preds)

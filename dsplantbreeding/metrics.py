@@ -13,10 +13,10 @@ def show_accuracy(my_model, dataset):
     print(f'Accuracy: {accuracy_score(true_labels, predicted_classes):.2f}')
 
 
-def show_confusion_matrix(my_model, dataset):
+def show_confusion_matrix(my_model, dataset, threshold=0.5):
     true_labels, predicted_probs = get_true_labels_and_probs(my_model, dataset)
 
-    predicted_classes = (predicted_probs > 0.5).astype(int) # Threshold for binary classification
+    predicted_classes = (predicted_probs > threshold).astype(int) # Threshold for binary classification
 
     # Calculate the confusion matrix
     cm = confusion_matrix(true_labels, predicted_classes)
