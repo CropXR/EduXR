@@ -2,10 +2,16 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 from pyvis.network import Network
-
-from IPython.core.display import display, HTML
+try:
+    from IPython.core.display import display, HTML
+except ImportError:
+    from IPython.display import display, HTML
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
+
+import seaborn as sns
+from scipy.cluster.hierarchy import linkage, fcluster
+
 
 
 def plot_correlation_network(df: pd.DataFrame, threshold: float = 0.9, colour_by=None, interactive=False, physics_options=False):
@@ -103,3 +109,46 @@ def plot_correlation_network(df: pd.DataFrame, threshold: float = 0.9, colour_by
         net.show("nx.html")
 
         display(HTML('nx.html'))
+
+def read_and_cluster_expression_data(in_path, n_clusters, linkage_method):
+    # Hierarchical clustering
+    df = pd.read_csv(in_path, sep='\t', header=[0], index_col=0, skiprows=[1,2])
+    df.index = [i.split(' ')[1].upper() for i in df.index.tolist()]
+    plt.figure(figsize=(10, 10))
+    Z = linkage(df, method=linkage_method, metric='correlation')
+    df['cluster'] = fcluster(Z, t=n_clusters, criterion='maxclust')
+
+    # Map clusters to colours for heatmap
+    palette = sns.color_palette("tab10", n_clusters)
+    row_colors = [palette[i-1] for i in df['cluster'] ]
+
+    # %% Clustermap
+    g = sns.clustermap(
+        df.drop(columns='cluster'),
+        row_linkage=Z,
+        metric="correlation",
+        cmap="vlag",
+        vmin=-2, vmax=2,
+        row_colors=row_colors,
+        figsize=(10,10)
+    )
+    g.ax_heatmap.set_yticks([])
+    g.ax_heatmap.set_yticklabels([])
+    plt.show()
+    cluster_counts = df.groupby('cluster').size()
+
+    # Map cluster numbers to the same colours
+    cluster_colors = [palette[i-1] for i in cluster_counts.index]
+
+    cluster_counts.plot(
+        kind='bar',
+        title='Number of genes per cluster',
+        color=cluster_colors
+    )
+    plt.show()
+    return df
+
+
+def show_genes_per_cluster(df):
+    for i, df in df.groupby('cluster'):
+        print(i, df.index.tolist())
