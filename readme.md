@@ -20,3 +20,5 @@
 # Week 4
 ## Practical 1
 [![Open in colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CropXR/EduXR/blob/main/notebooks/W4_practical_1_GO_enrich.ipynb)
+
+[![Open in colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CropXR/EduXR/blob/main/notebooks/W4_practical_2_translational_biology.ipynb)
