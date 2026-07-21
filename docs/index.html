@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Marker Assisted Selection — Interactive Practical</title>
+<style>
+  :root {
+    --bg: #0f1720;
+    --panel: #172230;
+    --panel-2: #1e2c3d;
+    --ink: #e9eef5;
+    --muted: #9fb0c3;
+    --line: #2c3e54;
+    --accent: #4cc38a;      /* salt resistance / go */
+    --accent-2: #f2c14e;     /* yield */
+    --accent-3: #5b9bd5;     /* markers / neutral */
+    --danger: #e2725b;
+    --highlight: #f26d5b;    /* the key marker */
+    --radius: 14px;
+    --shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1b2a3d 0%, var(--bg) 55%);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+
+  header.hero {
+    padding: 56px 20px 40px;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  header.hero .badge {
+    display: inline-block;
+    font-size: 13px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 14px;
+    margin-bottom: 18px;
+  }
+  header.hero h1 { font-size: clamp(28px, 5vw, 46px); margin: 0 0 12px; line-height: 1.15; }
+  header.hero p { color: var(--muted); font-size: 18px; max-width: 680px; margin: 0 auto; }
+
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .step {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 26px 28px;
+    margin: 26px 0;
+  }
+  .step h2 {
+    margin: 0 0 6px;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .step h2 .num {
+    flex: none;
+    width: 34px; height: 34px;
+    display: grid; place-items: center;
+    background: var(--accent);
+    color: #06281b;
+    border-radius: 10px;
+    font-size: 17px; font-weight: 700;
+  }
+  .step .lead { color: var(--muted); margin-top: 0; }
+  .step h3 { margin: 22px 0 8px; font-size: 17px; color: var(--ink); }
+
+  .callout {
+    border-left: 3px solid var(--accent-3);
+    background: var(--panel-2);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 16px 0;
+    color: var(--muted);
+  }
+  .callout.q { border-left-color: var(--accent-2); }
+  .callout.q strong { color: var(--accent-2); }
+  .callout ul { margin: 8px 0 0; padding-left: 20px; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    margin: 18px 0;
+  }
+  .controls label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  input[type="range"] { accent-color: var(--accent); }
+  button {
+    background: var(--accent);
+    color: #06281b;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer;
+    transition: transform .05s ease, filter .15s ease;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: translateY(1px); }
+  button.secondary { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+
+  .toggle {
+    display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  }
+  .toggle button { background: var(--panel-2); color: var(--muted); border-radius: 0; font-weight: 500; }
+  .toggle button.on { background: var(--accent); color: #06281b; font-weight: 700; }
+
+  canvas { max-width: 100%; display: block; }
+  .chartbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 14px 0; }
+  .chart-hint { font-size: 13px; color: var(--muted); text-align: center; margin: 4px 0 0; }
+
+  /* marker table */
+  .tablescroll { overflow-x: auto; border-radius: 10px; border: 1px solid var(--line); }
+  table.markers { border-collapse: collapse; font-size: 12px; width: 100%; }
+  table.markers th, table.markers td { padding: 4px 7px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.markers thead th { position: sticky; top: 0; background: var(--panel-2); color: var(--muted); font-weight: 600; }
+  table.markers td.allele-1 { color: var(--accent); font-weight: 700; }
+  table.markers td.allele-0 { color: var(--muted); }
+  table.markers td.pheno { color: var(--accent-2); font-weight: 600; border-left: 1px solid var(--line); }
+  table.markers td.rowlab, table.markers th.rowlab { text-align: left; color: var(--muted); background: var(--panel-2); position: sticky; left: 0; }
+  table.markers col.hl, table.markers td.hlcol { background: rgba(242,109,91,.14); }
+
+  /* parent cards */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .card h4 { margin: 0 0 4px; font-size: 17px; }
+  .card .sub { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+  .stat { margin: 10px 0; }
+  .stat .name { font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; }
+  .bar { height: 12px; background: #0d1520; border-radius: 999px; overflow: hidden; margin-top: 4px; }
+  .bar > span { display: block; height: 100%; border-radius: 999px; transition: width .5s ease; }
+  .bar.salt > span { background: var(--accent); }
+  .bar.yield > span { background: var(--accent-2); }
+  .marker-chip { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); margin-top: 6px; }
+  .marker-chip.yes { color: var(--accent); border-color: var(--accent); }
+  .marker-chip.no { color: var(--danger); border-color: var(--danger); }
+
+  /* backcross log */
+  .bcgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 16px 0; }
+  .roundbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px; text-align: center; opacity: 0; transform: translateY(6px); transition: all .4s ease; }
+  .roundbox.show { opacity: 1; transform: none; }
+  .roundbox .rn { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .roundbox .big { font-size: 22px; font-weight: 700; margin: 6px 0 0; }
+  .roundbox .small { font-size: 12px; color: var(--muted); }
+  .roundbox.kept { border-color: var(--accent); }
+  .roundbox.lost { border-color: var(--danger); }
+
+  .keyline { display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin-top:6px; }
+  .keyline span { display:inline-flex; align-items:center; gap:6px; }
+  .dot { width:11px; height:11px; border-radius:3px; display:inline-block; }
+
+  /* quiz */
+  .quiz { margin-top: 10px; }
+  .quiz .qitem { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; background: var(--panel-2); }
+  .quiz .qitem p.qtext { margin: 0 0 10px; font-weight: 600; }
+  .quiz .opt { display: block; width: 100%; text-align: left; background: #0d1520; border: 1px solid var(--line); color: var(--ink);
+               border-radius: 8px; padding: 9px 12px; margin: 6px 0; cursor: pointer; font-weight: 500; }
+  .quiz .opt:hover { border-color: var(--accent-3); }
+  .quiz .opt.correct { border-color: var(--accent); background: rgba(76,195,138,.14); }
+  .quiz .opt.wrong { border-color: var(--danger); background: rgba(226,114,91,.14); }
+  .quiz .explain { font-size: 13px; color: var(--muted); margin: 8px 0 0; display: none; }
+  .quiz .explain.show { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 30px 20px 60px; }
+
+  @media (max-width: 640px) {
+    .cards { grid-template-columns: 1fr; }
+    .step { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="badge">EduXR · Plant Breeding</div>
+  <h1>Marker Assisted Selection</h1>
+  <p>An interactive practical. No coding, no installing anything — just click, explore, and breed a better crop. Work through the steps from top to bottom.</p>
+</header>
+
+<div class="wrap">
+
+  <!-- STEP 0 -->
+  <section class="step">
+    <h2><span class="num">?</span> What are we doing here?</h2>
+    <p class="lead">Plant breeders want to combine good traits — like disease resistance or high yield — into one crop variety.</p>
+    <p>Traditionally you cross plants and keep the ones that <em>look</em> best. That's slow: some traits only appear late in life, and some are expensive to measure (you'd have to flood a field with salt water just to see which plants survive!).</p>
+    <p><strong>Genetic markers</strong> are a shortcut. A marker is a spot in the plant's DNA where individuals can differ. We simplify each marker to two values:</p>
+    <div class="keyline">
+      <span><span class="dot" style="background:var(--muted)"></span> <b>0</b> = the plant does <b>not</b> carry this DNA variant</span>
+      <span><span class="dot" style="background:var(--accent)"></span> <b>1</b> = the plant <b>does</b> carry it</span>
+    </div>
+    <p style="margin-top:14px">If a marker is reliably linked to a trait we care about, we can test a tiny leaf sample from a seedling instead of waiting months. That's <strong>marker assisted selection (MAS)</strong>. Below, you'll use it to make a high-yielding crop salt resistant — without losing its yield.</p>
+  </section>
+
+  <!-- STEP 1 -->
+  <section class="step">
+    <h2><span class="num">1</span> Explore a diverse population</h2>
+    <p class="lead">To find <em>which</em> marker controls salt resistance, we first need plants that differ from each other — genetically and in the trait. If every plant were identical, we'd have nothing to compare.</p>
+    <p>Each <strong>row</strong> below is one plant. Each blue-ish <strong>column</strong> is a marker (a DNA position). The last two columns are the plant's measured traits (its <em>phenotype</em>).</p>
+    <div class="controls">
+      <label>Population size:
+        <input id="pop1-size" type="range" min="5" max="20" value="8" />
+        <b id="pop1-size-val">8</b> plants
+      </label>
+      <button id="pop1-reroll" class="secondary">🎲 New random sample</button>
+    </div>
+    <div class="tablescroll" id="pop1-table"></div>
+    <p class="chart-hint">Scroll sideways to see all 50 markers. Notice how the trait values jump around from plant to plant.</p>
+    <div class="callout q">
+      <strong>❓ Think about it</strong>
+      <ul>
+        <li>What do the rows and columns represent?</li>
+        <li>Can you spot, just by eye, which single marker column lines up with high "Salt Resistance"? (Hard, right? That's why we need step 2.)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step">
+    <h2><span class="num">2</span> Find the marker with a GWAS</h2>
+    <p class="lead">A <strong>Genome-Wide Association Study (GWAS)</strong> tests every marker separately: do plants with a <b>1</b> here tend to have a different trait value than plants with a <b>0</b>?</p>
+    <p>Each test gives a <em>p-value</em> — small means the difference is unlikely to be pure chance. We plot <code>-log10(p-value)</code>, so tiny p-values become <b>tall bars</b>. The taller the bar, the stronger the evidence. Tall bars sticking up like a skyline give this a <strong>Manhattan plot</strong>.</p>
+    <div class="controls">
+      <label>Trait:
+        <span class="toggle" id="gwas-trait">
+          <button data-t="salt" class="on">Salt Resistance</button>
+          <button data-t="yield">Yield</button>
+        </span>
+      </label>
+      <label>Population size:
+        <input id="gwas-size" type="range" min="10" max="300" value="30" step="10" />
+        <b id="gwas-size-val">30</b> plants
+      </label>
+    </div>
+    <div class="chartbox">
+      <canvas id="manhattan" height="300"></canvas>
+      <p class="chart-hint">👆 Click a bar to inspect that marker below.</p>
+    </div>
+    <div id="scatter-wrap" style="display:none">
+      <h3>Marker <span id="scatter-marker">?</span> vs the trait</h3>
+      <div class="chartbox">
+        <canvas id="scatter" height="260"></canvas>
+        <p class="chart-hint" id="scatter-caption"></p>
+      </div>
+    </div>
+    <div class="callout q">
+      <strong>❓ Try this</strong>
+      <ul>
+        <li>For <b>Salt Resistance</b>, which marker has the tallest bar? Click it — do the two groups (0 vs 1) really separate?</li>
+        <li>Drag the population-size slider up. What happens to the bars? (More data = more powerful statistics.)</li>
+        <li>Now switch the trait to <b>Yield</b>. Why does it look so different? (You'll come back to this in step 6.)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step">
+    <h2><span class="num">3</span> Meet the two parents</h2>
+    <p class="lead">We found the salt-resistance marker. Now we want to move it into a crop farmers actually grow. We start from two very different plants:</p>
+    <div class="cards" id="parent-cards"></div>
+    <div class="callout">
+      Notice the <strong>trade-off</strong>: the resilient donor survives salt but yields little; the elite variety yields a lot but dies in salt. Our goal for the rest of this practical: <strong>break that trade-off</strong> — keep the elite's yield <em>and</em> gain the donor's salt resistance.
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step">
+    <h2><span class="num">4</span> Marker assisted backcrossing</h2>
+    <p class="lead">The trick: cross with the elite parent again and again (<em>backcrossing</em>), but each round keep <strong>only</strong> the offspring that still carry the salt-resistance marker. Over rounds, the plant becomes more and more like the elite variety — while never losing the one gene we care about.</p>
+    <div class="controls">
+      <label>Selection strategy:
+        <span class="toggle" id="bc-mode">
+          <button data-m="marker" class="on">✅ Select on marker (MAS)</button>
+          <button data-m="none">❌ No selection</button>
+        </span>
+      </label>
+      <button id="bc-run">▶ Run breeding programme</button>
+      <button id="bc-reset" class="secondary">Reset</button>
+    </div>
+    <div class="bcgrid" id="bc-grid"></div>
+    <div class="chartbox">
+      <canvas id="bc-chart" height="280"></canvas>
+      <div class="keyline" style="justify-content:center;margin-top:8px">
+        <span><span class="dot" style="background:var(--accent)"></span> Salt resistance</span>
+        <span><span class="dot" style="background:var(--accent-2)"></span> Yield</span>
+        <span><span class="dot" style="background:var(--muted)"></span> elite target yield</span>
+      </div>
+    </div>
+    <p id="bc-verdict" class="chart-hint"></p>
+    <div class="callout q">
+      <strong>❓ Compare the two strategies</strong>
+      <ul>
+        <li>Run it with <b>Select on marker</b>. Does salt resistance stay high while yield climbs back up toward the elite level?</li>
+        <li>Now switch to <b>No selection</b> and run again. What happens to salt resistance? Why?</li>
+        <li>Why do we keep crossing back to the <em>elite</em> parent, not the donor?</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="step">
+    <h2><span class="num">5</span> Why yield is harder: polygenic traits</h2>
+    <p class="lead">Salt resistance here is controlled by essentially <strong>one</strong> marker (a <em>monogenic</em> trait) — easy for MAS. Yield is <strong>polygenic</strong>: many genes each add a little.</p>
+    <p>Go back to <a href="#" onclick="document.getElementById('manhattan').scrollIntoView({behavior:'smooth',block:'center'});return false;">the Manhattan plot in step 2</a> and switch the trait to <b>Yield</b>. Instead of one giant bar, you see <em>many</em> medium bars. There's no single marker to select on — which is exactly why breeders needed a different method: <strong>genomic selection</strong> (that's the next practical).</p>
+    <div class="callout q">
+      <strong>❓ Wrap-up</strong>
+      <ul>
+        <li>How is the yield Manhattan plot different from the salt one?</li>
+        <li>What does that mean for whether MAS will work well?</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="step">
+    <h2><span class="num">✓</span> Check your understanding</h2>
+    <div class="quiz" id="quiz"></div>
+  </section>
+
+  <footer>
+    Built for the EduXR plant-breeding minor · simulation mirrors the <code>dsplantbreeding</code> notebook.<br/>
+    Some code and explanations were drafted with the help of Claude Code.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   Seeded RNG (mulberry32) — reproducible "random" numbers
+   ============================================================ */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gaussian(rng, mean, sd) {
+  // Box-Muller
+  let u = 0, v = 0;
+  while (u === 0) u = rng();
+  while (v === 0) v = rng();
+  return mean + sd * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+const N_MARKERS = 50;
+const SALT_MARKER = 12;                 // the one that controls salt resistance
+const YIELD_POS = [0,1,2,3,4,5,6,7,8,9]; // raise yield
+const YIELD_NEG = [20,21,22];            // lower yield
+
+/* ============================================================
+   Phenotype model — matches dsplantbreeding/Population.py
+   salt = 30 + Marker_12*50 + noise(0,5)
+   yield = sum(pos)*2 - sum(neg)*1 + noise
+   ============================================================ */
+function saltResistance(markerRow, rng) {
+  return 30 + markerRow[SALT_MARKER] * 50 + gaussian(rng, 0, 5);
+}
+function yieldOf(markerRow, rng) {
+  let pos = YIELD_POS.reduce((s,i)=>s+markerRow[i],0) * 2;
+  let neg = YIELD_NEG.reduce((s,i)=>s+markerRow[i],0) * 1;
+  return pos - neg + gaussian(rng, 0, 1);
+}
+
+/* ============================================================
+   Population generators
+   ============================================================ */
+function naturalPopulation(nPlants, seed) {
+  const rng = mulberry32(seed);
+  const rows = [];
+  for (let p = 0; p < nPlants; p++) {
+    const row = [];
+    for (let m = 0; m < N_MARKERS; m++) row.push(rng() < 0.5 ? 0 : 1);
+    rows.push(row);
+  }
+  return rows;
+}
+function resilientPlant(seed) {
+  const rng = mulberry32(seed);
+  const row = [];
+  for (let m = 0; m < N_MARKERS; m++) row.push(rng() < 0.5 ? 0 : 1);
+  row[SALT_MARKER] = 1;               // donor carries salt resistance
+  return row;
+}
+function agriculturalPlant(seed) {
+  const rng = mulberry32(seed);
+  const row = [];
+  for (let m = 0; m < N_MARKERS; m++) row.push(rng() < 0.5 ? 0 : 1);
+  row[SALT_MARKER] = 0;               // elite lacks salt resistance
+  YIELD_POS.forEach(i => row[i] = 1); // elite has every yield-boosting marker
+  YIELD_NEG.forEach(i => row[i] = 0);
+  return row;
+}
+// cross two plants (each parent = single representative row): random allele from either
+function crossRows(a, b, rng) {
+  const child = [];
+  for (let m = 0; m < N_MARKERS; m++) child.push(rng() < 0.5 ? a[m] : b[m]);
+  return child;
+}
+
+/* ============================================================
+   Statistics: Pearson r  ->  Student-t  ->  p-value
+   ============================================================ */
+function pearson(x, y) {
+  const n = x.length;
+  let mx = 0, my = 0;
+  for (let i=0;i<n;i++){ mx+=x[i]; my+=y[i]; }
+  mx/=n; my/=n;
+  let num=0, dx=0, dy=0;
+  for (let i=0;i<n;i++){
+    const a=x[i]-mx, b=y[i]-my;
+    num+=a*b; dx+=a*a; dy+=b*b;
+  }
+  if (dx===0 || dy===0) return 0;
+  return num/Math.sqrt(dx*dy);
+}
+// regularized incomplete beta (Lentz continued fraction) for t-distribution p-value
+function betacf(a,b,x){
+  const MAXIT=200, EPS=3e-12, FPMIN=1e-300;
+  let qab=a+b, qap=a+1, qam=a-1;
+  let c=1, d=1-qab*x/qap;
+  if (Math.abs(d)<FPMIN) d=FPMIN;
+  d=1/d; let h=d;
+  for (let m=1;m<=MAXIT;m++){
+    let m2=2*m;
+    let aa=m*(b-m)*x/((qam+m2)*(a+m2));
+    d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN;
+    c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN;
+    d=1/d; h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+    d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN;
+    c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN;
+    d=1/d; let del=d*c; h*=del;
+    if (Math.abs(del-1)<EPS) break;
+  }
+  return h;
+}
+function gammaln(x){
+  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,
+           -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y=x, tmp=x+5.5; tmp-=(x+0.5)*Math.log(tmp);
+  let ser=1.000000000190015;
+  for (let j=0;j<6;j++){ y++; ser+=c[j]/y; }
+  return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+function betai(a,b,x){
+  if (x<=0) return 0;
+  if (x>=1) return 1;
+  const bt=Math.exp(gammaln(a+b)-gammaln(a)-gammaln(b)+a*Math.log(x)+b*Math.log(1-x));
+  if (x < (a+1)/(a+b+2)) return bt*betacf(a,b,x)/a;
+  return 1-bt*betacf(b,a,1-x)/b;
+}
+// two-sided p-value for correlation r with n samples
+function corrPValue(r, n){
+  if (n<3) return 1;
+  const df=n-2;
+  const denom=1-r*r;
+  if (denom<=0) return 0;                 // perfect correlation
+  const t=r*Math.sqrt(df/denom);
+  const p=betai(df/2, 0.5, df/(df+t*t));  // two-sided
+  return Math.min(Math.max(p, 1e-300), 1);
+}
+
+/* ============================================================
+   Small canvas helpers (HiDPI aware)
+   ============================================================ */
+function setupCanvas(canvas, cssHeight){
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = canvas.parentElement.clientWidth - 28;
+  canvas.style.width = cssWidth + "px";
+  canvas.style.height = cssHeight + "px";
+  canvas.width = Math.round(cssWidth*dpr);
+  canvas.height = Math.round(cssHeight*dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cssWidth,cssHeight);
+  return {ctx, W: cssWidth, H: cssHeight};
+}
+const CSS = getComputedStyle(document.documentElement);
+const col = n => CSS.getPropertyValue(n).trim();
+
+/* ============================================================
+   STEP 1 — marker table
+   ============================================================ */
+const pop1 = { size: 8, seed: 421 };
+function renderPop1(){
+  const rows = naturalPopulation(pop1.size, pop1.seed);
+  const rng = mulberry32(pop1.seed + 7);
+  let html = '<table class="markers"><colgroup>';
+  html += '<col/>';
+  for (let m=0;m<N_MARKERS;m++) html += `<col class="${m===SALT_MARKER?'hl':''}"/>`;
+  html += '<col/><col/></colgroup><thead><tr><th class="rowlab">Plant</th>';
+  for (let m=0;m<N_MARKERS;m++) html += `<th class="${m===SALT_MARKER?'hlcol':''}">M${m}</th>`;
+  html += '<th>Salt&nbsp;Res.</th><th>Yield</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{
+    html += `<tr><td class="rowlab">#${i+1}</td>`;
+    r.forEach((v,m)=>{
+      html += `<td class="allele-${v} ${m===SALT_MARKER?'hlcol':''}">${v}</td>`;
+    });
+    html += `<td class="pheno">${saltResistance(r,rng).toFixed(0)}</td>`;
+    html += `<td class="pheno">${yieldOf(r,rng).toFixed(1)}</td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('pop1-table').innerHTML = html;
+}
+document.getElementById('pop1-size').addEventListener('input', e=>{
+  pop1.size = +e.target.value;
+  document.getElementById('pop1-size-val').textContent = pop1.size;
+  renderPop1();
+});
+document.getElementById('pop1-reroll').addEventListener('click', ()=>{
+  pop1.seed = Math.floor(Math.random()*100000);
+  renderPop1();
+});
+
+/* ============================================================
+   STEP 2 — Manhattan + scatter
+   ============================================================ */
+const gwas = { trait: 'salt', size: 30, seed: 421, selected: null };
+function buildGwasData(){
+  const rows = naturalPopulation(gwas.size, gwas.seed);
+  const rng = mulberry32(gwas.seed + 7);
+  const pheno = rows.map(r => gwas.trait==='salt' ? saltResistance(r,rng) : yieldOf(r,rng));
+  const negLogP = [];
+  for (let m=0;m<N_MARKERS;m++){
+    const colv = rows.map(r=>r[m]);
+    const r = pearson(colv, pheno);
+    const p = corrPValue(r, rows.length);
+    negLogP.push(-Math.log10(p));
+  }
+  return { rows, pheno, negLogP };
+}
+let gwasCache = null;
+function renderManhattan(){
+  gwasCache = buildGwasData();
+  const canvas = document.getElementById('manhattan');
+  const {ctx, W, H} = setupCanvas(canvas, 300);
+  const padL=46, padR=12, padT=18, padB=34;
+  const plotW = W-padL-padR, plotH = H-padT-padB;
+  const data = gwasCache.negLogP;
+  let maxY = Math.max(5, ...data.filter(v=>isFinite(v)));
+  maxY = Math.ceil(maxY/2)*2;
+  const bw = plotW/N_MARKERS;
+
+  // axes
+  ctx.strokeStyle = col('--line'); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  // y gridlines + labels
+  ctx.fillStyle = col('--muted'); ctx.font='11px system-ui'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for (let g=0; g<=maxY; g+=2){
+    const y = padT+plotH - (g/maxY)*plotH;
+    ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+plotW,y); ctx.stroke();
+    ctx.fillText(g, padL-6, y);
+  }
+  // significance line ~ -log10(0.05/50) Bonferroni ≈ 3
+  const sigY = padT+plotH - (3/maxY)*plotH;
+  ctx.strokeStyle = col('--danger'); ctx.setLineDash([5,4]); ctx.beginPath();
+  ctx.moveTo(padL,sigY); ctx.lineTo(padL+plotW,sigY); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = col('--danger'); ctx.textAlign='left'; ctx.fillText('significance', padL+4, sigY-8);
+
+  // bars
+  data.forEach((v,m)=>{
+    const h = Math.min(v/maxY,1)*plotH;
+    const x = padL + m*bw;
+    const isHot = m===SALT_MARKER && gwas.trait==='salt';
+    const isSel = m===gwas.selected;
+    ctx.fillStyle = isSel ? col('--accent-3')
+                  : isHot ? col('--highlight')
+                  : (gwas.trait==='salt' ? 'rgba(91,155,213,.55)' : 'rgba(242,193,78,.7)');
+    ctx.fillRect(x+bw*0.15, padT+plotH-h, bw*0.7, h);
+  });
+  // x labels (sparse)
+  ctx.fillStyle=col('--muted'); ctx.textAlign='center'; ctx.textBaseline='top'; ctx.font='10px system-ui';
+  for (let m=0;m<N_MARKERS;m+=5){
+    ctx.fillText(m, padL+m*bw+bw/2, padT+plotH+6);
+  }
+  ctx.fillStyle=col('--muted'); ctx.font='11px system-ui';
+  ctx.fillText('Marker index', padL+plotW/2, padT+plotH+20);
+  // y title
+  ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center'; ctx.fillText('-log10(p-value)',0,0); ctx.restore();
+
+  canvas._bars = { padL, padT, plotH, bw };
+}
+document.getElementById('manhattan').addEventListener('click', e=>{
+  const canvas = e.target;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const {padL, bw} = canvas._bars;
+  const m = Math.floor((x-padL)/bw);
+  if (m>=0 && m<N_MARKERS){ gwas.selected = m; renderManhattan(); renderScatter(m); }
+});
+function renderScatter(m){
+  document.getElementById('scatter-wrap').style.display='block';
+  document.getElementById('scatter-marker').textContent = m;
+  const canvas = document.getElementById('scatter');
+  const {ctx, W, H} = setupCanvas(canvas, 260);
+  const padL=46, padR=14, padT=16, padB=40;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const xs = gwasCache.rows.map(r=>r[m]);
+  const ys = gwasCache.pheno;
+  const ymin = Math.min(...ys), ymax = Math.max(...ys);
+  const yr = (ymax-ymin)||1;
+  // axes
+  ctx.strokeStyle=col('--line'); ctx.beginPath();
+  ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  // jittered points, two columns 0 and 1
+  const rng = mulberry32(999+m);
+  const colX = v => padL + (v===0? plotW*0.28 : plotW*0.72);
+  const meanY = {0:[],1:[]};
+  xs.forEach((v,i)=>{
+    const jitter = (rng()-0.5)*plotW*0.16;
+    const px = colX(v)+jitter;
+    const py = padT+plotH - ((ys[i]-ymin)/yr)*plotH;
+    meanY[v].push(ys[i]);
+    ctx.fillStyle = v===0? 'rgba(159,176,195,.8)':'rgba(76,195,138,.85)';
+    ctx.beginPath(); ctx.arc(px,py,4,0,2*Math.PI); ctx.fill();
+  });
+  // group means
+  [0,1].forEach(v=>{
+    if (!meanY[v].length) return;
+    const mv = meanY[v].reduce((a,b)=>a+b,0)/meanY[v].length;
+    const py = padT+plotH - ((mv-ymin)/yr)*plotH;
+    ctx.strokeStyle = col('--ink'); ctx.lineWidth=2; ctx.beginPath();
+    ctx.moveTo(colX(v)-plotW*0.12, py); ctx.lineTo(colX(v)+plotW*0.12, py); ctx.stroke();
+  });
+  // x labels
+  ctx.fillStyle=col('--muted'); ctx.textAlign='center'; ctx.textBaseline='top'; ctx.font='12px system-ui';
+  ctx.fillText('marker = 0', colX(0), padT+plotH+8);
+  ctx.fillText('marker = 1', colX(1), padT+plotH+8);
+  ctx.font='11px system-ui';
+  ctx.fillText('(black line = group average)', padL+plotW/2, padT+plotH+24);
+  // y title
+  ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+  ctx.fillText(gwas.trait==='salt'?'Salt resistance':'Yield',0,0); ctx.restore();
+
+  const r = pearson(xs, ys);
+  const p = corrPValue(r, xs.length);
+  const cap = document.getElementById('scatter-caption');
+  const strong = p < 0.001;
+  cap.innerHTML = `p-value ≈ <b>${p<1e-4 ? p.toExponential(1) : p.toFixed(4)}</b> — ` +
+    (strong ? 'the two groups clearly separate: this marker <b>is</b> linked to the trait.'
+            : 'the two clouds overlap a lot: little evidence this marker matters.');
+}
+document.getElementById('gwas-trait').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  gwas.trait = b.dataset.t; gwas.selected=null;
+  document.querySelectorAll('#gwas-trait button').forEach(x=>x.classList.toggle('on', x===b));
+  document.getElementById('scatter-wrap').style.display='none';
+  renderManhattan();
+});
+document.getElementById('gwas-size').addEventListener('input', e=>{
+  gwas.size=+e.target.value;
+  document.getElementById('gwas-size-val').textContent=gwas.size;
+  renderManhattan();
+  if (gwas.selected!=null) renderScatter(gwas.selected);
+});
+
+/* ============================================================
+   STEP 3 — parent cards
+   ============================================================ */
+function avgPhenotype(row, saltFn){
+  // average over noise for a stable displayed number
+  let s=0,y=0; const N=200;
+  const rng=mulberry32(2024);
+  for(let i=0;i<N;i++){ s+=saltResistance(row,rng); y+=yieldOf(row,rng); }
+  return { salt:s/N, yield:y/N };
+}
+const donorRow = resilientPlant(42);
+const eliteRow = agriculturalPlant(420);
+function renderParents(){
+  const d = avgPhenotype(donorRow), e = avgPhenotype(eliteRow);
+  // scale bars: salt 0..90, yield 0..22
+  const saltPct = v => Math.max(4,Math.min(100, v/90*100));
+  const yieldPct = v => Math.max(4,Math.min(100, v/22*100));
+  const card = (title, sub, ph, hasMarker) => `
+    <div class="card">
+      <h4>${title}</h4>
+      <p class="sub">${sub}</p>
+      <div class="stat">
+        <div class="name"><span>Salt resistance</span><span>${ph.salt.toFixed(0)}%</span></div>
+        <div class="bar salt"><span style="width:${saltPct(ph.salt)}%"></span></div>
+      </div>
+      <div class="stat">
+        <div class="name"><span>Yield</span><span>${ph.yield.toFixed(1)}</span></div>
+        <div class="bar yield"><span style="width:${yieldPct(ph.yield)}%"></span></div>
+      </div>
+      <span class="marker-chip ${hasMarker?'yes':'no'}">Salt marker (M12): ${hasMarker?'present ✓':'absent ✗'}</span>
+    </div>`;
+  document.getElementById('parent-cards').innerHTML =
+    card('🌾 Resilient donor', 'A hardy wild relative / old landrace', d, true) +
+    card('🚜 Elite variety', "Today's high-yielding crop farmers plant", e, false);
+}
+
+/* ============================================================
+   STEP 4 — backcrossing simulator
+   ============================================================ */
+const bc = { mode:'marker' };
+function runBackcross(){
+  const grid = document.getElementById('bc-grid');
+  grid.innerHTML='';
+  const rng = mulberry32(102);
+  const rounds = [];
+  // Start: a small population from donor x elite
+  let pop = [];
+  for (let i=0;i<20;i++) pop.push(crossRows(donorRow, eliteRow, rng));
+
+  const N_ROUNDS = 4;
+  for (let round=0; round<=N_ROUNDS; round++){
+    if (round>0){
+      // backcross whole population to elite
+      const next=[];
+      for (let i=0;i<20;i++){
+        const parent = pop[Math.floor(rng()*pop.length)];
+        next.push(crossRows(parent, eliteRow, rng));
+      }
+      pop = next;
+    }
+    // selection
+    let selected = pop;
+    if (bc.mode==='marker'){
+      selected = pop.filter(r=>r[SALT_MARKER]===1);
+      if (selected.length===0) selected=pop; // safety
+    }
+    // average phenotype of the selected group
+    let s=0,y=0, frac=0;
+    selected.forEach(r=>{
+      s+=saltResistance(r,rng); y+=yieldOf(r,rng);
+      frac += r[SALT_MARKER];
+    });
+    s/=selected.length; y/=selected.length; frac/=selected.length;
+    rounds.push({ round, salt:s, yield:y, markerFrac:frac, kept: frac>0.5 });
+    pop = selected;
+  }
+  renderBcResults(rounds);
+}
+function renderBcResults(rounds){
+  const grid = document.getElementById('bc-grid');
+  grid.innerHTML='';
+  rounds.forEach((r,i)=>{
+    const box=document.createElement('div');
+    box.className='roundbox '+(r.kept?'kept':'lost');
+    box.innerHTML = `<div class="rn">${r.round===0?'F1 cross':'Backcross '+r.round}</div>
+      <div class="big">${r.yield.toFixed(1)}</div><div class="small">yield</div>
+      <div class="big" style="color:var(--accent);font-size:18px">${r.salt.toFixed(0)}%</div>
+      <div class="small">salt res.</div>`;
+    grid.appendChild(box);
+    setTimeout(()=>box.classList.add('show'), i*260);
+  });
+  setTimeout(()=>renderBcChart(rounds), rounds.length*260);
+  // verdict
+  const last = rounds[rounds.length-1];
+  const eliteYield = avgPhenotype(eliteRow).yield;
+  const v = document.getElementById('bc-verdict');
+  if (bc.mode==='marker'){
+    v.innerHTML = `✅ <b>Success.</b> After ${rounds.length-1} backcrosses, yield recovered to <b>${last.yield.toFixed(1)}</b> ` +
+      `(elite ≈ ${eliteYield.toFixed(1)}) while salt resistance stayed high at <b>${last.salt.toFixed(0)}%</b>. ` +
+      `We broke the trade-off!`;
+  } else {
+    v.innerHTML = `⚠️ Without marker selection, salt resistance drifted to <b>${last.salt.toFixed(0)}%</b> — ` +
+      `most offspring lost the donor's salt gene by chance, because backcrossing keeps diluting it. ` +
+      `Yield came back, but we lost what we set out to add.`;
+  }
+}
+function renderBcChart(rounds){
+  const canvas = document.getElementById('bc-chart');
+  const {ctx, W, H} = setupCanvas(canvas, 280);
+  const padL=44, padR=44, padT=18, padB=34;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const n=rounds.length;
+  const xAt = i => padL + (n===1?plotW/2:(i/(n-1))*plotW);
+  const eliteYield = avgPhenotype(eliteRow).yield;
+  // left axis salt 0..90, right axis yield 0..(elite+2)
+  const saltMax=90, yieldMax=Math.ceil(eliteYield+2);
+  const ySalt = v => padT+plotH - (v/saltMax)*plotH;
+  const yYield = v => padT+plotH - (v/yieldMax)*plotH;
+
+  // frame
+  ctx.strokeStyle=col('--line'); ctx.beginPath();
+  ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  // elite target yield line
+  ctx.strokeStyle=col('--muted'); ctx.setLineDash([4,4]); ctx.beginPath();
+  ctx.moveTo(padL,yYield(eliteYield)); ctx.lineTo(padL+plotW,yYield(eliteYield)); ctx.stroke(); ctx.setLineDash([]);
+
+  const drawLine=(vals, yFn, color)=>{
+    ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.beginPath();
+    vals.forEach((v,i)=>{ const x=xAt(i),y=yFn(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+    ctx.stroke();
+    vals.forEach((v,i)=>{ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(xAt(i),yFn(v),4,0,2*Math.PI); ctx.fill(); });
+  };
+  drawLine(rounds.map(r=>r.salt), ySalt, col('--accent'));
+  drawLine(rounds.map(r=>r.yield), yYield, col('--accent-2'));
+
+  // axis labels
+  ctx.fillStyle=col('--muted'); ctx.font='11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='top';
+  rounds.forEach((r,i)=> ctx.fillText(r.round===0?'F1':'BC'+r.round, xAt(i), padT+plotH+8));
+  ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+  ctx.fillStyle=col('--accent'); ctx.fillText('salt resistance %',0,0); ctx.restore();
+  ctx.save(); ctx.translate(W-12,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+  ctx.fillStyle=col('--accent-2'); ctx.fillText('yield',0,0); ctx.restore();
+}
+document.getElementById('bc-mode').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  bc.mode=b.dataset.m;
+  document.querySelectorAll('#bc-mode button').forEach(x=>x.classList.toggle('on', x===b));
+});
+document.getElementById('bc-run').addEventListener('click', runBackcross);
+document.getElementById('bc-reset').addEventListener('click', ()=>{
+  document.getElementById('bc-grid').innerHTML='';
+  document.getElementById('bc-verdict').innerHTML='';
+  const {ctx,W,H}=setupCanvas(document.getElementById('bc-chart'),280);
+  ctx.fillStyle=col('--muted'); ctx.textAlign='center'; ctx.font='13px system-ui';
+  ctx.fillText('Press "Run breeding programme" to start.', W/2, H/2);
+});
+
+/* ============================================================
+   QUIZ
+   ============================================================ */
+const QUIZ = [
+  {
+    q: "Why does the population have to be genetically diverse for a GWAS to work?",
+    opts: [
+      "If all plants were identical, there'd be no differences to link to the trait.",
+      "Diverse plants grow faster.",
+      "It makes the DNA test cheaper.",
+    ],
+    correct: 0,
+    why: "A GWAS compares plants with a 0 vs a 1 at each marker. With no variation, there are no two groups to compare."
+  },
+  {
+    q: "A tall bar in a Manhattan plot means…",
+    opts: [
+      "That marker is very common in the population.",
+      "Strong statistical evidence that the marker is associated with the trait (small p-value).",
+      "That marker has the most DNA letters.",
+    ],
+    correct: 1,
+    why: "The bar height is -log10(p-value): tiny p-values (strong evidence) become tall bars."
+  },
+  {
+    q: "In marker assisted backcrossing, why do we keep crossing back to the elite variety?",
+    opts: [
+      "To slowly recover the elite's high-yield genome while keeping the one salt gene.",
+      "Because the elite variety makes more seeds.",
+      "To add even more salt-resistance genes each round.",
+    ],
+    correct: 0,
+    why: "Each backcross replaces more of the donor's genome with the elite's, restoring yield; marker selection guards the salt gene."
+  },
+  {
+    q: "Why is MAS much harder for yield than for salt resistance here?",
+    opts: [
+      "Yield can't be measured.",
+      "Yield is polygenic — many markers each with a small effect, so there's no single one to select on.",
+      "Yield markers are on a different chromosome.",
+    ],
+    correct: 1,
+    why: "The yield Manhattan plot shows many medium bars instead of one tall one — that's what 'polygenic' looks like."
+  },
+];
+function renderQuiz(){
+  const root=document.getElementById('quiz');
+  QUIZ.forEach((item,qi)=>{
+    const div=document.createElement('div'); div.className='qitem';
+    div.innerHTML=`<p class="qtext">${qi+1}. ${item.q}</p>`;
+    item.opts.forEach((o,oi)=>{
+      const b=document.createElement('button'); b.className='opt'; b.textContent=o;
+      b.addEventListener('click',()=>{
+        div.querySelectorAll('.opt').forEach(x=>{x.disabled=true;});
+        b.classList.add(oi===item.correct?'correct':'wrong');
+        if(oi!==item.correct) div.querySelectorAll('.opt')[item.correct].classList.add('correct');
+        div.querySelector('.explain').classList.add('show');
+      });
+      div.appendChild(b);
+    });
+    const ex=document.createElement('p'); ex.className='explain'; ex.textContent='💡 '+item.why;
+    div.appendChild(ex);
+    root.appendChild(div);
+  });
+}
+
+/* ============================================================
+   INIT + responsive redraw
+   ============================================================ */
+function initAll(){
+  renderPop1();
+  renderManhattan();
+  renderParents();
+  document.getElementById('bc-reset').click();
+  renderQuiz();
+}
+initAll();
+let rz;
+window.addEventListener('resize', ()=>{
+  clearTimeout(rz);
+  rz=setTimeout(()=>{
+    renderManhattan();
+    if(gwas.selected!=null) renderScatter(gwas.selected);
+    document.getElementById('bc-reset').click();
+  },200);
+});
+</script>
+</body>
+</html>
