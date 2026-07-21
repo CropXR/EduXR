@@ -100,7 +100,14 @@ def get_agricultural_population(n_plants=1, n_markers=50):
     np.random.seed(420)
     markers = pd.DataFrame(np.random.randint(0, 2, size=(n_plants, n_markers)),
                         columns=[f"Marker_{i}" for i in range(n_markers)])
-    markers["Marker_12"] = 0
+    markers["Marker_12"] = 0  # Lacks the salt resistance marker
+
+    # This elite cultivar already carries every marker that boosts yield,
+    # which is exactly why farmers use it despite it not being salt resistant.
+    for i in range(0, 10):
+        markers[f"Marker_{i}"] = 1
+    for i in range(20, 23):
+        markers[f"Marker_{i}"] = 0
 
     return PlantPopulation(markers)
 
