@@ -39,7 +39,7 @@ class PlantPopulation:
         print(f"{self.name} has {n_plants} {plant_word} and {self._markers.shape[1]} markers.")
 
     def show_marker_at_location(self, marker_index):
-        print(self._markers.iloc[:, marker_index].values)
+        print(f'Marker at location {marker_index} is {self._markers.iloc[:, marker_index].values}')
 
     def show_all_phenotypes(self):
         print(self._phenotypes)
