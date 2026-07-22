@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Marker Assisted Selection — Interactive Practical</title>
+<title>Marker Assisted Selection: Interactive Practical</title>
 <style>
   :root {
     --bg: #0f1720;
@@ -77,7 +77,7 @@
     border-radius: 10px;
     font-size: 17px; font-weight: 700;
   }
-  .step .lead { color: var(--muted); margin-top: 0; }
+  .step .lead { color: var(--ink); margin-top: 0; }
   .step h3 { margin: 22px 0 8px; font-size: 17px; color: var(--ink); }
 
   .callout {
@@ -91,6 +91,10 @@
   .callout.q { border-left-color: var(--accent-2); }
   .callout.q strong { color: var(--accent-2); }
   .callout ul { margin: 8px 0 0; padding-left: 20px; }
+  .callout details { margin-top: 8px; }
+  .callout details summary { cursor: pointer; color: var(--accent-3); font-size: 13px; width: fit-content; }
+  .callout details[open] summary { margin-bottom: 6px; }
+  .callout details > :not(summary) { font-size: 13px; }
 
   .controls {
     display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
@@ -119,6 +123,17 @@
   .toggle button { background: var(--panel-2); color: var(--muted); border-radius: 0; font-weight: 500; }
   .toggle button.on { background: var(--accent); color: #06281b; font-weight: 700; }
 
+  select, input[type="number"] {
+    background: #0d1520; color: var(--ink); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit;
+  }
+  .bc-current { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+                padding: 10px 14px; margin: 16px 0 4px; font-size: 15px; }
+  .bc-feedback { font-size: 14px; margin: 10px 0 0; min-height: 1.2em; }
+  .bc-feedback .ok { color: var(--accent); }
+  .bc-feedback .bad { color: var(--danger); }
+  .bc-feedback .warn { color: var(--accent-2); }
+
   canvas { max-width: 100%; display: block; }
   .chartbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 14px 0; }
   .chart-hint { font-size: 13px; color: var(--muted); text-align: center; margin: 4px 0 0; }
@@ -132,7 +147,6 @@
   table.markers td.allele-0 { color: var(--muted); }
   table.markers td.pheno { color: var(--accent-2); font-weight: 600; border-left: 1px solid var(--line); }
   table.markers td.rowlab, table.markers th.rowlab { text-align: left; color: var(--muted); background: var(--panel-2); position: sticky; left: 0; }
-  table.markers col.hl, table.markers td.hlcol { background: rgba(242,109,91,.14); }
 
   /* parent cards */
   .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
@@ -149,15 +163,27 @@
   .marker-chip.yes { color: var(--accent); border-color: var(--accent); }
   .marker-chip.no { color: var(--danger); border-color: var(--danger); }
 
-  /* backcross log */
-  .bcgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 16px 0; }
-  .roundbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px; text-align: center; opacity: 0; transform: translateY(6px); transition: all .4s ease; }
-  .roundbox.show { opacity: 1; transform: none; }
-  .roundbox .rn { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-  .roundbox .big { font-size: 22px; font-weight: 700; margin: 6px 0 0; }
-  .roundbox .small { font-size: 12px; color: var(--muted); }
-  .roundbox.kept { border-color: var(--accent); }
-  .roundbox.lost { border-color: var(--danger); }
+  /* backcross breeding scheme */
+  .scheme { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+  .roundcard { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+               opacity: 0; transform: translateY(6px); transition: all .4s ease; }
+  .roundcard.show { opacity: 1; transform: none; }
+  .roundcard.kept { border-left: 3px solid var(--accent); }
+  .roundcard.lost { border-left: 3px solid var(--danger); }
+  .roundcard .rlabel { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 9px; }
+  .chain { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .pill { background: #0d1520; border: 1px solid var(--line); border-radius: 8px; padding: 6px 11px; font-size: 13px; white-space: nowrap; }
+  .pill.donor { border-color: var(--accent); }
+  .pill.elite { border-color: var(--accent-2); }
+  .pill.offspring { border-color: var(--accent-3); }
+  .pill.sel { border-color: var(--accent); background: rgba(76,195,138,.12); font-weight: 600; }
+  .pill.noselect { border-color: var(--danger); background: rgba(226,114,91,.10); }
+  .arrow { color: var(--muted); font-size: 16px; }
+  .times { color: var(--muted); font-weight: 700; font-size: 16px; }
+  .chain .res { margin-left: auto; font-size: 13px; color: var(--muted); }
+  .chain .res b.salt { color: var(--accent); }
+  .chain .res b.yield { color: var(--accent-2); }
+  @media (max-width: 640px) { .chain .res { margin-left: 0; width: 100%; } }
 
   .keyline { display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin-top:6px; }
   .keyline span { display:inline-flex; align-items:center; gap:6px; }
@@ -188,62 +214,52 @@
 <header class="hero">
   <div class="badge">EduXR · Plant Breeding</div>
   <h1>Marker Assisted Selection</h1>
-  <p>An interactive practical. No coding, no installing anything — just click, explore, and breed a better crop. Work through the steps from top to bottom.</p>
+  <p>An interactive practical. No coding, no installing anything. Just click, explore, and breed a better crop. Work through the steps from top to bottom.</p>
 </header>
 
 <div class="wrap">
 
   <!-- STEP 0 -->
   <section class="step">
-    <h2><span class="num">?</span> What are we doing here?</h2>
-    <p class="lead">Plant breeders want to combine good traits — like disease resistance or high yield — into one crop variety.</p>
-    <p>Traditionally you cross plants and keep the ones that <em>look</em> best. That's slow: some traits only appear late in life, and some are expensive to measure (you'd have to flood a field with salt water just to see which plants survive!).</p>
-    <p><strong>Genetic markers</strong> are a shortcut. A marker is a spot in the plant's DNA where individuals can differ. We simplify each marker to two values:</p>
+    <h2><span class="num">?</span> Some background before we start</h2>
+    <p class="lead">Plant breeders want to combine desirable traits (for example disease resistance, drought tolerance, or high yield) into a single crop variety.</p>
+    <p>Traditionally this is done by crossing plants and simply looking at which offspring <em>look</em> the best. This is called phenotypic selection. It is slow: some traits only show up late in a plant's life, and some are expensive or destructive to measure (you would have to expose a plant to salt stress just to see if it survives).</p>
+    <p><strong>Genetic markers</strong> offer a shortcut. A marker is a specific, measurable position in a plant's DNA where individuals can differ from one another. Here we simplify this to just two possible values, <b>0</b> and <b>1</b>, for every marker:</p>
     <div class="keyline">
-      <span><span class="dot" style="background:var(--muted)"></span> <b>0</b> = the plant does <b>not</b> carry this DNA variant</span>
-      <span><span class="dot" style="background:var(--accent)"></span> <b>1</b> = the plant <b>does</b> carry it</span>
+      <span><span class="dot" style="background:var(--muted)"></span> <b>0</b> = this plant does <b>not</b> carry a particular DNA variant at that position</span>
+      <span><span class="dot" style="background:var(--accent)"></span> <b>1</b> = this plant <b>does</b> carry that DNA variant</span>
     </div>
-    <p style="margin-top:14px">If a marker is reliably linked to a trait we care about, we can test a tiny leaf sample from a seedling instead of waiting months. That's <strong>marker assisted selection (MAS)</strong>. Below, you'll use it to make a high-yielding crop salt resistant — without losing its yield.</p>
+    <p style="margin-top:14px">If we know that a marker is reliably linked to a trait we care about, we can screen very young plants (often from a small leaf sample, days after germination) instead of waiting months. This is the core idea behind marker assisted selection. In this practical we will:</p>
+    <ol>
+      <li>Use a genome-wide association study (GWAS) to find a genetic marker associated with salt resistance.</li>
+      <li>Use that marker to cross a high-yielding but salt-sensitive crop with a salt-resistant one, making it more salt resistant while losing minimal yield.</li>
+    </ol>
   </section>
 
   <!-- STEP 1 -->
   <section class="step">
-    <h2><span class="num">1</span> Explore a diverse population</h2>
-    <p class="lead">To find <em>which</em> marker controls salt resistance, we first need plants that differ from each other — genetically and in the trait. If every plant were identical, we'd have nothing to compare.</p>
-    <p>Each <strong>row</strong> below is one plant. Each blue-ish <strong>column</strong> is a marker (a DNA position). The last two columns are the plant's measured traits (its <em>phenotype</em>).</p>
-    <div class="controls">
-      <label>Population size:
-        <input id="pop1-size" type="range" min="5" max="20" value="8" />
-        <b id="pop1-size-val">8</b> plants
-      </label>
-      <button id="pop1-reroll" class="secondary">🎲 New random sample</button>
-    </div>
+    <h2><span class="num">1</span> Explore a genetically diverse population</h2>
+    <p class="lead">We want to breed plants that are salt resistant, but also have a high yield. To study what makes plants salt resistant, we first need a population that is genetically diverse: the plants differ from one another at many marker positions, and also differ in the trait we care about.</p>
+    <p>This is essential: if every plant were genetically identical, we could never work out which marker is responsible for a trait, because there would be nothing to compare.</p>
     <div class="tablescroll" id="pop1-table"></div>
-    <p class="chart-hint">Scroll sideways to see all 50 markers. Notice how the trait values jump around from plant to plant.</p>
+    <p class="chart-hint">Scroll sideways to see all the markers.</p>
     <div class="callout q">
-      <strong>❓ Think about it</strong>
+      <strong>❓ Question</strong>
       <ul>
-        <li>What do the rows and columns represent?</li>
-        <li>Can you spot, just by eye, which single marker column lines up with high "Salt Resistance"? (Hard, right? That's why we need step 2.)</li>
+        <li>What do the rows and columns in the table above represent?</li>
       </ul>
     </div>
   </section>
 
   <!-- STEP 2 -->
   <section class="step">
-    <h2><span class="num">2</span> Find the marker with a GWAS</h2>
-    <p class="lead">A <strong>Genome-Wide Association Study (GWAS)</strong> tests every marker separately: do plants with a <b>1</b> here tend to have a different trait value than plants with a <b>0</b>?</p>
-    <p>Each test gives a <em>p-value</em> — small means the difference is unlikely to be pure chance. We plot <code>-log10(p-value)</code>, so tiny p-values become <b>tall bars</b>. The taller the bar, the stronger the evidence. Tall bars sticking up like a skyline give this a <strong>Manhattan plot</strong>.</p>
+    <h2><span class="num">2</span> Find markers associated with the trait (a GWAS)</h2>
+    <p class="lead">To find out which marker(s) are responsible for salt resistance, we run a <strong>Genome-Wide Association Study (GWAS)</strong>. A GWAS statistically tests, separately for each marker, whether plants with a <b>1</b> at that marker tend to have a different phenotype than plants with a <b>0</b>.</p>
+    <p>The result of each test is a <em>p-value</em>. A small p-value means it is unlikely that the difference we observe happened purely by chance, so it is more likely to reflect a real, biological effect. Because p-values can become extremely small, we usually plot <code>-log10(p-value)</code> instead: this turns tiny p-values into large, easy-to-compare bars. The higher the bar, the stronger the evidence that a marker is associated with the trait. This plot is called a <strong>Manhattan plot</strong>, because the tall bars resemble a city skyline.</p>
     <div class="controls">
-      <label>Trait:
-        <span class="toggle" id="gwas-trait">
-          <button data-t="salt" class="on">Salt Resistance</button>
-          <button data-t="yield">Yield</button>
-        </span>
-      </label>
       <label>Population size:
-        <input id="gwas-size" type="range" min="10" max="300" value="30" step="10" />
-        <b id="gwas-size-val">30</b> plants
+        <input id="gwas-size" type="range" min="3" max="100" value="3" step="1" />
+        <b id="gwas-size-val">3</b> plants
       </label>
     </div>
     <div class="chartbox">
@@ -251,47 +267,69 @@
       <p class="chart-hint">👆 Click a bar to inspect that marker below.</p>
     </div>
     <div id="scatter-wrap" style="display:none">
-      <h3>Marker <span id="scatter-marker">?</span> vs the trait</h3>
+      <h3>Relation between Marker <span id="scatter-marker">?</span> and Salt Resistance</h3>
       <div class="chartbox">
         <canvas id="scatter" height="260"></canvas>
         <p class="chart-hint" id="scatter-caption"></p>
       </div>
     </div>
     <div class="callout q">
-      <strong>❓ Try this</strong>
+      <strong>❓ Questions</strong>
       <ul>
-        <li>For <b>Salt Resistance</b>, which marker has the tallest bar? Click it — do the two groups (0 vs 1) really separate?</li>
-        <li>Drag the population-size slider up. What happens to the bars? (More data = more powerful statistics.)</li>
-        <li>Now switch the trait to <b>Yield</b>. Why does it look so different? (You'll come back to this in step 6.)</li>
+        <li>What does this plot show, and why does the population have to be genetically diverse for it to work?</li>
+        <li>Which marker do you think is most promising? Click its bar. Do the two groups (0 vs 1) separate in the scatter plot below?</li>
+        <li>Before you drag the slider: what do you expect will happen to the Manhattan plot as you add more and more plants? Predict first, then drag the slider up to 100 and check.
+          <details>
+            <summary>Show a hint</summary>
+            Statistical tests become more reliable (more <em>powerful</em>) the more data points you give them, so the evidence for a real marker gets stronger as the population grows.
+          </details>
+        </li>
       </ul>
     </div>
   </section>
 
   <!-- STEP 3 -->
   <section class="step">
-    <h2><span class="num">3</span> Meet the two parents</h2>
-    <p class="lead">We found the salt-resistance marker. Now we want to move it into a crop farmers actually grow. We start from two very different plants:</p>
+    <h2><span class="num">3</span> Introgress the marker into an elite variety</h2>
+    <p class="lead">Now that we have pinpointed a marker for salt resistance, we want to move that specific piece of DNA into a plant that farmers already grow: one with a high yield, but which lacks the marker. This process is called <strong>introgression</strong>: transferring a gene (or a small region of a chromosome) from one variety into another through repeated crossing and selection.</p>
+    <p>We use two starting populations:</p>
+    <ul>
+      <li>a <strong>resilient population</strong>: genetically diverse and carrying the salt-resistance marker. Think of it as a wild relative or old landrace: hardy, but usually a poor yielder.</li>
+      <li>an <strong>agricultural population</strong>: today's elite, high-yielding variety that farmers actually plant, but which lacks the salt-resistance marker.</li>
+    </ul>
     <div class="cards" id="parent-cards"></div>
     <div class="callout">
-      Notice the <strong>trade-off</strong>: the resilient donor survives salt but yields little; the elite variety yields a lot but dies in salt. Our goal for the rest of this practical: <strong>break that trade-off</strong> — keep the elite's yield <em>and</em> gain the donor's salt resistance.
+      Notice the <strong>trade-off</strong>: one plant is salt resistant but low-yielding, the other is high-yielding but salt sensitive. That trade-off is exactly what we are about to break, by combining the best of both.
     </div>
   </section>
 
   <!-- STEP 4 -->
   <section class="step">
     <h2><span class="num">4</span> Marker assisted backcrossing</h2>
-    <p class="lead">The trick: cross with the elite parent again and again (<em>backcrossing</em>), but each round keep <strong>only</strong> the offspring that still carry the salt-resistance marker. Over rounds, the plant becomes more and more like the elite variety — while never losing the one gene we care about.</p>
+    <p class="lead">Now it is your turn to run the breeding programme. <strong>Backcrossing</strong> means: take the population you are currently holding, cross it with one other population, then keep only some of the offspring based on a marker. The offspring you keep become the population you hold for the next round. Repeat for a few rounds.</p>
+    <p>You start out holding the <strong>resilient donor</strong>. Each round, <em>you</em> decide which population to cross it with, and which marker (and allele) to keep the offspring on. Use what you found in steps 2 and 3. After each round, watch the scheme and the graph to see how salt resistance and yield change.</p>
+    <div class="bc-current" id="bc-current">You are holding: <b>🌾 Resilient donor</b></div>
     <div class="controls">
-      <label>Selection strategy:
-        <span class="toggle" id="bc-mode">
-          <button data-m="marker" class="on">✅ Select on marker (MAS)</button>
-          <button data-m="none">❌ No selection</button>
-        </span>
+      <label>Cross it with:
+        <select id="bc-partner">
+          <option value="elite">🚜 Elite (agricultural) variety</option>
+          <option value="donor">🌾 Resilient donor</option>
+          <option value="self">🧪 My current population</option>
+        </select>
       </label>
-      <button id="bc-run">▶ Run breeding programme</button>
-      <button id="bc-reset" class="secondary">Reset</button>
+      <label>Then keep offspring where Marker
+        <input id="bc-marker" type="number" min="0" max="49" placeholder="?" style="width:64px" />
+        <select id="bc-allele">
+          <option value="1">= 1</option>
+          <option value="0">= 0</option>
+          <option value="none">don't filter (keep all)</option>
+        </select>
+      </label>
+      <button id="bc-do">▶ Do this round</button>
+      <button id="bc-reset" class="secondary">↺ Start over</button>
     </div>
-    <div class="bcgrid" id="bc-grid"></div>
+    <p id="bc-feedback" class="bc-feedback"></p>
+    <div class="scheme" id="bc-scheme"></div>
     <div class="chartbox">
       <canvas id="bc-chart" height="280"></canvas>
       <div class="keyline" style="justify-content:center;margin-top:8px">
@@ -300,27 +338,37 @@
         <span><span class="dot" style="background:var(--muted)"></span> elite target yield</span>
       </div>
     </div>
-    <p id="bc-verdict" class="chart-hint"></p>
     <div class="callout q">
-      <strong>❓ Compare the two strategies</strong>
+      <strong>❓ Questions</strong>
       <ul>
-        <li>Run it with <b>Select on marker</b>. Does salt resistance stay high while yield climbs back up toward the elite level?</li>
-        <li>Now switch to <b>No selection</b> and run again. What happens to salt resistance? Why?</li>
-        <li>Why do we keep crossing back to the <em>elite</em> parent, not the donor?</li>
+        <li>Which population should you cross back to each round, and which marker and allele should you keep? Why those choices?</li>
+        <li>What is the advantage of selecting each population based on a marker, rather than on how the plant looks?</li>
+        <li>How can you tell from the graph whether the breeding was successful?</li>
+        <li>Try a few rounds where you choose "don't filter (keep all)". What happens to salt resistance, and why?</li>
       </ul>
     </div>
   </section>
 
   <!-- STEP 5 -->
   <section class="step">
-    <h2><span class="num">5</span> Why yield is harder: polygenic traits</h2>
-    <p class="lead">Salt resistance here is controlled by essentially <strong>one</strong> marker (a <em>monogenic</em> trait) — easy for MAS. Yield is <strong>polygenic</strong>: many genes each add a little.</p>
-    <p>Go back to <a href="#" onclick="document.getElementById('manhattan').scrollIntoView({behavior:'smooth',block:'center'});return false;">the Manhattan plot in step 2</a> and switch the trait to <b>Yield</b>. Instead of one giant bar, you see <em>many</em> medium bars. There's no single marker to select on — which is exactly why breeders needed a different method: <strong>genomic selection</strong> (that's the next practical).</p>
+    <h2><span class="num">5</span> Marker assisted selection for another trait: yield</h2>
+    <p class="lead">So far we selected for salt resistance. Now let's run exactly the same GWAS approach for <strong>yield</strong> and see what we find. As before, drag the slider to grow the population, then investigate the Manhattan plot yourself.</p>
+    <div class="controls">
+      <label>Population size:
+        <input id="gwas-yield-size" type="range" min="3" max="100" value="3" step="1" />
+        <b id="gwas-yield-size-val">3</b> plants
+      </label>
+    </div>
+    <div class="chartbox">
+      <canvas id="manhattan-yield" height="300"></canvas>
+      <p class="chart-hint">Manhattan plot for Yield, instead of Salt Resistance.</p>
+    </div>
     <div class="callout q">
-      <strong>❓ Wrap-up</strong>
+      <strong>❓ Questions</strong>
       <ul>
-        <li>How is the yield Manhattan plot different from the salt one?</li>
-        <li>What does that mean for whether MAS will work well?</li>
+        <li>Grow the population to a large size. How does this Manhattan plot compare to the one you made for salt resistance in step 2?</li>
+        <li>Does yield look like it is controlled by a single marker, or by many? What is your evidence from the plot?</li>
+        <li>What would that mean for marker assisted selection of yield? (In the next practical you will meet a method built for exactly this situation: genomic selection.)</li>
       </ul>
     </div>
   </section>
@@ -497,20 +545,17 @@ const col = n => CSS.getPropertyValue(n).trim();
 /* ============================================================
    STEP 1 — marker table
    ============================================================ */
-const pop1 = { size: 8, seed: 421 };
+const pop1 = { size: 10, seed: 421 };
 function renderPop1(){
   const rows = naturalPopulation(pop1.size, pop1.seed);
   const rng = mulberry32(pop1.seed + 7);
-  let html = '<table class="markers"><colgroup>';
-  html += '<col/>';
-  for (let m=0;m<N_MARKERS;m++) html += `<col class="${m===SALT_MARKER?'hl':''}"/>`;
-  html += '<col/><col/></colgroup><thead><tr><th class="rowlab">Plant</th>';
-  for (let m=0;m<N_MARKERS;m++) html += `<th class="${m===SALT_MARKER?'hlcol':''}">M${m}</th>`;
+  let html = '<table class="markers"><thead><tr><th class="rowlab">Plant</th>';
+  for (let m=0;m<N_MARKERS;m++) html += `<th>M${m}</th>`;
   html += '<th>Salt&nbsp;Res.</th><th>Yield</th></tr></thead><tbody>';
   rows.forEach((r,i)=>{
     html += `<tr><td class="rowlab">#${i+1}</td>`;
     r.forEach((v,m)=>{
-      html += `<td class="allele-${v} ${m===SALT_MARKER?'hlcol':''}">${v}</td>`;
+      html += `<td class="allele-${v}">${v}</td>`;
     });
     html += `<td class="pheno">${saltResistance(r,rng).toFixed(0)}</td>`;
     html += `<td class="pheno">${yieldOf(r,rng).toFixed(1)}</td>`;
@@ -519,24 +564,15 @@ function renderPop1(){
   html += '</tbody></table>';
   document.getElementById('pop1-table').innerHTML = html;
 }
-document.getElementById('pop1-size').addEventListener('input', e=>{
-  pop1.size = +e.target.value;
-  document.getElementById('pop1-size-val').textContent = pop1.size;
-  renderPop1();
-});
-document.getElementById('pop1-reroll').addEventListener('click', ()=>{
-  pop1.seed = Math.floor(Math.random()*100000);
-  renderPop1();
-});
 
 /* ============================================================
    STEP 2 — Manhattan + scatter
    ============================================================ */
-const gwas = { trait: 'salt', size: 30, seed: 421, selected: null };
-function buildGwasData(){
-  const rows = naturalPopulation(gwas.size, gwas.seed);
+const gwas = { size: 3, seed: 421, selected: null };
+function buildGwasData(trait, size){
+  const rows = naturalPopulation(size, gwas.seed);
   const rng = mulberry32(gwas.seed + 7);
-  const pheno = rows.map(r => gwas.trait==='salt' ? saltResistance(r,rng) : yieldOf(r,rng));
+  const pheno = rows.map(r => trait==='salt' ? saltResistance(r,rng) : yieldOf(r,rng));
   const negLogP = [];
   for (let m=0;m<N_MARKERS;m++){
     const colv = rows.map(r=>r[m]);
@@ -546,14 +582,20 @@ function buildGwasData(){
   }
   return { rows, pheno, negLogP };
 }
-let gwasCache = null;
+let gwasCache = null;   // salt data, kept for the scatter plot
 function renderManhattan(){
-  gwasCache = buildGwasData();
-  const canvas = document.getElementById('manhattan');
+  gwasCache = buildGwasData('salt', gwas.size);
+  drawManhattan(document.getElementById('manhattan'), gwasCache.negLogP, 'salt', gwas.selected);
+}
+const gwasYield = { size: 3 };
+function renderYieldManhattan(){
+  const d = buildGwasData('yield', gwasYield.size);
+  drawManhattan(document.getElementById('manhattan-yield'), d.negLogP, 'yield', null);
+}
+function drawManhattan(canvas, data, trait, selected){
   const {ctx, W, H} = setupCanvas(canvas, 300);
   const padL=46, padR=12, padT=18, padB=34;
   const plotW = W-padL-padR, plotH = H-padT-padB;
-  const data = gwasCache.negLogP;
   let maxY = Math.max(5, ...data.filter(v=>isFinite(v)));
   maxY = Math.ceil(maxY/2)*2;
   const bw = plotW/N_MARKERS;
@@ -578,11 +620,11 @@ function renderManhattan(){
   data.forEach((v,m)=>{
     const h = Math.min(v/maxY,1)*plotH;
     const x = padL + m*bw;
-    const isHot = m===SALT_MARKER && gwas.trait==='salt';
-    const isSel = m===gwas.selected;
+    const isHot = m===SALT_MARKER && trait==='salt';
+    const isSel = m===selected;
     ctx.fillStyle = isSel ? col('--accent-3')
                   : isHot ? col('--highlight')
-                  : (gwas.trait==='salt' ? 'rgba(91,155,213,.55)' : 'rgba(242,193,78,.7)');
+                  : (trait==='salt' ? 'rgba(91,155,213,.55)' : 'rgba(242,193,78,.7)');
     ctx.fillRect(x+bw*0.15, padT+plotH-h, bw*0.7, h);
   });
   // x labels (sparse)
@@ -648,28 +690,26 @@ function renderScatter(m){
   ctx.fillText('(black line = group average)', padL+plotW/2, padT+plotH+24);
   // y title
   ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
-  ctx.fillText(gwas.trait==='salt'?'Salt resistance':'Yield',0,0); ctx.restore();
+  ctx.fillText('Salt resistance',0,0); ctx.restore();
 
   const r = pearson(xs, ys);
   const p = corrPValue(r, xs.length);
   const cap = document.getElementById('scatter-caption');
   const strong = p < 0.001;
-  cap.innerHTML = `p-value ≈ <b>${p<1e-4 ? p.toExponential(1) : p.toFixed(4)}</b> — ` +
-    (strong ? 'the two groups clearly separate: this marker <b>is</b> linked to the trait.'
-            : 'the two clouds overlap a lot: little evidence this marker matters.');
+  cap.innerHTML = `p-value ≈ <b>${p<1e-4 ? p.toExponential(1) : p.toFixed(4)}</b>. ` +
+    (strong ? 'The two groups clearly separate, so this marker <b>is</b> linked to the trait.'
+            : 'The two clouds overlap a lot, so there is little evidence this marker matters.');
 }
-document.getElementById('gwas-trait').addEventListener('click', e=>{
-  const b = e.target.closest('button'); if(!b) return;
-  gwas.trait = b.dataset.t; gwas.selected=null;
-  document.querySelectorAll('#gwas-trait button').forEach(x=>x.classList.toggle('on', x===b));
-  document.getElementById('scatter-wrap').style.display='none';
-  renderManhattan();
-});
 document.getElementById('gwas-size').addEventListener('input', e=>{
   gwas.size=+e.target.value;
   document.getElementById('gwas-size-val').textContent=gwas.size;
   renderManhattan();
   if (gwas.selected!=null) renderScatter(gwas.selected);
+});
+document.getElementById('gwas-yield-size').addEventListener('input', e=>{
+  gwasYield.size=+e.target.value;
+  document.getElementById('gwas-yield-size-val').textContent=gwasYield.size;
+  renderYieldManhattan();
 });
 
 /* ============================================================
@@ -711,74 +751,129 @@ function renderParents(){
 /* ============================================================
    STEP 4 — backcrossing simulator
    ============================================================ */
-const bc = { mode:'marker' };
-function runBackcross(){
-  const grid = document.getElementById('bc-grid');
-  grid.innerHTML='';
-  const rng = mulberry32(102);
-  const rounds = [];
-  // Start: a small population from donor x elite
-  let pop = [];
-  for (let i=0;i<20;i++) pop.push(crossRows(donorRow, eliteRow, rng));
+const BC_POP = 20;
+const bcState = { current: null, currentLabel: '', currentClass: '', rounds: [], rng: null };
 
-  const N_ROUNDS = 4;
-  for (let round=0; round<=N_ROUNDS; round++){
-    if (round>0){
-      // backcross whole population to elite
-      const next=[];
-      for (let i=0;i<20;i++){
-        const parent = pop[Math.floor(rng()*pop.length)];
-        next.push(crossRows(parent, eliteRow, rng));
-      }
-      pop = next;
-    }
-    // selection
-    let selected = pop;
-    if (bc.mode==='marker'){
-      selected = pop.filter(r=>r[SALT_MARKER]===1);
-      if (selected.length===0) selected=pop; // safety
-    }
-    // average phenotype of the selected group
-    let s=0,y=0, frac=0;
-    selected.forEach(r=>{
-      s+=saltResistance(r,rng); y+=yieldOf(r,rng);
-      frac += r[SALT_MARKER];
-    });
-    s/=selected.length; y/=selected.length; frac/=selected.length;
-    rounds.push({ round, salt:s, yield:y, markerFrac:frac, kept: frac>0.5 });
-    pop = selected;
+// cross two populations (each an array of marker rows): sample one parent from each per offspring
+function crossPopulations(rowsA, rowsB, n, rng){
+  const out=[];
+  for (let i=0;i<n;i++){
+    const a = rowsA[Math.floor(rng()*rowsA.length)];
+    const b = rowsB[Math.floor(rng()*rowsB.length)];
+    out.push(crossRows(a,b,rng));
   }
-  renderBcResults(rounds);
+  return out;
 }
-function renderBcResults(rounds){
-  const grid = document.getElementById('bc-grid');
-  grid.innerHTML='';
-  rounds.forEach((r,i)=>{
-    const box=document.createElement('div');
-    box.className='roundbox '+(r.kept?'kept':'lost');
-    box.innerHTML = `<div class="rn">${r.round===0?'F1 cross':'Backcross '+r.round}</div>
-      <div class="big">${r.yield.toFixed(1)}</div><div class="small">yield</div>
-      <div class="big" style="color:var(--accent);font-size:18px">${r.salt.toFixed(0)}%</div>
-      <div class="small">salt res.</div>`;
-    grid.appendChild(box);
-    setTimeout(()=>box.classList.add('show'), i*260);
-  });
-  setTimeout(()=>renderBcChart(rounds), rounds.length*260);
-  // verdict
-  const last = rounds[rounds.length-1];
-  const eliteYield = avgPhenotype(eliteRow).yield;
-  const v = document.getElementById('bc-verdict');
-  if (bc.mode==='marker'){
-    v.innerHTML = `✅ <b>Success.</b> After ${rounds.length-1} backcrosses, yield recovered to <b>${last.yield.toFixed(1)}</b> ` +
-      `(elite ≈ ${eliteYield.toFixed(1)}) while salt resistance stayed high at <b>${last.salt.toFixed(0)}%</b>. ` +
-      `We broke the trade-off!`;
-  } else {
-    v.innerHTML = `⚠️ Without marker selection, salt resistance drifted to <b>${last.salt.toFixed(0)}%</b> — ` +
-      `most offspring lost the donor's salt gene by chance, because backcrossing keeps diluting it. ` +
-      `Yield came back, but we lost what we set out to add.`;
+function bcSetFeedback(html){ document.getElementById('bc-feedback').innerHTML = html; }
+function bcPlaceholderChart(){
+  const {ctx,W,H}=setupCanvas(document.getElementById('bc-chart'),280);
+  ctx.fillStyle=col('--muted'); ctx.textAlign='center'; ctx.font='13px system-ui';
+  ctx.fillText('Choose a cross and a filter, then press "Do this round".', W/2, H/2);
+}
+function bcReset(){
+  bcState.current = [donorRow];
+  bcState.currentLabel = '🌾 Resilient donor';
+  bcState.currentClass = 'donor';
+  bcState.rounds = [];
+  bcState.rng = mulberry32(102);
+  document.getElementById('bc-current').innerHTML = 'You are holding: <b>🌾 Resilient donor</b>';
+  document.getElementById('bc-scheme').innerHTML = '';
+  bcSetFeedback('');
+  bcPlaceholderChart();
+}
+function bcDoRound(){
+  const partner = document.getElementById('bc-partner').value;   // elite | donor | self
+  const alleleSel = document.getElementById('bc-allele').value;  // 1 | 0 | none
+  const markerRaw = document.getElementById('bc-marker').value;
+  let markerIdx = null;
+  if (alleleSel !== 'none'){
+    markerIdx = parseInt(markerRaw,10);
+    if (isNaN(markerIdx) || markerIdx<0 || markerIdx>49){
+      bcSetFeedback('<span class="bad">Enter a marker number between 0 and 49, or choose "don\'t filter".</span>');
+      return;
+    }
   }
+  const rng = bcState.rng;
+  let partnerRows, partnerLabel, partnerClass;
+  if (partner==='elite'){ partnerRows=[eliteRow]; partnerLabel='🚜 Elite variety'; partnerClass='elite'; }
+  else if (partner==='donor'){ partnerRows=[donorRow]; partnerLabel='🌾 Resilient donor'; partnerClass='donor'; }
+  else { partnerRows=bcState.current; partnerLabel='🧪 itself'; partnerClass='sel'; }
+
+  const offspring = crossPopulations(bcState.current, partnerRows, BC_POP, rng);
+  const totalN = offspring.length;
+
+  let kept, keptN, didFilter=false, filterLabel;
+  if (alleleSel==='none'){
+    kept = offspring; keptN=totalN; filterLabel='No selection: keep all '+totalN;
+  } else {
+    const allele = parseInt(alleleSel,10);
+    didFilter=true;
+    kept = offspring.filter(r=>r[markerIdx]===allele);
+    if (kept.length===0) kept = offspring;   // safety: nothing matched
+    keptN = kept.length;
+    filterLabel = `Keep M${markerIdx} = ${allele}: kept ${keptN} of ${totalN}`;
+  }
+
+  let s=0,y=0,frac=0;
+  kept.forEach(r=>{ s+=saltResistance(r,rng); y+=yieldOf(r,rng); frac+=r[SALT_MARKER]; });
+  s/=kept.length; y/=kept.length; frac/=kept.length;
+
+  const round = {
+    idx: bcState.rounds.length,
+    leftLabel: bcState.currentLabel, leftClass: bcState.currentClass,
+    partnerLabel, partnerClass, totalN, filterLabel, didFilter,
+    salt:s, yield:y, kept: frac>0.5
+  };
+  bcState.rounds.push(round);
+
+  bcState.current = kept;
+  bcState.currentLabel = didFilter ? `Selected plants (M${markerIdx} = ${alleleSel})` : 'Offspring (unfiltered)';
+  bcState.currentClass = didFilter ? 'sel' : 'offspring';
+  document.getElementById('bc-current').innerHTML =
+    `You are holding: <b>${bcState.currentLabel}</b> from round ${round.idx+1}`;
+
+  renderBcScheme();
+  renderBcChart(bcState.rounds);
+  bcFeedback(partner, markerIdx, alleleSel);
+}
+function bcFeedback(partner, markerIdx, alleleSel){
+  const parts=[];
+  if (partner==='elite')      parts.push('<span class="ok">✓ Backcrossing to the elite variety recovers its high-yield genome.</span>');
+  else if (partner==='donor') parts.push('<span class="bad">✗ Crossing back to the donor moves you away from the elite\'s high yield.</span>');
+  else                        parts.push('<span class="bad">✗ Crossing the population with itself makes no progress toward the elite variety.</span>');
+
+  if (alleleSel==='none')                                    parts.push('<span class="warn">⚠ Without selecting, the salt-resistance allele can be lost by chance as you keep crossing.</span>');
+  else if (markerIdx===SALT_MARKER && alleleSel==='1')       parts.push('<span class="ok">✓ Keeping Marker 12 = 1 preserves the salt-resistance allele.</span>');
+  else if (markerIdx===SALT_MARKER && alleleSel==='0')       parts.push('<span class="bad">✗ Keeping Marker 12 = 0 throws the salt-resistance allele away.</span>');
+  else                                                       parts.push(`<span class="bad">✗ Marker ${markerIdx} is not the salt-resistance marker, so selecting on it does not protect salt resistance.</span>`);
+
+  bcSetFeedback(parts.join('<br>'));
+}
+function renderBcScheme(){
+  const scheme = document.getElementById('bc-scheme');
+  scheme.innerHTML='';
+  bcState.rounds.forEach((r)=>{
+    const card=document.createElement('div');
+    card.className='roundcard show '+(r.kept?'kept':'lost');
+    const filterPill = r.didFilter
+      ? `<span class="arrow">→</span><span class="pill sel">${r.filterLabel}</span>`
+      : `<span class="arrow">→</span><span class="pill noselect">${r.filterLabel}</span>`;
+    card.innerHTML =
+      `<div class="rlabel">Round ${r.idx+1}</div>
+       <div class="chain">
+         <span class="pill ${r.leftClass}">${r.leftLabel}</span>
+         <span class="times">×</span>
+         <span class="pill ${r.partnerClass}">${r.partnerLabel}</span>
+         <span class="arrow">→</span>
+         <span class="pill offspring">${r.totalN} offspring</span>
+         ${filterPill}
+         <span class="res">Salt <b class="salt">${r.salt.toFixed(0)}%</b> · Yield <b class="yield">${r.yield.toFixed(1)}</b></span>
+       </div>`;
+    scheme.appendChild(card);
+  });
 }
 function renderBcChart(rounds){
+  if (!rounds || rounds.length===0){ bcPlaceholderChart(); return; }
   const canvas = document.getElementById('bc-chart');
   const {ctx, W, H} = setupCanvas(canvas, 280);
   const padL=44, padR=44, padT=18, padB=34;
@@ -809,69 +904,58 @@ function renderBcChart(rounds){
 
   // axis labels
   ctx.fillStyle=col('--muted'); ctx.font='11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='top';
-  rounds.forEach((r,i)=> ctx.fillText(r.round===0?'F1':'BC'+r.round, xAt(i), padT+plotH+8));
+  rounds.forEach((r,i)=> ctx.fillText('R'+(i+1), xAt(i), padT+plotH+8));
   ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
   ctx.fillStyle=col('--accent'); ctx.fillText('salt resistance %',0,0); ctx.restore();
   ctx.save(); ctx.translate(W-12,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
   ctx.fillStyle=col('--accent-2'); ctx.fillText('yield',0,0); ctx.restore();
 }
-document.getElementById('bc-mode').addEventListener('click', e=>{
-  const b=e.target.closest('button'); if(!b) return;
-  bc.mode=b.dataset.m;
-  document.querySelectorAll('#bc-mode button').forEach(x=>x.classList.toggle('on', x===b));
-});
-document.getElementById('bc-run').addEventListener('click', runBackcross);
-document.getElementById('bc-reset').addEventListener('click', ()=>{
-  document.getElementById('bc-grid').innerHTML='';
-  document.getElementById('bc-verdict').innerHTML='';
-  const {ctx,W,H}=setupCanvas(document.getElementById('bc-chart'),280);
-  ctx.fillStyle=col('--muted'); ctx.textAlign='center'; ctx.font='13px system-ui';
-  ctx.fillText('Press "Run breeding programme" to start.', W/2, H/2);
-});
+document.getElementById('bc-do').addEventListener('click', bcDoRound);
+document.getElementById('bc-reset').addEventListener('click', bcReset);
 
 /* ============================================================
    QUIZ
    ============================================================ */
 const QUIZ = [
   {
-    q: "Why does the population have to be genetically diverse for a GWAS to work?",
+    q: "Why does a population have to be genetically diverse for a GWAS to work?",
     opts: [
-      "If all plants were identical, there'd be no differences to link to the trait.",
-      "Diverse plants grow faster.",
-      "It makes the DNA test cheaper.",
+      "Genetically uniform plants germinate and grow faster in field trials.",
+      "With no variation between plants, there are no groups to compare.",
+      "A diverse population makes the genotyping test cheaper to run.",
     ],
-    correct: 0,
-    why: "A GWAS compares plants with a 0 vs a 1 at each marker. With no variation, there are no two groups to compare."
+    correct: 1,
+    why: "A GWAS compares plants with a 0 versus a 1 at each marker. With no variation there are simply no two groups to compare."
   },
   {
     q: "A tall bar in a Manhattan plot means…",
     opts: [
-      "That marker is very common in the population.",
-      "Strong statistical evidence that the marker is associated with the trait (small p-value).",
-      "That marker has the most DNA letters.",
-    ],
-    correct: 1,
-    why: "The bar height is -log10(p-value): tiny p-values (strong evidence) become tall bars."
-  },
-  {
-    q: "In marker assisted backcrossing, why do we keep crossing back to the elite variety?",
-    opts: [
-      "To slowly recover the elite's high-yield genome while keeping the one salt gene.",
-      "Because the elite variety makes more seeds.",
-      "To add even more salt-resistance genes each round.",
+      "There is strong evidence the marker is linked to the trait.",
+      "The marker appears very frequently across the population.",
+      "The marker sits at the far end of its chromosome.",
     ],
     correct: 0,
-    why: "Each backcross replaces more of the donor's genome with the elite's, restoring yield; marker selection guards the salt gene."
+    why: "The bar height is -log10(p-value), so a tiny p-value (strong evidence) becomes a tall bar."
   },
   {
-    q: "Why is MAS much harder for yield than for salt resistance here?",
+    q: "In marker assisted backcrossing, why cross back to the elite variety each round?",
     opts: [
-      "Yield can't be measured.",
-      "Yield is polygenic — many markers each with a small effect, so there's no single one to select on.",
-      "Yield markers are on a different chromosome.",
+      "Because the elite variety produces many more seeds per plant.",
+      "To keep adding extra salt-resistance genes with every cross.",
+      "To recover the elite's high yield while keeping the salt gene.",
     ],
-    correct: 1,
-    why: "The yield Manhattan plot shows many medium bars instead of one tall one — that's what 'polygenic' looks like."
+    correct: 2,
+    why: "Each backcross replaces more of the donor's genome with the elite's, restoring yield; the marker guards the salt gene."
+  },
+  {
+    q: "Yield turned out to be much harder for MAS than salt resistance. Why?",
+    opts: [
+      "Its effect is spread across many markers, not just one.",
+      "Yield simply cannot be measured accurately in the field.",
+      "The markers controlling yield all lie on one chromosome.",
+    ],
+    correct: 0,
+    why: "Yield is polygenic: its Manhattan plot shows many medium bars rather than one tall one, so there is no single marker to select on."
   },
 ];
 function renderQuiz(){
@@ -902,7 +986,8 @@ function initAll(){
   renderPop1();
   renderManhattan();
   renderParents();
-  document.getElementById('bc-reset').click();
+  bcReset();
+  renderYieldManhattan();
   renderQuiz();
 }
 initAll();
@@ -912,7 +997,8 @@ window.addEventListener('resize', ()=>{
   rz=setTimeout(()=>{
     renderManhattan();
     if(gwas.selected!=null) renderScatter(gwas.selected);
-    document.getElementById('bc-reset').click();
+    renderBcChart(bcState.rounds);   // redraw without wiping the student's rounds
+    renderYieldManhattan();
   },200);
 });
 </script>
