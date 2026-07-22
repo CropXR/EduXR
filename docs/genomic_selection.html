@@ -270,15 +270,20 @@
   <!-- STEP 5 -->
   <section class="step">
     <h2><span class="num">5</span> Check how good the predictions are</h2>
-    <p class="lead">Before we trust the model to guide our breeding, we should check how well it actually predicts yield. We let the model predict the yield of the same plants it was trained on, and compare its predictions against the real, measured yields. If the model were perfect, every point would lie exactly on the red diagonal line.</p>
+    <p class="lead">Before we trust the model to guide our breeding, we should check how well it actually predicts yield. The fair test is to use <strong>10 new plants that the model was never trained on</strong>: we ask the model to predict their yield from their markers alone, then compare its predictions against their real, measured yields. If the model were perfect, every point would lie exactly on the red diagonal line.</p>
     <div class="chartbox">
       <canvas id="pva" height="320"></canvas>
+      <div class="keyline" style="justify-content:center;margin-top:8px">
+        <span><span class="dot" style="background:var(--accent-3)"></span> training plants (model has seen these)</span>
+        <span><span class="dot" style="background:var(--accent-2)"></span> 10 new test plants (model never saw these)</span>
+      </div>
       <p class="chart-hint" id="pva-caption"></p>
     </div>
     <div class="callout q">
-      <strong>❓ Question</strong>
+      <strong>❓ Questions</strong>
       <ul>
         <li>The points cluster around the diagonal but do not sit exactly on it. Why can the model not perfectly predict the phenotype?</li>
+        <li>Does the model still predict reasonably well on the 10 plants it was never trained on? Why does testing on unseen plants matter?</li>
       </ul>
     </div>
   </section>
@@ -323,8 +328,7 @@
   </section>
 
   <footer>
-    Built for the EduXR plant-breeding minor · a no-code companion to the genomic-selection practical.<br/>
-    Some code and explanations were drafted with the help of Claude Code.
+    This HTML and JavaScript was created with the help of Claude Code, based on the original Jupyter notebooks.
   </footer>
 </div>
 
@@ -548,6 +552,7 @@ const col = n => CSS.getPropertyValue(n).trim();
    Shared training population + model
    ============================================================ */
 const TRAIN_SEED = 421;
+const TEST_SEED = 8675;   // held-out plants for step 5, disjoint from training
 let gsModel = null, trainRows = null, trainY = null;
 function trainModel(size){
   trainRows = naturalPopulation(size, TRAIN_SEED);
@@ -682,11 +687,11 @@ function renderWeights(){
 /* ============================================================
    STEP 5 — predicted vs actual scatter
    ============================================================ */
-function drawPredVsActual(canvas, actual, pred){
+function drawPredVsActual(canvas, trainA, trainP, testA, testP){
   const {ctx,W,H}=setupCanvas(canvas,320);
   const padL=52,padR=16,padT=16,padB=46;
   const plotW=W-padL-padR, plotH=H-padT-padB;
-  const all=actual.concat(pred);
+  const all=trainA.concat(trainP, testA, testP);
   let lo=Math.min(...all), hi=Math.max(...all);
   const pad=(hi-lo)*0.08||1; lo-=pad; hi+=pad;
   const sx=v=>padL+((v-lo)/(hi-lo))*plotW;
@@ -697,8 +702,15 @@ function drawPredVsActual(canvas, actual, pred){
   ctx.strokeStyle=col('--danger'); ctx.setLineDash([5,4]); ctx.beginPath();
   ctx.moveTo(sx(lo),sy(lo)); ctx.lineTo(sx(hi),sy(hi)); ctx.stroke(); ctx.setLineDash([]);
 
-  ctx.fillStyle='rgba(91,155,213,.8)';
-  for (let i=0;i<actual.length;i++){ ctx.beginPath(); ctx.arc(sx(pred[i]),sy(actual[i]),4,0,2*Math.PI); ctx.fill(); }
+  // training plants (faded blue) — the model has seen these
+  ctx.fillStyle='rgba(91,155,213,.5)';
+  for (let i=0;i<trainA.length;i++){ ctx.beginPath(); ctx.arc(sx(trainP[i]),sy(trainA[i]),3.5,0,2*Math.PI); ctx.fill(); }
+  // held-out test plants (yellow, outlined) — the model never saw these
+  for (let i=0;i<testA.length;i++){
+    ctx.beginPath(); ctx.arc(sx(testP[i]),sy(testA[i]),5,0,2*Math.PI);
+    ctx.fillStyle='rgba(242,193,78,.9)'; ctx.fill();
+    ctx.lineWidth=1.5; ctx.strokeStyle='#06281b'; ctx.stroke();
+  }
 
   ctx.fillStyle=col('--muted'); ctx.font='11px system-ui';
   ctx.textAlign='center'; ctx.textBaseline='top';
@@ -711,11 +723,16 @@ function drawPredVsActual(canvas, actual, pred){
   ctx.textAlign='center'; ctx.fillText('actual yield',0,0); ctx.restore();
 }
 function renderPva(){
-  const pred = trainRows.map(r=>gebv(r,gsModel));
-  drawPredVsActual(document.getElementById('pva'), trainY, pred);
-  const r = pearson(trainY, pred);
+  const trainPred = trainRows.map(r=>gebv(r,gsModel));
+  // 10 held-out plants the model was never trained on (seed differs from TRAIN_SEED)
+  const testRows = naturalPopulation(10, TEST_SEED);
+  const testRng = mulberry32(TEST_SEED + 7);
+  const testY = testRows.map(r=>yieldOf(r,testRng));
+  const testPred = testRows.map(r=>gebv(r,gsModel));
+  drawPredVsActual(document.getElementById('pva'), trainY, trainPred, testY, testPred);
+  const rTest = pearson(testY, testPred);
   document.getElementById('pva-caption').innerHTML =
-    `Correlation between predicted and actual yield: <b>${r.toFixed(2)}</b>. The closer to 1, the better the model tracks reality.`;
+    `Correlation between predicted and actual yield on the <b>10 unseen test plants</b>: <b>${rTest.toFixed(2)}</b>. The closer to 1, the better the model predicts plants it has never seen.`;
 }
 
 /* ============================================================
