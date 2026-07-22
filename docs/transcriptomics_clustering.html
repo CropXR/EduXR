@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Transcriptomics &amp; Clustering</title>
+<style>
+  :root {
+    --bg: #0f1720;
+    --panel: #172230;
+    --panel-2: #1e2c3d;
+    --ink: #e9eef5;
+    --muted: #9fb0c3;
+    --line: #2c3e54;
+    --accent: #4cc38a;
+    --accent-2: #f2c14e;
+    --accent-3: #5b9bd5;
+    --danger: #e2725b;
+    --radius: 14px;
+    --shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1b2a3d 0%, var(--bg) 55%);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+
+  header.hero { padding: 56px 20px 40px; text-align: center; max-width: 900px; margin: 0 auto; }
+  header.hero .badge {
+    display: inline-block; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; margin-bottom: 18px;
+  }
+  header.hero h1 { font-size: clamp(28px, 5vw, 46px); margin: 0 0 12px; line-height: 1.15; }
+  header.hero p { color: var(--muted); font-size: 18px; max-width: 680px; margin: 0 auto; }
+  header.hero .nav { margin-top: 16px; font-size: 15px; }
+
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .step { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+          box-shadow: var(--shadow); padding: 26px 28px; margin: 26px 0; }
+  .step h2 { margin: 0 0 6px; font-size: 24px; display: flex; align-items: center; gap: 12px; }
+  .step h2 .num { flex: none; width: 34px; height: 34px; display: grid; place-items: center;
+                  background: var(--accent); color: #06281b; border-radius: 10px; font-size: 17px; font-weight: 700; }
+  .step .lead { color: var(--ink); margin-top: 0; }
+  .step h3 { margin: 22px 0 8px; font-size: 17px; color: var(--ink); }
+
+  .callout { border-left: 3px solid var(--accent-3); background: var(--panel-2); padding: 12px 16px;
+             border-radius: 8px; margin: 16px 0; color: var(--muted); }
+  .callout.q { border-left-color: var(--accent-2); }
+  .callout.q strong { color: var(--accent-2); }
+  .callout ul { margin: 8px 0 0; padding-left: 20px; }
+  .callout li { margin: 4px 0; }
+  .callout details { margin-top: 10px; }
+  .callout details summary { cursor: pointer; color: var(--accent-3); font-size: 13px; width: fit-content; font-weight: 600; }
+  .callout details[open] summary { margin-bottom: 6px; }
+  .callout details > :not(summary) { font-size: 13px; }
+  .callout.info { border-left-color: var(--accent); color: var(--ink); }
+
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin: 18px 0; }
+  .controls label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  input[type="range"] { accent-color: var(--accent); }
+  button { background: var(--accent); color: #06281b; border: none; border-radius: 10px; padding: 10px 16px;
+           font-size: 15px; font-weight: 600; cursor: pointer; transition: transform .05s ease, filter .15s ease; }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: translateY(1px); }
+
+  /* segmented toggle */
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+  .seg button { background: var(--panel-2); color: var(--muted); border: none; border-radius: 0;
+                padding: 7px 13px; font-size: 13px; font-weight: 600; border-left: 1px solid var(--line); }
+  .seg button:first-child { border-left: none; }
+  .seg button.on { background: var(--accent); color: #06281b; }
+  .seg button:hover { filter: none; }
+  .seg-label { font-size: 13px; color: var(--muted); margin-right: 2px; }
+
+  canvas { max-width: 100%; display: block; }
+  .chartbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 14px 0; }
+  .chart-hint { font-size: 13px; color: var(--muted); text-align: center; margin: 6px 0 0; }
+
+  .tablescroll { overflow-x: auto; border-radius: 10px; border: 1px solid var(--line); }
+  table.markers { border-collapse: collapse; font-size: 12px; width: 100%; }
+  table.markers th, table.markers td { padding: 4px 8px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.markers thead th { position: sticky; top: 0; background: var(--panel-2); color: var(--muted); font-weight: 600; }
+  table.markers td.rowlab, table.markers th.rowlab { text-align: left; color: var(--accent-2); background: var(--panel-2);
+        position: sticky; left: 0; font-weight: 600; }
+
+  .keyline { display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin-top:6px; justify-content:center; }
+  .keyline span { display:inline-flex; align-items:center; gap:6px; }
+  .dot { width:11px; height:11px; border-radius:3px; display:inline-block; }
+  .swatch { width:60px; height:12px; border-radius:3px; display:inline-block;
+            background: linear-gradient(90deg,#3b6ea9,#ededed,#c8403a); }
+
+  .topgenes { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .topgenes code { color: var(--accent); background: #0d1520; padding: 1px 5px; border-radius: 4px; }
+
+  .quiz { margin-top: 10px; }
+  .quiz .qitem { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; background: var(--panel-2); }
+  .quiz .qitem p.qtext { margin: 0 0 10px; font-weight: 600; }
+  .quiz .opt { display: block; width: 100%; text-align: left; background: #0d1520; border: 1px solid var(--line); color: var(--ink);
+               border-radius: 8px; padding: 9px 12px; margin: 6px 0; cursor: pointer; font-weight: 500; }
+  .quiz .opt:hover { border-color: var(--accent-3); filter: none; }
+  .quiz .opt.correct { border-color: var(--accent); background: rgba(76,195,138,.14); }
+  .quiz .opt.wrong { border-color: var(--danger); background: rgba(226,114,91,.14); }
+  .quiz .explain { font-size: 13px; color: var(--muted); margin: 8px 0 0; display: none; }
+  .quiz .explain.show { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 30px 20px 60px; }
+  @media (max-width: 640px) { .step { padding: 20px 16px; } }
+
+  /* interactive network (vis-network) on a light backdrop so every node is visible */
+  #network { height: 520px; background: #eef3f8; border-radius: 10px; border: 1px solid var(--line); }
+  #network .vis-tooltip { background: #10202f; color: #e9eef5; border: 1px solid #2c3e54;
+        border-radius: 6px; padding: 5px 8px; font-family: system-ui; font-size: 12px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="badge">EduXR · Plant Breeding</div>
+  <h1>Transcriptomics &amp; Clustering</h1>
+  <p style="text-align:left; max-width: 640px; margin: 0 auto;">By the end of this practical you will be able to:</p>
+  <ul style="text-align:left; color: var(--muted); max-width: 640px; margin: 8px auto 0; padding-left: 20px;">
+    <li>Describe how hierarchical clustering is applied to a transcriptomics dataset</li>
+    <li>Explain the goal of unsupervised machine learning when used on gene expression data</li>
+    <li>Read a clustered heatmap and reason about which samples are most alike</li>
+    <li>Appreciate that there is often no single "best" clustering &mdash; the number of clusters is a judgement call</li>
+  </ul>
+  <div class="nav"><a href="genomic_selection.html">&larr; Genomic Selection</a> &nbsp;·&nbsp; <a href="index.html">Marker Assisted Selection</a></div>
+</header>
+
+<div class="wrap">
+
+  <!-- STEP 1 -->
+  <section class="step">
+    <h2><span class="num">1</span> The experiment behind the data</h2>
+    <p class="lead">In this practical we explore real RNA-seq data from the study
+      <a href="https://doi.org/10.1371/journal.pone.0074183" target="_blank" rel="noopener"><em>High-Throughput RNA Sequencing of Pseudomonas-Infected Arabidopsis Reveals Hidden Transcriptome Complexity and Novel Splice Variants</em></a>
+      by Howard <em>et&nbsp;al.</em> (2013). Open the paper in a new tab &mdash; you will keep coming back to it to connect what you see here with the plant biology from the lectures.</p>
+    <p>The researchers took <em>Arabidopsis</em> plants and applied <strong>three treatments</strong>:</p>
+    <ul>
+      <li><strong>MOCK</strong> &mdash; a control: the plant is handled the same way but receives no bacteria.</li>
+      <li><strong>AVR</strong> &mdash; infection with an <em>avirulent</em> strain of <em>Pseudomonas</em>: the plant's immune system recognises it and mounts a defence.</li>
+      <li><strong>VIR</strong> &mdash; infection with a <em>virulent</em> strain: it evades or suppresses the plant's defences and causes disease.</li>
+    </ul>
+    <p>Each treatment was sampled at <strong>three time points</strong> (1, 6 and 12&nbsp;hours), giving <strong>9 samples</strong> in total. For each sample we have the expression of the same <strong>500 genes</strong>. The numbers are <em>z-scored per gene</em>: for every gene the nine values were rescaled to have mean&nbsp;0, so a positive number means "higher than that gene's average" and a negative number means "lower than average". This lets us compare the <em>shape</em> of a gene's response across samples rather than its absolute level.</p>
+    <div class="tablescroll" id="data-table"></div>
+    <p class="chart-hint">A small slice of the data: rows are genes, columns are the 9 samples, numbers are z-scored expression.</p>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>Look at the paper. What are the three treatments, and what is the goal of comparing them?</li>
+        <li>Why do you think the plants were sampled at several time points instead of just one?</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step">
+    <h2><span class="num">2</span> Reading a clustered heatmap</h2>
+    <p class="lead">A <strong>heatmap</strong> shows the whole 500&times;9 table at once as colour: red means a gene is expressed above its average in that sample, blue means below. On its own that is just a wall of colour. The power comes from <strong>clustering</strong>: we reorder the rows so that genes with similar response patterns sit next to each other, and reorder the columns so that similar samples sit next to each other. The tree above the columns (a <em>dendrogram</em>) shows which samples were merged together, and how early.</p>
+    <div class="chartbox">
+      <canvas id="heatmap" height="720"></canvas>
+      <div class="keyline">
+        <span><span class="swatch"></span> low &rarr; high expression (z-score)</span>
+        <span><span class="dot" style="background:var(--accent)"></span> AVR</span>
+        <span><span class="dot" style="background:var(--danger)"></span> VIR</span>
+        <span><span class="dot" style="background:var(--muted)"></span> MOCK</span>
+      </div>
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>What do the rows and the columns represent, and what do the colours mean?</li>
+        <li>Is the <strong>avirulent (AVR)</strong> sample more similar to the <strong>virulent (VIR)</strong> sample or to the <strong>mock</strong> sample? Look at the tree above the heatmap.</li>
+        <li>Does the <strong>treatment</strong> or the <strong>time point</strong> play the bigger role in how the samples group together?</li>
+        <li>Explain the clustering in your own words: what does it tell you about the relationships between the samples?</li>
+      </ul>
+      <details>
+        <summary>💡 Hint for the avirulent-vs-virulent question</summary>
+        <p>Don't decide from the names alone. Two of the three treatments involve actually infecting the plant with <em>Pseudomonas</em> bacteria, while one does not &mdash; so which treatment is really the odd one out? Now look at the dendrogram at each time point: which two samples get merged together first (at the shortest distance)? Think about what a plant's cells are busy doing when they detect any bacterial attack, versus when nothing is there at all.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step">
+    <h2><span class="num">3</span> How hierarchical clustering works &mdash; and how many clusters?</h2>
+    <p class="lead">Hierarchical clustering is <strong>unsupervised</strong>: nobody tells the algorithm which genes belong together, it discovers structure on its own. It is beautifully simple. Every gene starts as its own tiny cluster. Then, over and over, the algorithm finds the <strong>two closest clusters and merges them</strong>, until everything is joined into one tree. Two choices decide the outcome:</p>
+    <ul>
+      <li><strong>Distance</strong> &mdash; how we measure "closeness" between two genes. <em>Correlation</em> distance counts two genes as close if their expression rises and falls together across the samples, regardless of absolute level. <em>Euclidean</em> distance instead compares the raw values point by point.</li>
+      <li><strong>Linkage</strong> &mdash; once clusters contain several genes, how we measure the distance between two <em>groups</em>: the <em>average</em> distance between their members, the distance between their <em>closest</em> members (single), or their <em>farthest</em> members (complete).</li>
+    </ul>
+    <p>The figure below draws this process directly onto the heatmap. On the left is the tree; to actually get clusters we <strong>cut</strong> it at some height (the dashed line), and every branch below the cut becomes one cluster. The coloured bar between the tree and the heatmap shows which cluster each gene row belongs to &mdash; so you can see the coloured blocks in the heatmap line up with the clusters. Slide the cut, and switch the distance and linkage, and watch genes move between clusters and the heatmap re-sort itself.</p>
+    <div class="controls">
+      <label>Number of clusters (where we cut):
+        <input id="kslider" type="range" min="2" max="12" value="4" step="1" />
+        <b id="kval">4</b>
+      </label>
+    </div>
+    <div class="controls">
+      <span class="seg-label">Distance:</span>
+      <div class="seg" id="metric-seg">
+        <button data-metric="correlation" class="on">correlation</button>
+        <button data-metric="euclidean">euclidean</button>
+      </div>
+      <span class="seg-label">Linkage:</span>
+      <div class="seg" id="method-seg">
+        <button data-method="average" class="on">average</button>
+        <button data-method="complete">complete</button>
+        <button data-method="single">single</button>
+      </div>
+    </div>
+    <div class="chartbox">
+      <canvas id="clusterfig" height="660"></canvas>
+      <div class="keyline">
+        <span><span class="swatch"></span> low &rarr; high expression (z-score)</span>
+        <span><span class="dot" style="background:var(--accent-2)"></span> dashed line = the cut</span>
+      </div>
+      <p class="chart-hint">Left: the gene tree, coloured by cluster. Middle bar: each gene's cluster. Right: the heatmap, its rows sorted by the tree so clusters appear as coloured blocks.</p>
+    </div>
+    <div class="chartbox">
+      <canvas id="clusterbar" height="200"></canvas>
+      <p class="chart-hint" id="clusterbar-cap">Number of genes in each cluster.</p>
+    </div>
+    <div class="callout info">
+      <strong>Notice</strong> how the number of clusters, and even which genes end up together, shift as you move the cut and switch the distance or linkage. There is rarely one obviously correct answer &mdash; choosing a clustering is a judgement call that depends on the biological question you are asking.
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>How many clusters do you think is most appropriate for this dataset? Why? Is there a single right answer?</li>
+        <li>Switch between the linkage and distance options. What differences do you observe, and can you explain them?</li>
+        <li>Which cluster(s) of genes would be most interesting to study further, and how would you decide?</li>
+      </ul>
+    </div>
+    <p>If you have extra time, pick a few genes from an interesting cluster and look them up in a database such as <a href="https://www.uniprot.org/" target="_blank" rel="noopener">UniProt</a>. Can you link them to a biological process involved in stress response, and does that match what the Howard <em>et&nbsp;al.</em> paper reports?</p>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step">
+    <h2><span class="num">4</span> A gene correlation network</h2>
+    <p class="lead">Clustering is not the only way to look for structure. We can also build a <strong>network</strong>: draw one dot (node) per gene, and connect two genes with a line (edge) whenever their expression patterns are highly correlated across the nine samples. Genes that move together end up tied into tightly connected knots. Raise the threshold and only the very strongest relationships survive; lower it and the web fills in.</p>
+    <div class="controls">
+      <label>Correlation threshold:
+        <input id="net-thr" type="range" min="0.85" max="0.99" value="0.95" step="0.01" />
+        <b id="net-thr-val">0.95</b>
+      </label>
+      <span class="seg-label">Colour nodes by:</span>
+      <div class="seg" id="cent-seg">
+        <button data-cent="degree" class="on">degree</button>
+        <button data-cent="betweenness">betweenness</button>
+        <button data-cent="closeness">closeness</button>
+      </div>
+    </div>
+    <div class="chartbox">
+      <div id="network"></div>
+      <p class="chart-hint" id="net-cap">Each dot is a gene; lines connect strongly correlated genes. Drag nodes around, scroll to zoom, and hover a node to see its name.</p>
+      <div class="keyline">
+        <span>node colour &amp; size: low <span class="swatch" style="background:linear-gradient(90deg,#440154,#21918c,#fde725)"></span> high centrality</span>
+      </div>
+      <div class="topgenes" id="net-top"></div>
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>What happens to the network as you change the correlation threshold?</li>
+        <li>What could it mean, biologically, that two genes are connected by an edge?</li>
+        <li>Is there a relationship between the hierarchical clusters from step 3 and the tightly connected knots you see here?</li>
+        <li>The colouring highlights "central" genes. If you worked with a plant biologist, which genes would you suggest studying next, and what experiment would you propose?</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="step">
+    <h2><span class="num">✓</span> Check your understanding</h2>
+    <div class="quiz" id="quiz"></div>
+  </section>
+
+  <footer>
+    This HTML and JavaScript was created with the help of Claude Code, based on the original Jupyter notebooks.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   Embedded dataset (Howard et al. 2013) — 500 genes x 9 samples
+   ============================================================ */
+const SAMPLES = [{"name": "AVR_1", "treatment": "AVR", "time": 1}, {"name": "MOCK_1", "treatment": "MOCK", "time": 1}, {"name": "VIR_1", "treatment": "VIR", "time": 1}, {"name": "AVR_12", "treatment": "AVR", "time": 12}, {"name": "MOCK_12", "treatment": "MOCK", "time": 12}, {"name": "VIR_12", "treatment": "VIR", "time": 12}, {"name": "AVR_6", "treatment": "AVR", "time": 6}, {"name": "MOCK_6", "treatment": "MOCK", "time": 6}, {"name": "VIR_6", "treatment": "VIR", "time": 6}];
+const GENES = ["AT1G29930", "AT1G67090", "AT2G34420", "AT1G79040", "AT3G15353", "AT5G15970", "AT5G38410", "AT2G25510", "AT2G39730", "AT3G47470", "AT5G54270", "AT1G31580", "AT1G29910", "AT2G21660", "AT2G34430", "AT1G78380", "AT4G10340", "AT1G08380", "AT3G09390", "AT5G38420", "AT1G29920", "AT1G61520", "AT3G54890", "AT1G20440", "AT5G42530", "AT2G05520", "AT4G05320", "AT1G31330", "AT5G54770", "AT3G60420", "AT2G36830", "AT2G41430", "AT4G21960", "AT5G38430", "AT3G45140", "AT4G12800", "AT1G55670", "AT2G38540", "AT2G05380", "AT1G75750", "AT5G66570", "AT3G25760", "AT5G42650", "AT1G06680", "AT2G30570", "AT5G01530", "AT2G42540", "AT1G02930", "AT1G30380", "AT5G52310", "AT2G06520", "AT3G61430", "AT3G61470", "AT5G64040", "AT3G25770", "AT1G20450", "AT4G28750", "AT2G24850", "AT1G54410", "AT3G22235", "AT3G41768", "AT4G38970", "AT3G01500", "AT2G14610", "AT1G60950", "AT2G05100", "AT1G20340", "AT1G01470", "AT1G52230", "AT2G36120", "AT4G05180", "AT1G15820", "AT2G30870", "AT2G47400", "AT5G20230", "AT5G11740", "AT2G06050", "AT2G29450", "AT1G14880", "AT4G02770", "AT4G00430", "AT3G26650", "AT2G17840", "AT2G14560", "AT3G62410", "AT3G14420", "AT4G30530", "AT2G05070", "AT1G20620", "AT3G17390", "AT5G42980", "AT3G26520", "AT3G50480", "AT2G41100", "AT1G67870", "AT3G63160", "AT1G19570", "AT4G02520", "AT3G09440", "AT4G23600", "AT1G64720", "AT2G38240", "AT5G14740", "AT2G38530", "AT3G62290", "AT3G08940", "AT4G05050", "AT5G02500", "AT2G18020", "AT1G76180", "AT5G62350", "AT5G02380", "AT1G42970", "AT1G45145", "AT3G44860", "AT1G10370", "AT5G11670", "AT3G16640", "AT2G45960", "AT1G52400", "AT5G62360", "AT2G30860", "AT4G16190", "AT4G08870", "AT3G11170", "AT1G26770", "AT1G19670", "AT2G33830", "AT3G49120", "AT2G43510", "AT1G03130", "AT1G59870", "AT4G34230", "AT5G03240", "AT2G45180", "AT3G22231", "AT5G05600", "AT2G15960", "AT2G23120", "AT5G25610", "AT1G70700", "AT1G37130", "AT2G21330", "AT1G21525", "AT3G53420", "AT2G46820", "ATCG00020", "AT1G74470", "AT3G21055", "AT1G76680", "AT1G33960", "AT3G25780", "AT2G39030", "AT5G60390", "AT4G23670", "AT4G01150", "AT1G15010", "AT5G60360", "AT5G15650", "AT1G23310", "AT1G44575", "AT3G16140", "AT2G47730", "AT3G57520", "AT1G13930", "AT1G17420", "AT2G41090", "AT1G19380", "AT2G13360", "AT1G02920", "AT4G02380", "AT5G16010", "AT3G56400", "AT2G26500", "AT4G33865", "AT5G35630", "AT1G52200", "AT2G43970", "AT1G64370", "AT1G67740", "AT5G58070", "AT1G05010", "AT2G43530", "AT3G27690", "AT4G34710", "AT4G13940", "AT1G13440", "AT1G02500", "AT4G37930", "AT1G07590", "AT5G66040", "AT4G30650", "AT3G60750", "AT1G67865", "AT4G34200", "AT1G65390", "AT3G53460", "AT5G15960", "AT1G47128", "AT3G08610", "AT3G16530", "AT2G38870", "AT1G23130", "AT3G60245", "AT4G39090", "AT1G09690", "AT1G08830", "AT5G54940", "AT4G33010", "AT3G50820", "AT4G21280", "AT3G50970", "AT1G30360", "AT2G18960", "AT4G03280", "AT5G20290", "AT1G32060", "AT5G67480", "AT3G12120", "AT3G16470", "AT1G23490", "AT3G22890", "AT1G07890", "AT4G01850", "AT3G29240", "AT5G14780", "AT5G25980", "AT4G17090", "AT4G36500", "AT2G40880", "AT2G37040", "AT1G51760", "AT2G28900", "AT1G79245", "AT2G01021", "AT2G34070", "AT4G14365", "AT3G14210", "AT1G19180", "AT4G27090", "AT5G20190", "AT3G26740", "AT1G76930", "AT4G22470", "AT3G52430", "AT2G15970", "AT1G12900", "AT5G03350", "AT4G16720", "AT2G42530", "AT5G02160", "AT1G15405", "AT5G09660", "AT1G08930", "AT4G31500", "AT2G16600", "AT1G28330", "AT5G42300", "AT2G30490", "AT3G20470", "AT5G20700", "AT2G02100", "AT5G46110", "AT1G09070", "AT3G23810", "AT1G04410", "AT1G26630", "AT5G16970", "AT3G44310", "AT5G19140", "AT4G24960", "AT2G33380", "AT3G51600", "AT3G15356", "AT3G51450", "AT5G47240", "AT1G43160", "AT1G68520", "AT3G44010", "AT4G27520", "AT2G43620", "AT5G24210", "AT1G09310", "AT1G29670", "AT3G23820", "AT2G37170", "AT2G44490", "AT3G08580", "AT5G37600", "AT3G56940", "AT3G55970", "AT5G26000", "AT1G11910", "AT5G35735", "AT1G56220", "AT1G56070", "AT4G36670", "AT2G23090", "AT5G54160", "AT3G04400", "AT1G66100", "AT4G20360", "AT2G34480", "AT4G04020", "AT3G01290", "AT5G53300", "AT5G54170", "AT5G13320", "AT3G22060", "AT5G64400", "AT1G65930", "AT5G24200", "AT1G17745", "AT3G18780", "AT5G50920", "AT2G36880", "AT3G05880", "AT1G02780", "AT4G39980", "AT2G34250", "AT1G66580", "AT4G27130", "AT2G29630", "AT2G45820", "AT4G21570", "AT5G51070", "AT2G04450", "AT4G18440", "AT3G48360", "AT5G49480", "AT3G53260", "AT1G70600", "AT1G30230", "AT5G01750", "AT1G21250", "AT1G11860", "AT1G09340", "AT4G34620", "AT4G20830", "AT1G67430", "AT1G51400", "AT1G72450", "AT2G46370", "AT3G14415", "AT4G04640", "AT1G51200", "AT4G26530", "AT1G09590", "AT5G17920", "AT1G33590", "AT2G43570", "AT3G48140", "AT4G32260", "AT5G02490", "AT3G10985", "AT1G09970", "AT5G20250", "AT5G47700", "AT1G14320", "AT1G04480", "AT1G68010", "AT1G75380", "AT1G13340", "AT2G47710", "AT3G60450", "AT1G11260", "AT3G11340", "AT3G14990", "AT5G26340", "AT4G39200", "AT5G07440", "AT5G17760", "AT1G72370", "AT2G37180", "AT5G38980", "AT5G07010", "AT1G76490", "AT3G16770", "AT2G45070", "AT3G54050", "AT2G20630", "AT3G46780", "AT4G14400", "AT2G32240", "AT4G25100", "AT4G09650", "AT3G59540", "AT3G49220", "AT3G15450", "AT1G20020", "AT1G78020", "AT4G32020", "AT5G24770", "AT4G35090", "AT4G39030", "AT3G52590", "AT1G01680", "AT2G37220", "AT3G09840", "AT3G48520", "AT4G24770", "AT2G39800", "AT4G38770", "AT5G13190", "AT3G22120", "AT5G10450", "AT2G22500", "AT2G20260", "AT1G77760", "AT1G51805", "AT1G21520", "AT3G63540", "AT1G80840", "AT2G26740", "AT3G21230", "AT2G40510", "AT3G07390", "AT3G05500", "AT3G09200", "AT1G07770", "AT2G26400", "AT1G15690", "AT3G49910", "AT3G52470", "AT5G18380", "AT5G67600", "AT3G04120", "AT1G43910", "AT5G40370", "AT3G12780", "AT3G13520", "AT1G31812", "AT4G14320", "AT5G48540", "AT5G48810", "AT4G35100", "AT2G43550", "AT4G17390", "AT2G27690", "AT5G42050", "AT5G37780", "AT1G18080", "AT5G28540", "AT4G19200", "AT3G09500", "AT1G64230", "AT1G27950", "AT1G07930", "AT3G11940", "AT3G52930", "AT1G43170", "AT5G66190", "AT1G10585", "AT2G35370", "AT3G14067", "AT3G19010", "AT4G31780", "AT3G23550", "AT1G01620", "AT3G56800", "AT1G76010", "AT5G48180", "AT4G34050", "AT3G28940", "AT4G20860", "AT5G64750", "AT5G17000", "AT2G25080", "AT1G28480", "AT1G75800", "AT5G11770", "AT3G25520", "AT4G31800", "AT3G16400", "AT5G43940", "AT4G16980", "AT4G23470", "AT3G62250", "AT1G21680", "AT3G57260", "AT2G39200", "AT1G15930", "AT4G16500", "AT1G52890", "AT1G29395", "AT5G48930", "AT3G47540", "AT5G39570", "AT1G22400", "AT5G64120", "AT3G62870", "AT4G36040", "ATCG00490", "AT1G21770", "AT1G66200", "AT1G21130", "AT2G47450", "AT4G12480", "AT5G13220", "AT5G56010"];
+const EXPR = [[0.682,0.889,1.784,-1.276,0.24,-0.28,-0.791,-0.179,-1.068],[-0.304,0.614,0.171,-0.732,2.224,0.257,-1.103,-0.336,-0.791],[0.575,1.195,1.132,-1.235,-0.707,-0.959,-0.354,1.132,-0.779],[1.32,1.695,-0.467,-0.938,-0.062,-1.069,-0.472,0.673,-0.68],[0.176,-0.726,-1.071,1.696,-0.447,-0.991,1.197,-0.544,0.711],[1.365,0.838,1.134,-1.156,-1.426,-0.849,0.024,0.202,-0.133],[0.703,1.638,0.434,-1.084,0.898,-0.86,-1.093,0.189,-0.825],[-0.644,-1.053,-1.172,2.125,0.587,-0.292,0.302,-0.093,0.239],[-0.094,0.879,-0.465,-0.498,2.231,0.004,-1.066,-0.225,-0.767],[0.776,1.66,1.297,-0.919,-0.758,-0.84,-0.529,0.055,-0.742],[0.921,1.795,1.114,-0.822,-0.754,-0.793,-0.541,-0.239,-0.682],[-0.835,-0.839,-1.457,1.816,0.244,-0.329,0.85,0.013,0.536],[1.011,1.652,1.139,-0.915,-0.812,-0.84,-0.398,-0.072,-0.765],[-0.682,-0.942,-0.233,-0.792,-0.467,-0.513,0.951,2.045,0.633],[0.301,1.121,2.092,-0.906,-0.616,-0.532,-0.579,-0.253,-0.627],[-0.773,-0.821,-0.887,1.437,-0.642,-0.093,1.828,-0.261,0.212],[0.714,1.336,1.726,-0.916,-0.39,-0.668,-0.717,-0.237,-0.847],[0.907,1.622,0.734,-0.921,-0.418,-1.073,-0.601,0.725,-0.974],[-1.355,-1.551,-0.549,0.687,0.192,-0.239,0.668,1.34,0.807],[0.637,1.91,-0.375,-0.994,1.107,-0.733,-0.92,-0.25,-0.382],[0.742,1.718,1.394,-0.728,-0.722,-0.72,-0.566,-0.42,-0.698],[0.777,1.451,1.415,-1.097,-0.61,-0.813,-0.587,0.264,-0.8],[0.861,1.557,1.372,-0.971,-0.783,-0.733,-0.563,-0.006,-0.735],[1.255,1.217,1.488,-0.829,-0.821,-0.611,-0.709,-0.445,-0.544],[-0.897,-0.824,-0.914,2.096,0.531,-0.667,0.013,0.744,-0.082],[-1.392,-1.578,-0.222,0.031,1.267,0.678,-0.397,0.787,0.826],[1.369,0.936,0.682,0.72,-0.591,-0.417,-0.154,-1.762,-0.783],[0.706,1.143,1.783,-0.997,-0.381,-0.871,-0.637,0.092,-0.838],[-0.91,-0.81,-0.973,-0.601,1.766,0.028,-0.065,1.439,0.127],[-0.73,-0.766,-0.764,0.878,-0.596,0.333,2.173,-0.579,0.051],[-0.648,-0.622,-0.576,-0.682,0.502,2.397,-0.608,0.075,0.162],[1.106,0.966,1.786,-0.719,-0.685,-0.801,-0.709,-0.274,-0.669],[-1.092,-1.241,-1.104,0.453,1.875,0.36,0.307,0.162,0.281],[-1.013,-0.534,-1.197,-0.287,2.104,0.059,-0.171,0.814,0.224],[-0.095,-0.91,-0.512,-0.937,-0.475,2.013,-0.547,0.297,1.166],[0.97,1.302,1.177,-1.205,-0.472,-0.998,-0.491,0.575,-0.857],[1.02,1.421,1.285,-1.173,-0.195,-0.866,-0.662,-0.001,-0.83],[-1.068,-1.014,-1.06,-0.556,0.482,1.315,-0.262,0.966,1.197],[-1.311,-1.402,-1.18,0.689,0.972,0.463,0.36,0.416,0.993],[-0.844,-0.838,-0.84,0.062,2.157,0.079,-0.571,-0.139,0.934],[0.579,1.051,1.155,-1.112,1.063,-0.584,-1.03,0.084,-1.205],[1.307,1.047,1.566,-0.865,-0.808,-0.409,-0.77,-0.607,-0.461],[1.431,1.533,0.899,-0.861,-0.807,-0.456,-0.858,-0.628,-0.253],[0.551,1.518,0.828,-1.21,0.38,-0.901,-0.876,0.714,-1.004],[1.16,1.596,1.051,-0.886,-0.551,-0.955,-0.61,-0.011,-0.795],[0.461,1.25,1.301,-1.261,0.653,-0.545,-0.904,0.21,-1.165],[0.877,1.233,1.131,-1.18,-1.141,-0.998,-0.221,0.719,-0.42],[0.959,-0.071,2.216,-0.664,-0.746,-0.843,0.076,-0.573,-0.353],[0.921,1.758,0.592,-1.108,-0.024,-0.889,-0.673,0.444,-1.02],[1.272,1.087,1.591,-0.784,-0.786,-0.64,-0.679,-0.508,-0.553],[0.756,1.777,0.506,-0.878,0.341,-0.994,-0.954,0.457,-1.011],[-0.57,-0.575,-0.51,-0.322,-0.11,2.526,-0.488,-0.394,0.442],[0.282,0.917,1.246,-1.222,1.143,-0.527,-1.03,0.323,-1.133],[0.978,1.418,1.462,-0.87,-0.252,-0.797,-0.821,-0.294,-0.824],[1.273,0.762,1.687,-1.09,-0.954,-0.165,-0.706,-0.368,-0.439],[1.263,1.359,1.365,-0.756,-0.786,-0.582,-0.708,-0.599,-0.556],[0.954,1.448,1.343,-0.965,-0.097,-0.733,-0.813,-0.12,-1.018],[-0.277,-0.847,-0.776,0.95,-0.854,0.972,1.727,-1.015,0.121],[0.024,-0.679,-0.015,-0.601,-0.282,-1.188,0.324,2.362,0.055],[-0.814,-0.665,-0.959,1.782,-0.631,-0.632,1.193,0.761,-0.033],[-0.809,0.055,-1.146,1.642,-0.208,0.12,1.528,-0.243,-0.939],[-0.1,1.17,-0.983,-0.752,1.947,0.229,-0.894,0.049,-0.667],[0.85,1.848,0.203,-0.97,0.733,-0.452,-1.022,-0.154,-1.034],[-0.456,-0.456,-0.46,2.644,-0.138,-0.266,-0.188,-0.459,-0.22],[-0.885,-0.177,-0.619,-0.405,2.372,0.316,-0.73,0.495,-0.368],[0.76,2.165,0.698,-0.654,-0.632,-0.633,-0.654,-0.38,-0.67],[-0.621,0.823,-0.085,-1.025,1.731,-0.346,-0.892,1.177,-0.762],[1.093,1.024,1.732,-0.87,-0.908,-0.275,-0.706,-0.604,-0.486],[0.932,2.072,0.569,-0.805,-0.356,-0.875,-0.644,-0.162,-0.731],[-1.073,-0.905,-0.973,-0.212,1.616,1.359,-0.509,0.154,0.543],[0.947,0.979,1.747,-0.722,0.063,-0.852,-0.788,-0.315,-1.058],[0.843,1.933,0.834,-0.852,-0.551,-0.811,-0.634,0.108,-0.869],[1.238,0.216,1.939,-0.728,-1.094,-0.712,-0.259,-0.598,-0.002],[-1.08,-0.981,-0.969,-0.129,1.346,1.628,-0.402,0.538,0.051],[1.365,0.395,1.829,-0.65,-0.975,-0.864,-0.103,-0.567,-0.43],[1.077,0.719,1.84,-0.995,-0.872,-0.945,-0.487,-0.135,-0.202],[1.356,1.35,1.244,-0.801,-0.866,-0.366,-0.753,-0.686,-0.477],[1.272,1.558,1.099,-0.782,-0.837,-0.429,-0.822,-0.619,-0.438],[-0.777,-0.823,-0.769,2.117,-0.115,-0.281,1.177,-0.386,-0.143],[0.777,1.545,1.012,-1.03,-0.147,-1.012,-0.77,0.593,-0.967],[-0.453,-0.508,-0.394,-0.254,-0.246,2.614,-0.482,-0.413,0.137],[-0.912,-0.395,-0.827,-0.125,2.247,0.874,-0.686,-0.001,-0.174],[1.129,1.014,1.767,-0.683,-0.735,-0.711,-0.627,-0.592,-0.562],[-0.805,-0.845,-0.916,1.911,-0.436,-0.347,1.185,0.573,-0.32],[-0.973,-0.711,-0.969,-0.181,1.218,-0.016,-0.353,1.992,-0.005],[-0.58,-0.159,-0.621,-0.077,2.465,0.498,-0.801,-0.264,-0.461],[1.21,1.122,1.577,-0.831,-0.84,-0.343,-0.772,-0.721,-0.402],[0.727,2.074,0.879,-0.694,-0.663,-0.687,-0.663,-0.277,-0.698],[-0.883,-1.797,0.37,-0.177,1.158,-0.838,0.373,0.766,1.027],[1.325,0.436,1.907,-0.795,-0.582,-0.825,-0.579,-0.309,-0.578],[-0.481,-1.523,-0.7,2.061,-0.237,0.249,-0.14,0.016,0.756],[-0.705,-0.526,-0.493,-0.676,2.337,0.783,-0.662,0.043,-0.101],[0.06,-0.875,0.126,0.653,-0.841,-0.643,2.23,-0.826,0.116],[0.891,-0.283,0.788,0.326,-1.191,-0.934,1.648,-1.179,-0.066],[-0.954,-0.97,-1.701,0.856,0.464,0.216,1.234,0.861,-0.006],[-0.94,-1.096,-0.57,-0.5,0.813,-0.277,0.356,2.113,0.102],[0.542,-0.415,0.338,-1.564,-1.032,1.775,-0.177,-0.275,0.806],[-0.642,-1.13,0.316,0.991,-0.331,-0.847,1.976,-0.635,0.301],[1.995,0.533,1.028,-0.806,-0.849,-0.85,0.011,-0.429,-0.633],[-0.567,-1.086,-0.255,-0.881,0.008,2.309,-0.222,0.474,0.221],[-0.816,-0.497,-0.524,0.195,2.314,0.709,-0.816,-0.498,-0.066],[0.865,0.639,1.352,-0.497,-1.306,0.249,-1.031,-1.111,0.839],[-0.743,0.141,-0.842,-0.447,2.374,0.376,-0.675,0.276,-0.459],[-0.99,-1.0,-1.005,-0.58,0.038,1.432,-0.17,1.142,1.134],[-1.085,-1.157,-0.763,1.554,0.988,0.965,-0.169,-0.664,0.332],[0.395,1.897,0.832,-0.836,0.169,-0.849,-0.88,0.366,-1.094],[1.058,1.769,0.708,0.081,-1.068,-0.356,-0.429,-1.226,-0.537],[0.148,-1.483,-0.825,0.563,-0.342,0.258,1.625,-0.96,1.018],[-1.158,-1.117,-1.279,0.219,-0.065,0.174,1.199,0.697,1.331],[1.373,0.964,1.575,-0.616,-0.912,-0.464,-0.715,-0.743,-0.462],[1.463,1.138,1.311,-0.971,-0.604,-0.782,-0.797,-0.329,-0.43],[-0.187,-0.65,-0.434,2.478,0.294,-0.645,0.165,-0.795,-0.227],[-0.351,0.305,-0.785,-0.552,2.414,0.296,-0.824,0.017,-0.518],[-0.034,-0.512,0.065,2.198,-1.129,0.538,0.314,-1.035,-0.405],[1.352,1.235,1.356,-0.625,-0.978,-0.385,-0.565,-0.809,-0.58],[1.169,1.289,1.491,-0.85,-0.81,-0.703,-0.665,-0.527,-0.394],[1.236,0.278,2.025,-0.779,-0.614,-0.862,-0.324,-0.475,-0.485],[-0.751,-0.798,0.063,0.942,1.105,1.518,-0.847,-1.289,0.058],[-0.752,-0.648,-0.661,-0.361,1.725,1.7,-0.699,-0.305,0.001],[0.166,-1.317,-0.044,-0.731,0.284,2.103,-0.1,-0.93,0.569],[1.033,0.713,2.006,-0.717,-0.688,-0.69,-0.66,-0.453,-0.544],[-0.899,-1.791,-0.391,0.017,-0.4,0.783,0.785,0.38,1.516],[-1.23,-1.241,-1.042,0.696,1.217,1.309,-0.09,-0.034,0.415],[-0.016,-0.393,-0.643,-0.334,-0.616,2.495,-0.528,-0.451,0.484],[1.494,0.872,1.452,-0.867,-0.645,-0.099,-0.878,-0.849,-0.48],[-0.513,-0.473,-0.51,-0.38,-0.42,2.515,-0.334,-0.439,0.553],[0.343,-0.082,-0.466,-0.883,-0.475,2.166,-0.946,-0.539,0.882],[-0.958,-1.074,-0.145,-0.296,0.091,-0.66,0.587,2.233,0.222],[-0.844,-1.482,-0.497,1.553,-0.567,0.613,0.753,-0.493,0.963],[-1.068,-1.225,-1.114,1.028,0.143,0.644,-0.102,0.079,1.615],[0.968,1.853,0.682,-0.718,-0.358,-0.951,-0.766,0.27,-0.979],[1.08,0.588,2.02,-0.615,-0.718,-0.81,-0.334,-0.527,-0.684],[1.426,0.465,1.774,-0.814,-0.844,-0.797,-0.529,-0.541,-0.14],[-0.991,-1.165,-0.933,1.54,1.088,0.945,-0.092,-0.553,0.161],[0.344,0.926,1.077,-1.073,0.708,-1.142,-1.224,1.009,-0.626],[-1.105,-0.894,-0.983,1.788,-0.408,0.125,1.079,0.641,-0.244],[1.124,0.926,1.178,-0.729,-1.207,-0.069,-1.151,-0.801,0.729],[0.577,0.995,1.995,-0.651,-0.611,-0.759,-1.107,-0.174,-0.264],[1.423,1.64,0.763,-0.829,-0.876,-0.635,-0.706,-0.536,-0.243],[-0.55,-0.428,-0.969,-0.93,-0.201,-0.059,-0.153,1.987,1.302],[1.092,1.206,0.556,-0.729,-1.053,1.017,-1.336,-0.763,0.01],[-0.859,-0.777,-0.837,0.567,1.527,1.446,-0.223,-1.058,0.215],[-0.554,0.422,-0.955,-0.132,2.279,0.495,-0.794,-0.042,-0.718],[-0.511,-0.509,-0.509,2.585,-0.332,0.111,0.074,-0.477,-0.432],[-0.41,-0.162,-0.249,-0.833,1.173,2.126,-0.953,-0.405,-0.287],[0.966,1.42,1.46,-0.886,-0.126,-0.621,-0.869,-0.484,-0.861],[-1.03,0.083,-0.67,2.012,-0.783,0.413,0.8,0.167,-0.992],[-0.414,0.229,-0.275,-0.244,2.36,0.579,-0.955,-0.611,-0.67],[0.46,1.371,-0.004,-0.822,0.92,-1.239,-0.804,1.108,-0.989],[1.483,0.969,1.47,-0.822,-0.742,-0.826,-0.486,-0.46,-0.587],[-0.765,-0.795,-0.778,1.907,-0.391,-0.174,1.376,-0.633,0.252],[0.968,0.634,2.073,-0.691,-0.767,-0.372,-0.582,-0.735,-0.529],[-0.633,-0.917,-0.622,0.683,-0.321,2.295,-0.253,-0.587,0.355],[-1.129,-1.179,-0.921,-0.234,0.169,0.114,1.139,0.31,1.731],[-0.94,-0.985,-1.484,1.079,1.218,0.849,-0.377,-0.016,0.655],[0.952,1.768,-0.153,-1.081,0.326,-0.248,-0.999,0.569,-1.134],[1.048,1.359,1.119,-0.688,-1.214,-0.937,-0.34,-0.806,0.459],[-1.129,-1.104,-1.014,1.332,1.042,1.144,-0.329,-0.289,0.346],[0.961,0.765,1.974,-0.864,-0.836,-0.76,-0.461,-0.561,-0.217],[-0.079,0.468,0.001,0.12,2.122,0.387,-1.18,-1.027,-0.814],[0.972,1.844,0.808,-1.087,-0.18,-0.651,-0.795,-0.058,-0.854],[0.878,1.173,1.693,-0.931,-0.093,-0.805,-0.729,-0.258,-0.93],[-0.11,-0.491,-0.109,-0.352,-0.71,-0.452,2.61,-0.279,-0.108],[-0.44,-0.621,-0.319,0.027,-0.68,2.531,-0.592,-0.171,0.264],[0.023,-0.398,-0.582,-1.046,-0.51,0.918,-0.311,2.255,-0.349],[0.915,1.745,1.179,-0.803,-0.819,-0.283,-0.755,-0.77,-0.409],[-0.586,-0.805,-0.881,1.97,-0.188,-0.606,1.38,-0.167,-0.117],[1.468,0.701,1.688,-0.708,-0.667,-0.709,-0.645,-0.569,-0.56],[-0.99,-0.336,-0.75,-0.394,2.081,0.107,-0.762,1.122,-0.078],[0.862,-0.455,2.122,-0.568,-0.75,-0.889,0.606,-0.657,-0.271],[-0.678,-0.921,-0.249,1.65,-0.403,0.575,1.476,-1.03,-0.42],[1.021,1.102,1.735,-0.867,-0.728,-0.849,-0.656,-0.462,-0.294],[-0.834,-0.952,-0.987,1.153,-0.586,0.861,1.676,-0.438,0.106],[-1.423,-0.794,-0.333,-0.186,1.893,0.773,-0.659,0.762,-0.033],[-1.304,-1.009,-1.221,0.64,-0.33,0.347,1.451,0.836,0.589],[-0.477,-0.32,-0.667,-0.323,2.478,0.233,-0.903,0.224,-0.245],[0.861,0.05,2.332,-0.544,-0.654,-0.674,-0.364,-0.455,-0.551],[-0.967,-1.239,-0.98,1.634,1.14,0.543,0.107,-0.482,0.244],[0.714,-0.302,-1.374,1.803,0.224,-1.031,0.834,-0.629,-0.239],[0.087,0.856,1.305,-1.187,1.276,-0.415,-1.001,0.218,-1.14],[1.466,1.466,0.902,-0.479,-0.923,-0.991,-0.659,-0.186,-0.597],[1.814,0.269,1.381,-0.208,-0.831,-0.749,0.019,-0.813,-0.882],[2.066,0.531,0.183,-0.742,-1.012,-0.853,-0.771,-0.116,0.714],[0.514,2.252,0.765,-0.6,-0.588,-0.601,-0.604,-0.533,-0.605],[1.919,0.828,0.771,-0.772,-1.146,-0.06,-0.21,-0.977,-0.354],[-0.26,-1.08,-0.661,-0.024,0.395,1.654,-0.137,-1.249,1.362],[-1.237,-0.891,-1.272,0.661,1.793,0.37,-0.036,0.106,0.507],[-0.869,-1.315,-1.013,1.083,0.278,0.755,1.081,-0.866,0.865],[0.762,0.927,1.226,-1.28,1.008,-0.758,-1.058,0.014,-0.842],[-0.039,0.123,-0.45,0.932,-1.518,1.317,-0.646,-0.959,1.24],[-1.005,-0.845,-0.981,0.97,1.753,0.828,-0.491,-0.531,0.302],[0.656,0.158,2.075,-1.013,-0.936,-0.976,-0.177,0.51,-0.299],[-1.104,-0.869,-0.963,-0.359,2.021,0.484,-0.153,0.773,0.171],[1.366,1.313,-0.599,1.228,-0.66,-0.531,-1.055,-0.8,-0.262],[-0.84,-0.878,-0.834,0.43,-0.547,2.117,0.549,-0.529,0.532],[1.12,0.814,1.905,-0.646,-0.645,-0.646,-0.639,-0.627,-0.635],[-1.098,-1.213,-0.934,-0.632,1.072,0.426,0.086,1.351,0.942],[1.489,0.701,1.376,-1.142,-1.191,-0.722,-0.382,-0.053,-0.075],[-1.213,-1.179,-1.183,1.137,1.048,1.0,-0.274,0.172,0.493],[-0.8,-0.92,-1.377,1.618,-0.263,-0.355,0.994,0.229,0.875],[1.202,0.184,2.102,-0.697,-0.606,-0.728,-0.383,-0.55,-0.524],[1.217,0.538,1.805,-0.92,-0.851,-0.961,-0.355,-0.584,0.11],[1.182,-0.744,-0.063,1.544,-0.443,-0.293,0.585,-1.743,-0.025],[-0.948,-0.959,-1.185,0.337,-0.406,-0.355,1.562,1.089,0.865],[-0.984,-1.543,-0.721,0.593,0.519,1.756,-0.367,0.299,0.45],[-1.257,-1.178,-1.316,0.664,0.215,0.067,0.905,0.643,1.257],[-0.932,-1.371,-0.799,1.689,0.655,0.145,0.844,-0.652,0.42],[1.369,0.301,0.84,0.626,-1.642,0.429,-0.761,-1.215,0.053],[0.058,1.418,-0.47,-0.894,1.738,-0.436,-1.035,0.363,-0.742],[0.628,1.491,0.386,-0.884,1.223,-0.697,-1.055,0.072,-1.163],[-0.285,0.971,-0.08,-1.217,1.507,-0.562,-0.871,1.268,-0.731],[1.379,0.873,1.644,-0.782,-0.786,-0.759,-0.549,-0.463,-0.558],[0.89,0.988,1.924,-0.863,-0.54,-0.718,-0.713,-0.501,-0.467],[-1.122,-1.199,-1.051,1.111,1.233,1.028,-0.153,-0.344,0.498],[0.181,0.623,0.366,-1.484,1.766,-0.203,-1.129,0.574,-0.693],[-1.352,-1.269,-1.261,0.271,0.65,0.521,0.784,0.5,1.158],[-0.687,-0.172,-0.538,-0.594,2.39,0.323,-0.851,0.455,-0.327],[-0.703,-0.839,-0.528,-0.267,-0.393,2.372,-0.489,0.229,0.618],[-0.904,-0.98,-0.56,-0.308,1.687,1.553,-0.45,-0.439,0.4],[-0.027,-1.151,-0.171,-0.513,-0.313,1.478,-0.549,-0.607,1.852],[1.134,0.345,0.564,-0.918,-1.346,-1.388,0.955,-0.206,0.861],[0.725,-0.4,0.485,-0.429,-1.139,1.574,0.275,-1.653,0.561],[1.559,-0.604,1.215,0.28,-0.611,-1.771,0.279,-0.163,-0.185],[-0.18,-0.55,-0.717,0.018,-0.438,2.253,-0.237,-1.028,0.879],[-0.948,-0.918,-0.96,2.212,0.186,0.394,0.415,-0.118,-0.263],[-1.31,-1.352,-1.011,1.145,1.083,0.41,0.206,-0.03,0.859],[-0.227,-1.536,-0.123,-0.21,0.47,0.695,0.648,-1.337,1.619],[0.692,-0.041,1.678,0.547,0.604,-0.536,-1.672,-0.361,-0.91],[1.153,0.85,1.849,-0.682,-0.818,-0.58,-0.527,-0.661,-0.585],[0.811,1.319,1.514,-0.202,-0.935,-1.194,-0.554,-0.811,0.052],[1.916,0.336,1.398,-0.737,-0.7,-0.52,-0.576,-0.594,-0.522],[0.13,-0.181,0.11,0.396,-1.088,2.237,-0.379,-1.204,-0.023],[0.571,0.869,1.514,-1.175,-0.827,-1.162,-0.286,0.958,-0.464],[1.083,1.17,1.691,-0.669,-0.599,-0.648,-0.655,-0.698,-0.676],[-0.753,-0.724,-0.799,-0.67,1.301,1.862,-0.04,0.478,-0.656],[-0.603,-0.557,-0.63,0.244,-0.357,2.415,-0.374,-0.686,0.547],[-0.198,-0.746,-0.317,0.447,-0.825,-0.2,2.397,-0.77,0.212],[-0.601,-0.524,-0.734,-0.636,2.477,-0.267,0.029,0.427,-0.172],[0.899,0.732,1.899,-0.575,-1.053,0.055,-0.67,-1.051,-0.236],[-1.422,-1.307,-1.156,0.542,0.444,0.367,0.602,0.76,1.17],[1.264,1.477,1.125,-0.532,-0.767,-0.079,-0.858,-0.897,-0.732],[-1.079,-1.286,-0.213,0.097,0.823,-0.539,0.169,2.032,-0.005],[-0.828,-1.082,-0.779,-0.213,-0.005,0.168,0.862,-0.278,2.155],[0.814,-0.08,2.349,-0.721,-0.614,-0.671,-0.516,-0.427,-0.133],[-0.749,-0.818,-0.811,1.538,-0.443,0.474,1.661,-0.746,-0.108],[0.804,0.553,1.937,-1.031,-0.631,-0.828,-0.745,0.514,-0.574],[0.016,1.465,-0.199,-0.933,1.769,-0.382,-1.034,0.069,-0.771],[-0.97,-0.915,-0.952,1.29,-0.121,1.833,0.361,-0.32,-0.207],[-1.212,-1.235,-1.274,0.093,0.392,0.364,0.864,0.603,1.406],[0.289,-0.005,1.348,-1.202,-1.182,-0.761,0.334,1.557,-0.378],[-0.46,-0.49,1.917,-1.052,0.171,-0.801,-0.29,1.37,-0.365],[-0.733,-0.628,-0.729,-0.2,-0.608,1.338,2.006,0.102,-0.549],[0.384,1.451,0.333,-0.847,1.492,-0.629,-1.152,-0.046,-0.985],[1.54,0.295,1.791,-0.683,-0.681,-0.79,-0.305,-0.641,-0.525],[1.272,-0.206,1.372,-0.559,-1.069,-0.311,0.471,-1.537,0.566],[-1.007,-1.459,-0.665,1.503,-0.237,-0.368,1.187,0.583,0.464],[-1.094,-1.158,-0.678,-0.174,1.635,-0.245,0.001,1.477,0.235],[-0.668,-1.332,-0.609,1.412,-0.624,-0.52,0.7,0.142,1.498],[1.792,0.263,1.554,-0.656,-0.692,-0.8,-0.52,-0.616,-0.327],[-1.0,-0.793,-1.213,-0.139,-0.003,0.474,-0.116,2.008,0.782],[-0.729,-0.987,-1.177,1.406,0.688,1.078,0.162,-1.049,0.608],[-1.234,-1.464,-0.653,-0.487,0.176,0.733,0.576,1.216,1.137],[-0.077,0.483,0.896,-0.87,2.031,-0.44,-1.007,-0.088,-0.928],[1.471,1.323,1.145,-0.747,-0.786,-0.858,-0.654,-0.574,-0.32],[1.636,1.228,1.063,-0.877,-0.664,-0.7,-0.707,-0.453,-0.527],[-1.305,-1.518,-1.0,0.455,0.959,0.462,0.592,0.242,1.114],[-1.439,-1.505,-0.829,0.609,0.34,0.33,0.966,0.392,1.137],[0.614,0.633,1.166,-1.108,-1.052,-1.372,-0.298,0.186,1.234],[-0.864,-1.009,-1.844,0.903,0.529,0.445,0.101,0.961,0.779],[1.305,0.168,1.687,-0.689,0.037,-1.248,-1.09,0.223,-0.392],[0.864,1.333,1.704,-0.685,-0.725,-0.51,-0.685,-0.718,-0.577],[0.368,0.636,0.13,0.021,-1.14,2.008,-0.961,-1.089,0.027],[-0.631,-0.928,-0.809,-0.754,0.537,-0.387,0.23,2.167,0.575],[1.169,0.197,2.114,-0.7,-0.651,-0.72,-0.329,-0.525,-0.555],[1.236,1.417,1.32,-0.65,-0.906,-0.582,-0.507,-0.679,-0.648],[1.443,1.278,1.181,-0.881,-0.911,-0.425,-0.804,-0.625,-0.256],[0.669,0.874,0.573,-0.534,-1.339,1.478,-0.982,-1.062,0.323],[-0.708,-0.948,-0.841,-0.248,1.856,-0.6,-0.234,1.356,0.366],[-0.782,-0.797,-1.268,0.879,-0.578,-0.012,1.308,-0.254,1.504],[1.184,1.32,1.413,-0.944,-0.526,-0.25,-0.848,-0.661,-0.688],[0.215,-0.721,1.318,-0.982,-0.828,-0.65,0.738,-0.7,1.609],[-0.696,-0.92,-0.924,1.565,-0.449,0.062,1.704,-0.486,0.146],[0.192,0.5,-0.7,-0.949,-0.233,-0.903,-0.581,2.215,0.458],[1.384,1.11,1.389,-1.035,-0.412,-0.819,-0.774,-0.251,-0.592],[1.215,1.031,1.644,-1.014,-0.587,-0.542,-0.787,-0.558,-0.401],[-0.435,-0.449,-0.288,-0.55,0.304,2.52,-0.703,-0.521,0.123],[1.219,0.81,1.82,-0.637,-0.69,-0.816,-0.531,-0.47,-0.704],[-0.846,-1.339,0.046,0.165,-0.188,1.666,0.499,-1.098,1.095],[1.049,-0.834,1.118,-0.12,-1.113,-1.498,1.112,-0.156,0.442],[0.703,1.569,1.168,-0.701,0.508,-0.514,-1.06,-0.57,-1.103],[-0.632,-0.819,-0.679,0.432,-0.436,1.677,-0.665,-0.488,1.612],[0.652,-0.934,0.48,-0.783,0.613,0.444,0.288,-1.948,1.187],[-1.196,-1.232,-1.087,1.293,1.145,0.587,0.118,-0.293,0.665],[0.702,-0.323,2.094,-0.861,-0.957,-0.768,0.684,-0.547,-0.024],[-1.09,-1.137,-0.956,0.28,1.838,-0.427,0.222,0.868,0.402],[-1.074,-1.242,-1.127,0.168,0.1,0.73,0.928,-0.094,1.61],[1.338,0.551,1.871,-0.705,-0.72,-0.685,-0.647,-0.51,-0.493],[-0.989,-1.046,-1.218,1.036,-0.461,0.538,0.395,0.102,1.644],[1.684,0.327,1.521,-0.902,-0.74,-0.913,-0.53,-0.516,0.07],[-1.364,-1.089,-1.177,1.217,0.009,-0.005,0.972,0.488,0.95],[-0.498,-1.153,-0.274,-0.752,1.702,1.507,-0.739,0.254,-0.048],[-0.706,-0.034,-0.955,-0.704,2.233,0.333,-0.809,0.582,0.06],[-1.278,-1.149,-1.233,0.381,0.281,0.454,0.837,0.167,1.539],[1.245,1.693,0.093,-1.027,-1.027,-1.021,-0.104,0.523,-0.374],[0.668,-0.619,0.435,0.33,-1.259,-0.523,2.09,-0.651,-0.47],[-0.385,-1.172,0.595,0.91,0.454,1.407,-0.634,-1.592,0.416],[1.226,1.458,1.291,-0.797,-0.733,-0.645,-0.747,-0.485,-0.568],[-0.808,-0.824,-0.83,1.266,-0.532,1.071,1.53,-0.771,-0.103],[1.462,0.641,1.705,-0.735,-0.716,-0.823,-0.376,-0.585,-0.574],[-0.764,-1.345,-1.204,0.448,-0.018,0.26,1.657,1.065,-0.099],[-1.059,-1.397,-0.682,0.613,1.703,0.535,-0.14,-0.414,0.841],[-0.725,-0.735,-0.732,2.191,-0.25,0.252,0.965,-0.679,-0.287],[-0.985,-1.157,-1.048,1.452,-0.146,0.257,1.404,-0.337,0.559],[-1.089,-1.227,-0.724,0.33,1.669,1.011,-0.294,-0.441,0.766],[-0.745,-0.898,-0.598,0.802,1.303,1.372,-1.209,-0.558,0.532],[1.729,0.198,1.512,-1.002,-0.743,-0.789,-0.207,-0.682,-0.016],[-0.752,-1.03,1.269,-0.036,-0.961,-0.972,0.48,1.575,0.427],[-1.192,-1.223,-1.32,0.506,0.464,0.074,0.82,0.465,1.406],[1.819,0.266,1.36,-1.026,-0.943,-0.446,-0.616,-0.496,0.082],[0.829,0.466,2.214,-0.726,-0.755,-0.511,-0.511,-0.686,-0.32],[0.073,-0.235,0.222,0.321,-1.581,-0.838,2.063,-0.418,0.393],[-1.113,-1.392,-0.818,0.97,0.685,1.346,-0.109,-0.427,0.859],[-1.087,-1.092,-0.865,-0.148,1.981,0.426,-0.16,0.847,0.098],[1.052,1.701,1.147,-0.702,-0.453,-0.64,-0.868,-0.791,-0.446],[0.81,0.935,1.98,-0.771,-0.802,-0.287,-0.711,-0.744,-0.412],[0.057,-0.924,0.781,0.592,-1.102,1.815,-0.328,-1.21,0.319],[-0.693,-0.705,-0.701,1.176,-0.458,-0.053,2.135,-0.605,-0.096],[1.307,0.648,1.19,-1.471,-1.092,0.143,-0.792,-0.441,0.509],[-1.111,-1.138,-1.01,0.021,1.181,0.062,-0.088,1.703,0.38],[1.375,1.662,0.823,-0.599,-0.63,-0.291,-0.776,-0.82,-0.744],[1.888,0.53,1.34,-0.645,-0.653,-0.653,-0.579,-0.647,-0.58],[-1.045,-0.919,-1.38,0.21,-0.042,-0.139,1.138,0.626,1.551],[-1.054,-1.115,-0.827,0.922,1.003,1.447,-0.199,-0.779,0.603],[1.328,0.331,1.695,-0.826,-0.782,-1.358,-0.042,-0.016,-0.331],[-0.772,-0.998,-0.999,1.327,-0.282,0.03,1.882,-0.163,-0.024],[-0.568,0.021,-1.038,-0.66,2.146,-0.343,-0.633,1.019,0.055],[0.807,1.478,0.501,-1.088,1.077,-0.664,-1.195,-0.084,-0.833],[-1.127,-0.122,-0.802,-0.299,2.016,1.048,-0.864,0.25,-0.101],[1.446,0.772,1.475,-0.924,-1.156,-0.651,0.002,-0.65,-0.315],[-1.108,-1.233,-1.214,0.229,0.22,0.668,0.981,-0.049,1.506],[-0.14,1.529,-0.603,0.174,0.906,-1.006,-1.007,1.167,-1.02],[1.43,1.293,1.067,-0.679,-0.814,-0.145,-1.044,-0.939,-0.17],[0.844,1.852,1.142,-0.699,-0.72,-0.376,-0.715,-0.737,-0.59],[-0.881,-0.426,-0.912,-0.329,2.277,-0.053,-0.575,0.751,0.147],[0.923,1.59,0.684,-1.082,0.643,-0.967,-1.053,-0.011,-0.726],[-0.859,-1.017,-0.519,0.809,1.23,1.596,-0.57,-0.924,0.254],[-0.802,0.346,-0.583,-0.881,0.905,-0.288,-0.492,2.195,-0.399],[-0.978,-1.072,-1.189,0.472,-0.413,-0.211,1.372,0.766,1.254],[0.025,-0.115,-0.581,-1.756,0.454,-0.709,-0.055,1.142,1.597],[0.874,0.538,2.178,-0.713,-0.483,-0.707,-0.477,-0.587,-0.624],[-0.701,-0.774,-0.752,2.106,-0.409,0.171,1.087,-0.729,0.001],[-0.986,-0.918,0.247,2.201,-0.184,0.463,-0.022,-0.997,0.197],[0.426,0.692,0.927,-1.105,1.339,0.611,-1.287,-0.525,-1.078],[0.213,-0.549,-0.376,-0.109,-0.629,-0.553,2.576,-0.308,-0.265],[-0.277,-0.795,-0.341,-0.012,-0.737,2.459,0.163,-0.707,0.247],[1.301,1.058,1.371,-0.86,-1.129,-0.741,-0.126,-0.852,-0.022],[-0.528,-0.637,0.128,-0.105,0.091,-0.929,-0.399,2.499,-0.119],[-1.345,-1.261,-1.24,0.008,0.608,0.965,0.604,0.738,0.922],[-0.989,-1.036,-1.124,0.278,-0.406,0.046,1.065,0.39,1.776],[-1.109,-1.287,-1.328,0.587,-0.001,0.893,0.753,0.23,1.261],[-0.479,0.895,-0.801,-0.576,2.112,-0.041,-1.094,0.402,-0.418],[-1.117,-1.179,-0.783,1.127,0.865,-0.622,-0.289,1.362,0.636],[-0.717,-0.718,-0.734,2.054,-0.497,1.18,0.231,-0.715,-0.082],[-1.121,-1.194,-1.136,1.434,0.771,1.059,0.393,-0.305,0.098],[-0.507,-0.646,-0.48,0.957,-0.775,-0.003,2.255,-0.695,-0.106],[0.514,0.755,1.992,-0.588,-0.417,-1.072,-1.162,0.291,-0.312],[-0.794,-0.813,-0.783,0.387,-0.602,0.513,2.285,-0.296,0.103],[-1.144,-1.337,-0.759,1.173,0.482,0.358,1.175,-0.751,0.803],[0.274,-0.521,1.847,0.775,-1.234,0.722,-0.111,-1.028,-0.725],[-1.348,-1.207,-1.182,0.618,0.397,0.734,0.576,0.026,1.386],[0.001,-0.543,0.566,1.827,-1.432,0.755,0.34,-1.044,-0.471],[-0.84,-0.85,-0.872,1.91,-0.444,0.527,1.059,-0.717,0.227],[-1.197,-1.104,-1.176,-0.045,0.327,0.79,0.931,-0.063,1.537],[0.13,-0.098,0.046,-0.851,-0.436,2.456,-0.762,-0.646,0.161],[-1.201,-1.119,-1.239,0.961,1.385,0.413,0.114,0.848,-0.161],[-0.238,-0.302,-0.378,0.093,-0.99,2.343,-0.664,-0.557,0.694],[-1.017,-0.967,-0.569,0.901,1.373,1.398,-0.423,-0.911,0.216],[-0.756,-0.733,-0.581,0.247,2.007,1.141,-0.741,-0.763,0.178],[-0.134,-0.712,-0.886,0.518,-1.129,-0.771,1.689,1.296,0.129],[-0.337,0.516,-0.692,-1.02,2.077,0.168,-0.959,0.759,-0.512],[1.176,1.169,1.576,-0.565,-0.823,-0.924,-0.662,-0.597,-0.35],[1.02,1.364,1.101,-1.136,0.348,-0.697,-0.969,-0.007,-1.025],[-0.894,-0.982,-1.287,1.346,-0.013,-0.272,1.359,0.906,-0.163],[1.151,0.918,1.812,-0.744,-0.699,-0.542,-0.626,-0.711,-0.56],[1.004,1.79,0.77,-1.073,0.114,-0.231,-1.036,-0.737,-0.601],[-0.045,1.23,-0.339,-0.858,1.933,-0.412,-1.092,0.265,-0.682],[-1.052,-1.082,-1.265,0.522,-0.431,0.669,1.127,0.122,1.39],[0.899,1.781,1.204,-0.748,-0.485,-0.596,-0.758,-0.71,-0.586],[-0.426,-0.53,0.739,0.228,-0.304,-1.301,-0.4,2.223,-0.23],[-0.069,-0.299,0.976,-1.35,0.061,-0.994,-0.08,2.016,-0.262],[-0.666,-0.722,-0.706,0.137,2.439,0.493,-0.381,-0.349,-0.245],[1.307,1.016,1.589,-0.618,-0.617,-0.348,-0.75,-0.938,-0.64],[0.398,-0.785,-0.412,-1.629,-0.911,0.922,0.685,1.48,0.252],[-0.062,1.206,-0.581,-0.337,1.774,0.678,-1.136,-0.827,-0.715],[-0.48,-0.689,-0.568,0.342,-0.527,0.098,2.46,-0.715,0.08],[-1.11,-0.827,-1.147,1.254,-0.277,-0.583,0.972,0.436,1.282],[-0.725,-0.727,-0.726,1.328,-0.496,0.169,1.977,-0.676,-0.123],[-1.155,-0.691,-0.632,-0.606,1.743,0.38,-0.539,1.392,0.108],[-1.002,-1.397,-1.021,1.248,-0.296,0.235,1.301,0.171,0.761],[1.144,0.991,0.483,-0.937,-1.301,0.552,-0.875,-0.987,0.929],[-0.094,0.623,-0.111,-1.123,2.054,0.375,-1.227,0.165,-0.663],[-0.715,-0.557,-0.547,0.515,-0.082,2.348,-0.704,-0.661,0.403],[-0.502,-0.453,-0.978,-1.014,1.515,0.782,-0.733,1.452,-0.069],[0.266,-0.268,0.437,0.208,-1.173,-0.832,2.184,-0.882,0.06],[-0.659,-0.274,-0.801,-1.077,1.888,0.642,-0.804,0.054,1.031],[-1.233,-1.302,-0.65,1.262,1.218,0.865,-0.196,-0.482,0.518],[1.247,1.239,1.484,-0.62,-0.844,-0.584,-0.539,-0.803,-0.58],[0.21,0.572,1.009,-1.819,0.709,-0.556,-0.39,1.205,-0.94],[-0.611,-0.575,-0.693,0.66,-0.229,2.241,0.311,-1.099,-0.006],[1.087,1.223,1.636,-0.709,-0.568,-0.718,-0.745,-0.492,-0.713],[-0.691,-0.694,-0.667,2.358,-0.314,0.267,0.651,-0.577,-0.333],[-1.065,-0.676,-1.373,-0.035,1.593,0.386,-0.356,1.284,0.242],[0.202,-0.003,0.523,-0.574,-0.941,2.308,-0.583,-0.896,-0.035],[-0.959,-0.995,-1.28,1.868,0.321,0.552,0.234,-0.352,0.612],[2.044,0.578,1.063,-0.666,-0.782,-0.642,-0.42,-0.705,-0.469],[-0.918,-1.069,-1.283,0.606,-0.084,-0.45,1.067,0.626,1.503],[0.514,-0.084,1.703,-0.874,-0.738,-0.663,1.467,-0.826,-0.499],[-0.619,-0.637,-0.565,0.405,-1.02,0.119,1.716,-0.828,1.43],[-1.362,-1.18,-1.151,0.021,0.984,0.334,0.8,0.278,1.277],[-1.268,-1.214,-0.965,0.798,0.383,1.365,0.306,-0.435,1.029],[-0.641,-0.642,-0.638,2.419,-0.335,-0.029,0.647,-0.59,-0.19],[-1.049,-0.954,-1.004,-0.165,1.98,0.234,-0.285,0.874,0.368],[-1.007,-1.108,-1.34,0.082,-0.178,0.649,0.988,0.366,1.548],[0.713,0.205,1.383,-0.068,-1.236,0.134,1.067,-1.563,-0.636],[-1.417,-1.224,-1.197,0.616,0.897,0.936,0.511,0.017,0.86],[-0.819,-0.802,-1.021,1.856,-0.395,-0.279,1.359,-0.189,0.29],[-0.726,-1.166,-1.058,0.054,-0.077,-0.171,2.077,0.345,0.723],[-0.772,-0.776,-0.772,1.683,-0.532,1.185,1.03,-0.724,-0.322],[0.19,-1.216,0.218,1.069,-1.501,-0.684,1.318,-0.268,0.875],[-0.013,0.361,0.264,-1.367,1.935,0.341,-1.224,0.365,-0.663],[0.0,-0.033,0.179,0.689,-1.723,-1.195,1.53,-0.271,0.824],[-0.764,-1.312,-0.923,0.801,1.592,1.169,-0.067,-0.543,0.046],[-1.275,-0.996,-1.072,0.822,-0.372,-0.034,0.981,0.442,1.504],[1.467,0.827,1.605,-0.71,-0.704,-0.78,-0.481,-0.637,-0.587],[-1.229,-1.434,-1.142,0.948,0.981,0.49,0.202,0.215,0.969],[-0.9,-0.793,-0.993,0.015,1.556,1.595,-0.529,-0.379,0.428],[-0.167,-0.42,-0.478,-1.396,-0.816,0.881,-0.335,1.775,0.955],[-1.269,-1.221,-1.305,0.023,0.641,0.977,0.725,0.34,1.09],[1.031,0.799,1.96,-0.564,-0.768,-0.55,-0.665,-0.74,-0.505],[0.761,-0.322,0.454,1.256,-1.136,-0.467,0.748,-1.793,0.499],[0.133,-1.117,0.1,-0.17,-1.255,-1.0,1.446,0.548,1.315],[-1.326,-1.235,-1.242,0.009,0.644,0.715,0.858,0.423,1.154],[-0.087,-1.035,-0.878,-0.122,-0.392,-1.067,1.343,1.637,0.6],[0.165,-1.283,-0.037,-0.209,-0.054,0.694,-0.252,-1.134,2.109],[-1.437,-1.13,-0.85,1.287,0.753,0.619,-0.102,-0.258,1.119],[-0.84,-1.047,-0.252,1.071,1.251,1.21,-0.803,-1.05,0.459],[1.527,1.572,0.498,-1.075,-0.696,-0.727,-0.869,-0.123,-0.107],[-1.184,-1.246,-1.179,-0.035,0.474,0.562,0.91,0.201,1.498],[-1.391,-1.364,-1.036,0.405,0.973,1.021,0.565,0.015,0.812],[-0.947,-1.311,-0.893,-0.006,-0.148,0.433,1.767,-0.016,1.121],[-1.06,-0.997,-1.184,-0.049,0.233,0.283,0.851,0.022,1.902],[0.82,0.951,0.722,-1.398,1.172,-0.811,-1.211,0.336,-0.581],[0.702,1.019,1.642,-1.04,-1.307,-0.541,-0.444,-0.512,0.482],[0.31,0.557,-0.273,-0.399,2.168,0.072,-1.412,-0.25,-0.773],[-0.99,-0.909,-0.977,0.173,0.624,2.104,-0.469,0.032,0.413],[1.178,0.366,2.037,-0.338,-0.773,-0.686,-0.367,-0.66,-0.759],[1.027,1.147,1.385,-0.868,-0.926,0.496,-0.957,-0.864,-0.439],[0.995,0.161,2.244,-0.641,-0.578,-0.652,-0.52,-0.491,-0.518],[-0.898,-0.807,-0.631,-0.362,1.529,1.811,-0.605,-0.135,0.1],[1.565,1.086,1.243,-0.315,-0.832,-0.874,-0.479,-0.883,-0.511],[-1.23,-1.213,-1.428,0.54,0.74,0.384,0.367,0.634,1.205],[-0.804,-0.733,-1.083,2.208,-0.519,0.05,0.292,-0.051,0.64],[1.864,-0.077,1.303,0.122,-0.714,-0.961,-0.138,-1.132,-0.268],[0.193,-1.205,0.704,1.373,-0.292,-1.155,0.546,-1.177,1.013],[1.334,1.174,1.463,-0.765,-0.754,-0.764,-0.668,-0.516,-0.503],[0.999,1.147,1.707,-0.834,-0.849,-0.244,-0.76,-0.724,-0.441],[1.276,1.518,1.179,-0.788,-0.695,-0.736,-0.665,-0.547,-0.542],[0.983,1.332,1.592,-0.733,-0.286,-0.699,-0.846,-0.637,-0.705],[-0.321,-0.555,-1.045,0.553,-1.029,0.61,2.115,-0.506,0.176],[-0.85,-0.89,-0.67,-0.421,2.174,0.819,-0.562,0.018,0.383],[-1.092,-1.143,-0.902,0.222,1.398,1.586,-0.009,-0.319,0.26],[-1.043,-1.18,-1.168,-0.054,0.11,0.835,0.825,0.014,1.662],[1.249,-0.023,1.328,0.048,-1.569,0.629,0.194,-1.094,-0.763],[-0.154,-0.994,-0.962,-0.25,-0.553,1.613,-0.246,-0.185,1.731],[-1.224,-1.477,-1.182,0.87,0.452,0.461,0.916,0.27,0.915],[-0.477,-0.419,-0.576,-0.236,2.565,0.109,-0.559,0.129,-0.535],[-0.008,-0.766,0.045,1.563,-0.816,-0.066,1.467,-1.464,0.044],[-1.107,-1.014,-1.483,0.067,0.209,0.401,1.089,0.435,1.402],[-1.148,-1.192,-0.965,-0.288,1.574,0.987,-0.189,0.693,0.528],[0.131,-1.003,-0.528,0.764,-0.353,-0.554,0.867,-1.196,1.871],[1.114,0.309,2.132,-0.608,-0.631,-0.635,-0.565,-0.591,-0.524],[-1.206,-1.112,-1.084,0.515,1.136,1.41,0.001,-0.346,0.686],[1.761,0.946,0.959,-0.79,-1.126,-0.917,-0.093,-0.556,-0.184],[-0.191,-0.127,0.167,0.585,-1.072,2.193,-0.586,-1.119,0.151],[0.811,0.669,1.795,-1.317,-0.931,-0.677,-0.618,0.446,-0.178],[1.497,0.624,1.686,-0.802,-0.459,-0.733,-0.507,-0.77,-0.536],[-0.687,-0.745,-0.703,1.841,-0.608,0.754,1.236,-0.666,-0.422],[0.87,-0.083,0.384,-0.526,-0.918,-1.989,0.337,0.812,1.113],[-0.146,-0.606,0.537,1.006,-1.223,-0.431,1.914,-0.98,-0.071],[0.937,-0.269,1.297,-1.146,-0.514,-1.173,-0.175,-0.438,1.48],[-1.313,-1.195,-1.084,0.332,0.398,0.854,0.676,-0.151,1.482],[1.595,1.319,0.811,-0.588,-0.871,-0.948,-0.697,0.124,-0.744],[-0.705,0.297,-0.636,1.549,-1.067,0.133,1.474,0.084,-1.129],[-0.769,-0.749,-0.685,2.428,0.355,0.24,-0.253,-0.478,-0.09],[-1.042,-0.885,-1.046,0.689,2.086,0.125,-0.284,0.34,0.016],[1.317,0.057,2.02,-0.67,-0.406,-0.842,-0.539,-0.215,-0.723],[-1.028,-0.251,-1.34,0.385,2.115,-0.042,-0.483,0.422,0.222],[-0.922,-1.022,-0.773,-0.28,0.845,-0.43,0.647,-0.09,2.025],[0.448,0.108,0.727,-0.524,-1.058,1.875,-0.966,-1.089,0.479],[2.219,0.316,0.661,-0.76,-0.841,-0.949,0.044,-0.107,-0.582]];
+
+const N_GENES = GENES.length;
+const N_SAMP  = SAMPLES.length;
+
+/* ============================================================
+   Small helpers (shared with the other practical pages)
+   ============================================================ */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function setupCanvas(canvas, cssHeight){
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = canvas.parentElement.clientWidth - 28;
+  canvas.style.width = cssWidth + "px";
+  canvas.style.height = cssHeight + "px";
+  canvas.width = Math.round(cssWidth*dpr);
+  canvas.height = Math.round(cssHeight*dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cssWidth,cssHeight);
+  return {ctx, W: cssWidth, H: cssHeight};
+}
+const CSS = getComputedStyle(document.documentElement);
+const col = n => CSS.getPropertyValue(n).trim();
+
+const TAB10 = ['#4c9be0','#ff9f40','#4cc38a','#e2725b','#b78be0','#c58a6b','#ec8fc9','#9aa7b5','#d3d264','#4fc9d6'];
+const TREAT_COL = { AVR: '#4cc38a', VIR: '#e2725b', MOCK: '#9fb0c3' };
+function heatColor(v){
+  let t = Math.max(-2, Math.min(2, v));
+  const white=[237,237,237], blue=[59,110,169], red=[200,64,58];
+  const mix=(x,y,f)=>Math.round(x+(y-x)*f);
+  let c;
+  if (t < 0){ const f=-t/2; c=[mix(white[0],blue[0],f),mix(white[1],blue[1],f),mix(white[2],blue[2],f)]; }
+  else      { const f= t/2; c=[mix(white[0],red[0],f), mix(white[1],red[1],f), mix(white[2],red[2],f)]; }
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+// viridis-like ramp for centrality colouring
+function viridis(t){
+  t = Math.max(0, Math.min(1, t));
+  const stops = [[68,1,84],[59,82,139],[33,145,140],[94,201,98],[253,231,37]];
+  const x = t*(stops.length-1); const i = Math.floor(x); const f = x-i;
+  const a = stops[i], b = stops[Math.min(i+1,stops.length-1)];
+  return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+}
+
+/* ============================================================
+   Correlation matrix over genes (computed once) + distances
+   ============================================================ */
+let CORR = null;                 // Float64Array(N_GENES*N_GENES): Pearson r between genes
+function buildCorr(){
+  const n = N_GENES, m = N_SAMP;
+  const cen = new Float64Array(n*m), norm = new Float64Array(n);
+  for (let i=0;i<n;i++){
+    let mean=0; for (let j=0;j<m;j++) mean+=EXPR[i][j]; mean/=m;
+    let ss=0;
+    for (let j=0;j<m;j++){ const v=EXPR[i][j]-mean; cen[i*m+j]=v; ss+=v*v; }
+    norm[i]=Math.sqrt(ss)||1e-300;
+  }
+  CORR = new Float64Array(n*n);
+  for (let i=0;i<n;i++){
+    for (let k=i;k<n;k++){
+      let s=0; for (let j=0;j<m;j++) s+=cen[i*m+j]*cen[k*m+j];
+      const r=s/(norm[i]*norm[k]);
+      CORR[i*n+k]=r; CORR[k*n+i]=r;
+    }
+  }
+}
+// gene distance matrix (flat n*n) by metric, cached
+const geneDistCache = {};
+function geneDist(metric){
+  if (geneDistCache[metric]) return geneDistCache[metric];
+  const n = N_GENES; const D = new Float64Array(n*n);
+  if (metric === 'correlation'){
+    for (let i=0;i<n*n;i++) D[i] = 1 - CORR[i];
+  } else {
+    const m = N_SAMP;
+    for (let i=0;i<n;i++){
+      for (let k=i+1;k<n;k++){
+        let s=0; for (let j=0;j<m;j++){ const d=EXPR[i][j]-EXPR[k][j]; s+=d*d; }
+        const v=Math.sqrt(s); D[i*n+k]=v; D[k*n+i]=v;
+      }
+    }
+  }
+  geneDistCache[metric]=D; return D;
+}
+// sample distance matrix (9x9) by metric
+function sampleDist(metric){
+  const n=N_SAMP, m=N_GENES; const D=new Float64Array(n*n);
+  const cols=[]; for (let s=0;s<n;s++){ const c=new Float64Array(m); for (let g=0;g<m;g++) c[g]=EXPR[g][s]; cols.push(c); }
+  for (let i=0;i<n;i++) for (let k=i+1;k<n;k++){
+    let v;
+    if (metric==='correlation'){
+      let mi=0,mk=0; for (let g=0;g<m;g++){ mi+=cols[i][g]; mk+=cols[k][g]; } mi/=m; mk/=m;
+      let num=0,di=0,dk=0; for (let g=0;g<m;g++){ const a=cols[i][g]-mi,b=cols[k][g]-mk; num+=a*b; di+=a*a; dk+=b*b; }
+      v = 1 - num/Math.sqrt(di*dk);
+    } else {
+      let s=0; for (let g=0;g<m;g++){ const d=cols[i][g]-cols[k][g]; s+=d*d; } v=Math.sqrt(s);
+    }
+    D[i*n+k]=v; D[k*n+i]=v;
+  }
+  return D;
+}
+
+/* ============================================================
+   Agglomerative clustering (nearest-neighbour chain, Lance-Williams)
+   Mirrors scipy linkage(); verified to give identical partitions.
+   ============================================================ */
+function nnChain(Dsrc, n, method){
+  const D = Dsrc.slice();               // mutated in place, so clone
+  const size = new Float64Array(n).fill(1);
+  const inactive = new Uint8Array(n);
+  const chain = new Int32Array(n); let cl = 0;
+  const merges = [];
+  for (let it=0; it<n-1; it++){
+    if (cl===0){ let s=0; while(inactive[s]) s++; chain[cl++]=s; }
+    let x, y, cur;
+    while (true){
+      x = chain[cl-1]; cur = Infinity; y = -1;
+      if (cl>1){ y = chain[cl-2]; cur = D[x*n+y]; }
+      const base = x*n;
+      for (let w=0; w<n; w++){ if (inactive[w]||w===x) continue; const d=D[base+w]; if (d<cur){ cur=d; y=w; } }
+      if (cl>1 && y===chain[cl-2]) break;
+      chain[cl++]=y;
+    }
+    cl -= 2;
+    merges.push([x,y,cur]);
+    const nx=size[x], ny=size[y], ns=nx+ny;
+    for (let w=0; w<n; w++){
+      if (inactive[w]||w===x||w===y) continue;
+      const dxw=D[x*n+w], dyw=D[y*n+w]; let nd;
+      if (method==='average') nd=(nx*dxw+ny*dyw)/ns;
+      else if (method==='complete') nd=Math.max(dxw,dyw);
+      else nd=Math.min(dxw,dyw);
+      D[y*n+w]=nd; D[w*n+y]=nd;
+    }
+    inactive[x]=1; size[y]=ns;
+  }
+  // sort by distance and relabel into a proper linkage matrix
+  merges.sort((a,b)=>a[2]-b[2]);
+  const parent = new Int32Array(2*n-1); for (let i=0;i<2*n-1;i++) parent[i]=i;
+  const sz = new Float64Array(2*n-1).fill(1);
+  let nextlabel = n;
+  const find = x => { let r=x; while(parent[r]!==r) r=parent[r]; while(parent[x]!==r){ const t=parent[x]; parent[x]=r; x=t; } return r; };
+  const Z = [];
+  for (const [x,y,d] of merges){
+    const rx=find(x), ry=find(y);
+    const s=sz[rx]+sz[ry];
+    Z.push([Math.min(rx,ry), Math.max(rx,ry), d, s]);
+    parent[rx]=nextlabel; parent[ry]=nextlabel; sz[nextlabel]=s; nextlabel++;
+  }
+  return Z;   // n-1 rows of [child1, child2, dist, size]
+}
+function leafOrder(Z, n){
+  const order = [];
+  const rec = node => {
+    if (node < n){ order.push(node); return; }
+    const r = Z[node-n]; rec(r[0]); rec(r[1]);
+  };
+  rec(2*n-2);
+  return order;
+}
+function cutTree(Z, n, k){
+  const parent = new Int32Array(2*n-1); for (let i=0;i<2*n-1;i++) parent[i]=i;
+  const find = x => { let r=x; while(parent[r]!==r) r=parent[r]; while(parent[x]!==r){ const t=parent[x]; parent[x]=r; x=t; } return r; };
+  const nMerge = n - k;
+  for (let i=0;i<nMerge;i++){ parent[Z[i][0]]=n+i; parent[Z[i][1]]=n+i; }
+  const labels = new Int32Array(n);
+  for (let i=0;i<n;i++) labels[i]=find(i);
+  return labels;
+}
+// tree cache by metric+method for the gene clustering
+const treeCache = {};
+function geneTree(metric, method){
+  const key = metric+'|'+method;
+  if (treeCache[key]) return treeCache[key];
+  const Z = nnChain(geneDist(metric), N_GENES, method);
+  const order = leafOrder(Z, N_GENES);
+  treeCache[key] = { Z, order };
+  return treeCache[key];
+}
+
+/* ============================================================
+   STEP 1 — data preview table
+   ============================================================ */
+function renderDataTable(){
+  const showGenes = 8;
+  let html = '<table class="markers"><thead><tr><th class="rowlab">Gene</th>';
+  for (const s of SAMPLES) html += `<th>${s.name}</th>`;
+  html += '</tr></thead><tbody>';
+  for (let i=0;i<showGenes;i++){
+    html += `<tr><td class="rowlab">${GENES[i]}</td>`;
+    for (let j=0;j<N_SAMP;j++){
+      const v = EXPR[i][j];
+      html += `<td style="color:${heatColor(v)}">${v.toFixed(2)}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += `<tr><td class="rowlab">…</td>${SAMPLES.map(()=>'<td>…</td>').join('')}</tr>`;
+  html += '</tbody></table>';
+  document.getElementById('data-table').innerHTML = html;
+}
+
+/* ============================================================
+   Dendrogram coordinate helper
+   ============================================================ */
+function dendroCoords(Z, n, order){
+  const rank = new Int32Array(n); order.forEach((leaf,i)=>rank[leaf]=i);
+  const pos = new Array(2*n-1);
+  for (let i=0;i<n;i++) pos[i] = { p: rank[i], d: 0 };
+  for (let i=0;i<n-1;i++){ const [a,b,d]=Z[i]; pos[n+i] = { p:(pos[a].p+pos[b].p)/2, d, a, b }; }
+  return pos;
+}
+
+/* ============================================================
+   STEP 2 — clustered heatmap with sample dendrogram
+   ============================================================ */
+function drawHeatmap(){
+  const canvas = document.getElementById('heatmap');
+  const geneOrder = geneTree('correlation','average').order;
+  const sD = sampleDist('correlation');
+  const sZ = nnChain(sD, N_SAMP, 'average');
+  const sOrder = leafOrder(sZ, N_SAMP);
+  const topH = 70, labelH = 34, padL = 8, padR = 8;
+  const totalH = topH + 600 + labelH;
+  const { ctx, W } = setupCanvas(canvas, totalH);
+  const hmLeft = padL, hmWidth = W - padL - padR;
+  const colW = hmWidth / N_SAMP;
+  const hmTop = topH, hmH = 600;
+  const rowH = hmH / N_GENES;
+
+  // heatmap cells
+  for (let r=0;r<N_GENES;r++){
+    const g = geneOrder[r];
+    const y = hmTop + r*rowH;
+    for (let c=0;c<N_SAMP;c++){
+      const s = sOrder[c];
+      ctx.fillStyle = heatColor(EXPR[g][s]);
+      ctx.fillRect(hmLeft + c*colW, y, colW+0.5, rowH+0.5);
+    }
+  }
+  // sample dendrogram (top)
+  const pos = dendroCoords(sZ, N_SAMP, sOrder);
+  const maxD = sZ[N_SAMP-2][2];
+  const X = p => hmLeft + (p+0.5)*colW;
+  const Y = d => 8 + (1 - d/maxD)*(topH-12);
+  ctx.strokeStyle = col('--muted'); ctx.lineWidth = 1.4;
+  for (let i=0;i<N_SAMP-1;i++){
+    const node = pos[N_SAMP+i]; const a=node.a, b=node.b;
+    const xa=X(pos[a].p), xb=X(pos[b].p), yn=Y(node.d);
+    const ya=Y(pos[a].d), yb=Y(pos[b].d);
+    ctx.beginPath();
+    ctx.moveTo(xa,ya); ctx.lineTo(xa,yn); ctx.lineTo(xb,yn); ctx.lineTo(xb,yb);
+    ctx.stroke();
+  }
+  // sample labels (bottom), coloured by treatment
+  ctx.font = '600 12px system-ui'; ctx.textAlign='center'; ctx.textBaseline='top';
+  for (let c=0;c<N_SAMP;c++){
+    const s = SAMPLES[sOrder[c]];
+    ctx.fillStyle = TREAT_COL[s.treatment] || col('--muted');
+    ctx.fillText(s.treatment, hmLeft + (c+0.5)*colW, hmTop+hmH+6);
+    ctx.fillStyle = col('--muted'); ctx.font='11px system-ui';
+    ctx.fillText(s.time+' h', hmLeft + (c+0.5)*colW, hmTop+hmH+20);
+    ctx.font = '600 12px system-ui';
+  }
+}
+
+/* ============================================================
+   STEP 3 — dendrogram explorer + genes-per-cluster bar
+   ============================================================ */
+const explorer = { metric:'correlation', method:'average', k:4 };
+// Integrated figure: gene dendrogram (+ cut) | cluster sidebar | heatmap | sample dendrogram.
+// The dendrogram leaves line up row-for-row with the heatmap, so students see exactly which
+// genes fall into which cluster and how that maps onto the coloured blocks in the heatmap.
+function drawClusterFigure(){
+  const canvas = document.getElementById('clusterfig');
+  const n = N_GENES, k = explorer.k;
+  const { Z, order } = geneTree(explorer.metric, explorer.method);
+  // sample clustering with the same choices, so the columns are ordered too
+  const sZ = nnChain(sampleDist(explorer.metric), N_SAMP, explorer.method);
+  const sOrder = leafOrder(sZ, N_SAMP);
+  // cluster labels + stable colour index (first appearance along the leaf order)
+  const labels = cutTree(Z, n, k);
+  const remap = {}; let next=0;
+  const clusterOf = new Int32Array(n);
+  for (const leaf of order){ const l=labels[leaf]; if (!(l in remap)) remap[l]=next++; clusterOf[leaf]=remap[l]; }
+
+  const totalH = 660;
+  const { ctx, W } = setupCanvas(canvas, totalH);
+  const topH = 56, labelH = 34, padR = 8;
+  const geneDendW = 132, sidebarW = 13, gap = 3;
+  const hmLeft = geneDendW + sidebarW + gap;
+  const hmW = W - hmLeft - padR;
+  const colW = hmW / N_SAMP;
+  const hmTop = topH, hmH = totalH - topH - labelH;
+  const rowH = hmH / n;
+  const rowY = r => hmTop + r*rowH;
+
+  // --- heatmap cells (rows in gene leaf order, cols in sample leaf order) ---
+  for (let r=0;r<n;r++){
+    const g = order[r]; const y = rowY(r);
+    for (let c=0;c<N_SAMP;c++){
+      ctx.fillStyle = heatColor(EXPR[g][sOrder[c]]);
+      ctx.fillRect(hmLeft + c*colW, y, colW+0.5, rowH+0.6);
+    }
+  }
+  // --- cluster colour sidebar ---
+  for (let r=0;r<n;r++){
+    ctx.fillStyle = TAB10[clusterOf[order[r]]%10];
+    ctx.fillRect(geneDendW+1, rowY(r), sidebarW-1, rowH+0.6);
+  }
+
+  // --- gene dendrogram (left), aligned to heatmap rows ---
+  const pos = dendroCoords(Z, n, order);
+  const maxD = Z[n-2][2];
+  const Yp = p => hmTop + (p+0.5)*rowH;
+  const Xd = d => 2 + (1 - d/maxD)*(geneDendW-6);   // root at left, leaves touch the sidebar
+  const cutIdx = n - k;
+  const cutDist = (Z[cutIdx-1][2] + Z[cutIdx][2]) / 2;
+  const nodeCluster = new Int32Array(2*n-1).fill(-1);
+  for (let i=0;i<n;i++) nodeCluster[i]=clusterOf[i];
+  for (let i=0;i<cutIdx;i++) nodeCluster[n+i]=nodeCluster[Z[i][0]];
+  ctx.lineWidth = 1;
+  for (let i=0;i<n-1;i++){
+    const node=pos[n+i], a=node.a, b=node.b;
+    const ya=Yp(pos[a].p), yb=Yp(pos[b].p), xn=Xd(node.d);
+    const xa=Xd(pos[a].d), xb=Xd(pos[b].d);
+    ctx.strokeStyle = (i < cutIdx) ? TAB10[nodeCluster[n+i]%10] : 'rgba(159,176,195,.5)';
+    ctx.beginPath();
+    ctx.moveTo(xa,ya); ctx.lineTo(xn,ya); ctx.lineTo(xn,yb); ctx.lineTo(xb,yb); ctx.stroke();
+  }
+  // cut line spanning the heatmap height
+  const xc = Xd(cutDist);
+  ctx.strokeStyle = col('--accent-2'); ctx.setLineDash([5,4]); ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(xc,hmTop-6); ctx.lineTo(xc,hmTop+hmH+2); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = col('--accent-2'); ctx.font='11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText('cut', xc, hmTop-7);
+
+  // --- sample dendrogram (top) ---
+  const sPos = dendroCoords(sZ, N_SAMP, sOrder);
+  const sMax = sZ[N_SAMP-2][2];
+  const Xs = p => hmLeft + (p+0.5)*colW;
+  const Ys = d => 8 + (1 - d/sMax)*(topH-14);
+  ctx.strokeStyle = col('--muted'); ctx.lineWidth = 1.3;
+  for (let i=0;i<N_SAMP-1;i++){
+    const node=sPos[N_SAMP+i], a=node.a, b=node.b;
+    const xa=Xs(sPos[a].p), xb=Xs(sPos[b].p), yn=Ys(node.d);
+    ctx.beginPath();
+    ctx.moveTo(xa,Ys(sPos[a].d)); ctx.lineTo(xa,yn); ctx.lineTo(xb,yn); ctx.lineTo(xb,Ys(sPos[b].d)); ctx.stroke();
+  }
+  // --- sample labels (bottom) ---
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for (let c=0;c<N_SAMP;c++){
+    const s = SAMPLES[sOrder[c]];
+    ctx.fillStyle = TREAT_COL[s.treatment] || col('--muted'); ctx.font='600 12px system-ui';
+    ctx.fillText(s.treatment, Xs(c), hmTop+hmH+6);
+    ctx.fillStyle = col('--muted'); ctx.font='11px system-ui';
+    ctx.fillText(s.time+' h', Xs(c), hmTop+hmH+20);
+  }
+  // gene-axis caption
+  ctx.save(); ctx.translate(11, hmTop+hmH/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle=col('--muted'); ctx.font='11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText('500 genes', 0, 0); ctx.restore();
+
+  drawClusterBar(clusterOf, k);
+}
+function drawClusterBar(clusterOf, k){
+  const canvas = document.getElementById('clusterbar');
+  const counts = new Array(k).fill(0);
+  for (let i=0;i<N_GENES;i++) counts[clusterOf[i]]++;
+  const { ctx, W } = setupCanvas(canvas, 200);
+  const padL=40,padR=12,padT=12,padB=28;
+  const plotW=W-padL-padR, plotH=200-padT-padB;
+  const maxC=Math.max(...counts,1);
+  const bw=plotW/k;
+  ctx.strokeStyle=col('--line'); ctx.beginPath();
+  ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  ctx.fillStyle=col('--muted'); ctx.font='11px system-ui'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for (let g=0;g<=maxC;g+=Math.max(1,Math.round(maxC/4))){ const y=padT+plotH-(g/maxC)*plotH; ctx.fillText(g,padL-6,y); }
+  for (let c=0;c<k;c++){
+    const h=(counts[c]/maxC)*plotH; const x=padL+c*bw;
+    ctx.fillStyle=TAB10[c%10];
+    ctx.fillRect(x+bw*0.18, padT+plotH-h, bw*0.64, h);
+    ctx.fillStyle=col('--muted'); ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText(c+1, x+bw*0.5, padT+plotH+6);
+  }
+  document.getElementById('clusterbar-cap').textContent =
+    `Number of genes in each of the ${k} clusters (total ${N_GENES}).`;
+}
+
+/* ============================================================
+   STEP 4 — gene correlation network
+   ============================================================ */
+// adjacency over all genes at a given correlation threshold
+function adjacencyAt(thr){
+  const n=N_GENES; const adj=Array.from({length:n},()=>[]);
+  for (let i=0;i<n;i++){ const base=i*n;
+    for (let j=i+1;j<n;j++){ if (CORR[base+j] > thr){ adj[i].push(j); adj[j].push(i); } }
+  }
+  return adj;
+}
+function centralityScores(adj, active, mode){
+  const n=N_GENES; const score={};
+  if (mode==='degree'){ for (const i of active) score[i]=adj[i].length; return score; }
+  // BFS-based for closeness / betweenness (Brandes) over the active subgraph
+  if (mode==='closeness'){
+    for (const s of active){
+      const dist={}; dist[s]=0; const q=[s]; let sum=0, reach=0;
+      for (let h=0;h<q.length;h++){ const u=q[h];
+        for (const w of adj[u]) if (dist[w]===undefined){ dist[w]=dist[u]+1; sum+=dist[w]; reach++; q.push(w); }
+      }
+      score[s] = reach>0 ? reach/sum * (reach/(active.length-1||1)) : 0;
+    }
+    return score;
+  }
+  // betweenness (Brandes)
+  for (const i of active) score[i]=0;
+  for (const s of active){
+    const S=[]; const P={}; const sigma={}; const dist={};
+    for (const i of active){ P[i]=[]; sigma[i]=0; dist[i]=-1; }
+    sigma[s]=1; dist[s]=0; const q=[s];
+    for (let h=0;h<q.length;h++){ const v=q[h]; S.push(v);
+      for (const w of adj[v]){
+        if (dist[w]<0){ dist[w]=dist[v]+1; q.push(w); }
+        if (dist[w]===dist[v]+1){ sigma[w]+=sigma[v]; P[w].push(v); }
+      }
+    }
+    const delta={}; for (const i of active) delta[i]=0;
+    for (let idx=S.length-1; idx>=0; idx--){ const w=S[idx];
+      for (const v of P[w]) delta[v]+=(sigma[v]/sigma[w])*(1+delta[w]);
+      if (w!==s) score[w]+=delta[w];
+    }
+  }
+  return score;
+}
+// interactive network via vis-network (same engine as the notebook's pyvis)
+let visNet = null, visNodes = null, visEdges = null;
+function buildNetwork(){
+  const holder = document.getElementById('network');
+  if (typeof vis === 'undefined'){
+    holder.innerHTML = '<p style="padding:16px;color:#33475b">The interactive network library could not be loaded (are you offline?).</p>';
+    return;
+  }
+  if (!visNodes){ visNodes = new vis.DataSet(); visEdges = new vis.DataSet(); }
+  const thr = +document.getElementById('net-thr').value;
+  const mode = document.querySelector('#cent-seg button.on').dataset.cent;
+  const n = N_GENES;
+  const adj = adjacencyAt(thr);
+  const active = []; for (let i=0;i<n;i++) if (adj[i].length) active.push(i);
+  const score = centralityScores(adj, active, mode);
+  let smin=Infinity, smax=-Infinity;
+  for (const i of active){ smin=Math.min(smin,score[i]); smax=Math.max(smax,score[i]); }
+  const norm = v => (smax>smin) ? (v-smin)/(smax-smin) : 0.5;
+
+  const nodes = active.map(i=>{
+    const t = norm(score[i]);
+    return { id:i, title:`${GENES[i]} — ${mode}: ${score[i].toFixed(3)}`,
+      value: 1+t*6, color:{ background:viridis(t), border:'#33475b',
+        highlight:{ background:viridis(t), border:'#10202f' } } };
+  });
+  const edges = [];
+  for (const i of active){ for (const j of adj[i]){ if (j>i) edges.push({ from:i, to:j }); } }
+
+  visNodes.clear(); visEdges.clear();
+  visNodes.add(nodes); visEdges.add(edges);
+
+  if (!visNet){
+    visNet = new vis.Network(holder, { nodes:visNodes, edges:visEdges }, {
+      nodes:{ shape:'dot', borderWidth:1, scaling:{ min:5, max:26 },
+              font:{ color:'#22303f', size:12, face:'system-ui' } },
+      edges:{ color:{ color:'rgba(70,90,110,.28)', highlight:'#e2725b' }, width:0.5, smooth:false },
+      physics:{ solver:'barnesHut',
+                barnesHut:{ gravitationalConstant:-3000, springLength:70, springConstant:0.03, damping:0.6 },
+                stabilization:{ iterations:120, updateInterval:25 } },
+      interaction:{ hover:true, tooltipDelay:120, hideEdgesOnDrag:true } });
+  }
+  const edgeCount = edges.length;
+  document.getElementById('net-cap').innerHTML =
+    `<b>${active.length}</b> genes are connected at threshold ${thr.toFixed(2)} (${edgeCount} edges). ` +
+    `Drag nodes, scroll to zoom, hover for a gene name.`;
+  const top=[...active].sort((a,b)=>score[b]-score[a]).slice(0,8);
+  document.getElementById('net-top').innerHTML =
+    `<b>Top genes by ${mode}:</b> ` + top.map(i=>`<code>${GENES[i]}</code>`).join(' ');
+}
+
+/* ============================================================
+   QUIZ
+   ============================================================ */
+const QUIZ = [
+  {
+    q: "What is the goal of an unsupervised method like hierarchical clustering here?",
+    opts: [
+      "To predict each plant's yield from its DNA markers.",
+      "To find structure in the data without being told the answers.",
+      "To classify samples into labels we defined in advance.",
+    ],
+    correct: 1,
+    why: "Unsupervised methods are given no target labels; they group genes or samples purely by similarity, letting patterns emerge on their own."
+  },
+  {
+    q: "Two genes have a small correlation distance. What does that mean?",
+    opts: [
+      "Their expression rises and falls together across the samples.",
+      "They sit on the same chromosome, close together.",
+      "They both have a high average expression level.",
+    ],
+    correct: 0,
+    why: "Correlation distance is 1 − Pearson r. A small distance means a high correlation: the two genes follow the same up-and-down pattern across samples."
+  },
+  {
+    q: "You slide the cut and switch linkage; the clusters keep changing. What is the lesson?",
+    opts: [
+      "The dataset is broken and should be re-measured.",
+      "Only average linkage ever gives valid clusters.",
+      "There is usually no single 'correct' number of clusters.",
+    ],
+    correct: 2,
+    why: "Clustering is exploratory. The number of clusters and the grouping depend on your choices of distance, linkage and cut, so it is a judgement guided by the biological question."
+  },
+  {
+    q: "In this dataset, what structures the samples most strongly?",
+    opts: [
+      "The sequencing machine that was used.",
+      "Whether the sample came early or late (time point).",
+      "The alphabetical order of the sample names.",
+    ],
+    correct: 1,
+    why: "The three 1-hour samples cluster tightly together regardless of treatment, so the time point dominates the top split of the sample tree."
+  },
+  {
+    q: "In the correlation network, what does an edge between two genes suggest?",
+    opts: [
+      "One gene physically switches the other one off.",
+      "They are very highly correlated, hinting they are co-regulated.",
+      "They are guaranteed to share the same function.",
+    ],
+    correct: 1,
+    why: "An edge only means the two expression profiles are highly correlated. That is a hint they may be co-regulated or involved in the same response, but it is not proof of a direct or functional link."
+  },
+];
+function renderQuiz(){
+  const root=document.getElementById('quiz');
+  QUIZ.forEach((item,qi)=>{
+    const div=document.createElement('div'); div.className='qitem';
+    div.innerHTML=`<p class="qtext">${qi+1}. ${item.q}</p>`;
+    item.opts.forEach((o,oi)=>{
+      const b=document.createElement('button'); b.className='opt'; b.textContent=o;
+      b.addEventListener('click',()=>{
+        div.querySelectorAll('.opt').forEach(x=>{x.disabled=true;});
+        b.classList.add(oi===item.correct?'correct':'wrong');
+        if(oi!==item.correct) div.querySelectorAll('.opt')[item.correct].classList.add('correct');
+        div.querySelector('.explain').classList.add('show');
+      });
+      div.appendChild(b);
+    });
+    const ex=document.createElement('p'); ex.className='explain'; ex.textContent='💡 '+item.why;
+    div.appendChild(ex);
+    root.appendChild(div);
+  });
+}
+
+/* ============================================================
+   Wiring + init
+   ============================================================ */
+document.getElementById('kslider').addEventListener('input', e=>{
+  explorer.k = +e.target.value; document.getElementById('kval').textContent = explorer.k; drawClusterFigure();
+});
+document.querySelectorAll('#metric-seg button').forEach(b=>b.addEventListener('click', ()=>{
+  document.querySelectorAll('#metric-seg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); explorer.metric=b.dataset.metric; drawClusterFigure();
+}));
+document.querySelectorAll('#method-seg button').forEach(b=>b.addEventListener('click', ()=>{
+  document.querySelectorAll('#method-seg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); explorer.method=b.dataset.method; drawClusterFigure();
+}));
+let netTimer=null;
+document.getElementById('net-thr').addEventListener('input', e=>{
+  document.getElementById('net-thr-val').textContent = (+e.target.value).toFixed(2);
+  clearTimeout(netTimer); netTimer=setTimeout(buildNetwork, 150);
+});
+document.querySelectorAll('#cent-seg button').forEach(b=>b.addEventListener('click', ()=>{
+  document.querySelectorAll('#cent-seg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); buildNetwork();
+}));
+
+function initAll(){
+  buildCorr();
+  renderDataTable();
+  drawHeatmap();
+  drawClusterFigure();
+  renderQuiz();
+  // the network runs a physics layout — defer so the rest of the page paints first
+  setTimeout(buildNetwork, 60);
+}
+initAll();
+
+let rz;
+window.addEventListener('resize', ()=>{
+  clearTimeout(rz);
+  rz=setTimeout(()=>{ drawHeatmap(); drawClusterFigure(); }, 220);  // vis-network self-resizes
+});
+</script>
+</body>
+</html>
