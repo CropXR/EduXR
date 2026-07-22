@@ -214,7 +214,12 @@
 <header class="hero">
   <div class="badge">EduXR · Plant Breeding</div>
   <h1>Marker Assisted Selection</h1>
-  <p>An interactive practical. No coding, no installing anything. Just click, explore, and breed a better crop. Work through the steps from top to bottom.</p>
+  <p style="text-align:left; max-width: 620px; margin: 0 auto;">By the end of this practical you will be able to:</p>
+  <ul style="text-align:left; color: var(--muted); max-width: 620px; margin: 8px auto 0; padding-left: 20px;">
+    <li>Explain what marker assisted selection is and how it differs from genomic selection</li>
+    <li>Describe how a computational method (a GWAS) guides which plants get crossed in a breeding programme</li>
+    <li>Interpret Manhattan plots and simple backcrossing schemes, and describe what each is used for</li>
+  </ul>
 </header>
 
 <div class="wrap">
@@ -312,6 +317,7 @@
     <div class="controls">
       <label>Cross it with:
         <select id="bc-partner">
+          <option value="" selected disabled>— choose —</option>
           <option value="elite">🚜 Elite (agricultural) variety</option>
           <option value="donor">🌾 Resilient donor</option>
           <option value="self">🧪 My current population</option>
@@ -450,7 +456,8 @@ function agriculturalPlant(seed) {
   const row = [];
   for (let m = 0; m < N_MARKERS; m++) row.push(rng() < 0.5 ? 0 : 1);
   row[SALT_MARKER] = 0;               // elite lacks salt resistance
-  YIELD_POS.forEach(i => row[i] = 1); // elite has every yield-boosting marker
+  for (let i = 0; i <= 8; i++) row[i] = 1; // elite carries most yield markers (0..8)
+  row[9] = 0;                         // but is missing one (marker 9), yield ~18 not the max ~20
   YIELD_NEG.forEach(i => row[i] = 0);
   return row;
 }
@@ -620,10 +627,8 @@ function drawManhattan(canvas, data, trait, selected){
   data.forEach((v,m)=>{
     const h = Math.min(v/maxY,1)*plotH;
     const x = padL + m*bw;
-    const isHot = m===SALT_MARKER && trait==='salt';
     const isSel = m===selected;
     ctx.fillStyle = isSel ? col('--accent-3')
-                  : isHot ? col('--highlight')
                   : (trait==='salt' ? 'rgba(91,155,213,.55)' : 'rgba(242,193,78,.7)');
     ctx.fillRect(x+bw*0.15, padT+plotH-h, bw*0.7, h);
   });
@@ -782,7 +787,11 @@ function bcReset(){
   bcPlaceholderChart();
 }
 function bcDoRound(){
-  const partner = document.getElementById('bc-partner').value;   // elite | donor | self
+  const partner = document.getElementById('bc-partner').value;   // '' | elite | donor | self
+  if (!partner){
+    bcSetFeedback('<span class="bad">Choose a population to cross with first.</span>');
+    return;
+  }
   const alleleSel = document.getElementById('bc-allele').value;  // 1 | 0 | none
   const markerRaw = document.getElementById('bc-marker').value;
   let markerIdx = null;

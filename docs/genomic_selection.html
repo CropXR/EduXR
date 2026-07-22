@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Genomic Selection</title>
+<style>
+  :root {
+    --bg: #0f1720;
+    --panel: #172230;
+    --panel-2: #1e2c3d;
+    --ink: #e9eef5;
+    --muted: #9fb0c3;
+    --line: #2c3e54;
+    --accent: #4cc38a;      /* genomic selection / positive */
+    --accent-2: #f2c14e;     /* yield */
+    --accent-3: #5b9bd5;     /* control / neutral */
+    --danger: #e2725b;
+    --highlight: #f26d5b;
+    --radius: 14px;
+    --shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1b2a3d 0%, var(--bg) 55%);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+
+  header.hero {
+    padding: 56px 20px 40px;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  header.hero .badge {
+    display: inline-block;
+    font-size: 13px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 14px;
+    margin-bottom: 18px;
+  }
+  header.hero h1 { font-size: clamp(28px, 5vw, 46px); margin: 0 0 12px; line-height: 1.15; }
+  header.hero p { color: var(--muted); font-size: 18px; max-width: 680px; margin: 0 auto; }
+  header.hero .nav { margin-top: 16px; font-size: 15px; }
+
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .step {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 26px 28px;
+    margin: 26px 0;
+  }
+  .step h2 {
+    margin: 0 0 6px;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .step h2 .num {
+    flex: none;
+    width: 34px; height: 34px;
+    display: grid; place-items: center;
+    background: var(--accent);
+    color: #06281b;
+    border-radius: 10px;
+    font-size: 17px; font-weight: 700;
+  }
+  .step .lead { color: var(--ink); margin-top: 0; }
+  .step h3 { margin: 22px 0 8px; font-size: 17px; color: var(--ink); }
+
+  .callout {
+    border-left: 3px solid var(--accent-3);
+    background: var(--panel-2);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 16px 0;
+    color: var(--muted);
+  }
+  .callout.q { border-left-color: var(--accent-2); }
+  .callout.q strong { color: var(--accent-2); }
+  .callout ul { margin: 8px 0 0; padding-left: 20px; }
+  .callout li { margin: 4px 0; }
+  .callout details { margin-top: 8px; }
+  .callout details summary { cursor: pointer; color: var(--accent-3); font-size: 13px; width: fit-content; }
+  .callout details[open] summary { margin-bottom: 6px; }
+  .callout details > :not(summary) { font-size: 13px; }
+  .callout.ok { border-left-color: var(--accent); color: var(--ink); }
+
+  .controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    margin: 18px 0;
+  }
+  .controls label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  input[type="range"] { accent-color: var(--accent); }
+  button {
+    background: var(--accent);
+    color: #06281b;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer;
+    transition: transform .05s ease, filter .15s ease;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: translateY(1px); }
+  button.secondary { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+
+  select, input[type="number"] {
+    background: #0d1520; color: var(--ink); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit;
+  }
+  .status { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+            padding: 10px 14px; margin: 12px 0 4px; font-size: 14px; min-height: 1.2em; }
+  .status b.gs { color: var(--accent); }
+  .status b.ctrl { color: var(--accent-3); }
+
+  canvas { max-width: 100%; display: block; }
+  .chartbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 14px 0; }
+  .chart-hint { font-size: 13px; color: var(--muted); text-align: center; margin: 4px 0 0; }
+
+  /* marker table */
+  .tablescroll { overflow-x: auto; border-radius: 10px; border: 1px solid var(--line); }
+  table.markers { border-collapse: collapse; font-size: 12px; width: 100%; }
+  table.markers th, table.markers td { padding: 4px 7px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.markers thead th { position: sticky; top: 0; background: var(--panel-2); color: var(--muted); font-weight: 600; }
+  table.markers td.allele-1 { color: var(--accent); font-weight: 700; }
+  table.markers td.allele-0 { color: var(--muted); }
+  table.markers td.pheno { color: var(--accent-2); font-weight: 600; border-left: 1px solid var(--line); }
+  table.markers td.rowlab, table.markers th.rowlab { text-align: left; color: var(--muted); background: var(--panel-2); position: sticky; left: 0; }
+
+  .keyline { display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin-top:6px; }
+  .keyline span { display:inline-flex; align-items:center; gap:6px; }
+  .dot { width:11px; height:11px; border-radius:3px; display:inline-block; }
+
+  /* quiz */
+  .quiz { margin-top: 10px; }
+  .quiz .qitem { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; background: var(--panel-2); }
+  .quiz .qitem p.qtext { margin: 0 0 10px; font-weight: 600; }
+  .quiz .opt { display: block; width: 100%; text-align: left; background: #0d1520; border: 1px solid var(--line); color: var(--ink);
+               border-radius: 8px; padding: 9px 12px; margin: 6px 0; cursor: pointer; font-weight: 500; }
+  .quiz .opt:hover { border-color: var(--accent-3); }
+  .quiz .opt.correct { border-color: var(--accent); background: rgba(76,195,138,.14); }
+  .quiz .opt.wrong { border-color: var(--danger); background: rgba(226,114,91,.14); }
+  .quiz .explain { font-size: 13px; color: var(--muted); margin: 8px 0 0; display: none; }
+  .quiz .explain.show { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 30px 20px 60px; }
+
+  @media (max-width: 640px) {
+    .step { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="badge">EduXR · Plant Breeding</div>
+  <h1>Genomic Selection</h1>
+  <p style="text-align:left; max-width: 620px; margin: 0 auto;">By the end of this practical you will be able to:</p>
+  <ul style="text-align:left; color: var(--muted); max-width: 620px; margin: 8px auto 0; padding-left: 20px;">
+    <li>Explain why marker assisted selection does not work well for traits controlled by many genes</li>
+    <li>Describe what a genomic selection model does and what a GEBV is</li>
+    <li>Follow a genomic selection breeding cycle step by step, and explain what happens in each step</li>
+    <li>List some limitations of genomic selection</li>
+  </ul>
+  <div class="nav"><a href="index.html">← Back to the Marker Assisted Selection practical</a></div>
+</header>
+
+<div class="wrap">
+
+  <!-- STEP 0 -->
+  <section class="step">
+    <h2><span class="num">?</span> Recap: why we need a new method</h2>
+    <p class="lead">In the previous practical we bred for <strong>salt resistance</strong>, a trait controlled by essentially one marker. We could find that single marker with a GWAS and then select plants simply by checking whether they carried it.</p>
+    <p>Many important traits do not work like that. <strong>Yield</strong> is a good example: it is a <em>polygenic</em> trait, influenced by many different genes that each contribute only a tiny bit. There is no single marker you can check to know whether a plant will be high yielding.</p>
+    <p>So how do we select for a trait that is spread across many markers, each with a small effect? This is what <strong>genomic selection</strong> solves. Instead of looking at one marker, we build a model that looks at <em>all</em> the markers at once and combines them into a single prediction of a plant's performance. In this practical we will:</p>
+    <ol>
+      <li>Confirm that no single marker explains yield.</li>
+      <li>Train a genomic selection model on plants whose markers <em>and</em> yield we both know.</li>
+      <li>Inspect what the model learned and how well it predicts.</li>
+      <li>Use it to run breeding cycles, and compare against breeding without any selection.</li>
+    </ol>
+  </section>
+
+  <!-- STEP 1 -->
+  <section class="step">
+    <h2><span class="num">1</span> A population where we know markers and yield</h2>
+    <p class="lead">We start with a genetically diverse population. For every plant we know its markers (its DNA) and its measured yield. This combination of known markers plus known phenotype is exactly what we will use to train the model.</p>
+    <div class="tablescroll" id="pop-table"></div>
+    <p class="chart-hint">Scroll sideways to see all the markers.</p>
+    <div class="callout q">
+      <strong>❓ Question</strong>
+      <ul>
+        <li>If you wanted to predict the yield of a brand new plant from its DNA alone, what would you need to have worked out first from a population like this?</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step">
+    <h2><span class="num">2</span> Confirm that single-marker selection will not work</h2>
+    <p class="lead">Just like in the previous practical, we can run a GWAS and make a <strong>Manhattan plot</strong>, this time for yield. If one marker controlled yield, we would expect one tall bar rising above the significance line, the way Marker 12 did for salt resistance.</p>
+    <div class="controls">
+      <label>Population size:
+        <input id="y-size" type="range" min="3" max="100" value="3" step="1" />
+        <b id="y-size-val">3</b> plants
+      </label>
+    </div>
+    <div class="chartbox">
+      <canvas id="manhattan-yield" height="300"></canvas>
+      <p class="chart-hint">Manhattan plot for yield. Drag the slider to grow the population.</p>
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>Grow the population to a large size. How does this plot compare with the salt-resistance Manhattan plot from the previous practical?</li>
+        <li>Why would marker assisted selection not be (easily) applicable here? What underlying biology causes this difference?</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step">
+    <h2><span class="num">3</span> Train a genomic selection model</h2>
+    <p class="lead">Instead of picking one marker, we train a model that uses <strong>all markers together</strong>. The model learns a <em>weight</em> for each marker: how much, and in which direction, that marker tends to push the yield. Adding up the contributions of all markers for a given plant gives a single predicted value for that plant.</p>
+    <p>To learn these weights, the model needs examples. We give it a population where we know both the markers and the real yield, and we tell it which phenotype to predict. "Training" simply means letting the model adjust its 50 weights until its predictions fit the yields it was shown as closely as it can. This actually runs live in your browser: drag the slider and the model is retrained on the spot.</p>
+    <div class="controls">
+      <label>Train the model on
+        <input id="train-size" type="range" min="5" max="100" value="50" step="1" />
+        <b id="train-size-val">50</b> plants
+      </label>
+    </div>
+    <div class="callout ok" id="train-note">Training the model…</div>
+    <p class="chart-hint" style="text-align:left">After changing this, look at the weights in step 4 and the predictions in step 5: notice how the model's picture sharpens as it learns from more plants.</p>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step">
+    <h2><span class="num">4</span> Look at what the model learned</h2>
+    <p class="lead">Now that the model is trained, we can look at the weight it assigned to each marker. A large positive weight means that marker tends to increase yield, a large negative weight means it tends to decrease yield, and a weight near zero means the model thinks that marker barely matters for yield.</p>
+    <div class="chartbox">
+      <canvas id="weights" height="300"></canvas>
+      <p class="chart-hint">Each bar is one marker's learned weight. Above zero raises yield, below zero lowers it.</p>
+    </div>
+    <div class="callout q">
+      <strong>❓ Question</strong>
+      <ul>
+        <li>What does the height, and the direction (above or below zero), of a single bar tell you about that marker's effect on yield?</li>
+        <li>Which group of markers looks most important for raising yield, and which group for lowering it?</li>
+        <li>How is this plot different from a Manhattan plot? Think carefully about what the height of a bar means in each of the two plots.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="step">
+    <h2><span class="num">5</span> Check how good the predictions are</h2>
+    <p class="lead">Before we trust the model to guide our breeding, we should check how well it actually predicts yield. We let the model predict the yield of the same plants it was trained on, and compare its predictions against the real, measured yields. If the model were perfect, every point would lie exactly on the red diagonal line.</p>
+    <div class="chartbox">
+      <canvas id="pva" height="320"></canvas>
+      <p class="chart-hint" id="pva-caption"></p>
+    </div>
+    <div class="callout q">
+      <strong>❓ Question</strong>
+      <ul>
+        <li>The points cluster around the diagonal but do not sit exactly on it. Why can the model not perfectly predict the phenotype?</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 6 -->
+  <section class="step">
+    <h2><span class="num">6</span> Predict, select and breed</h2>
+    <p class="lead">Now we put the model to work. We ask it to predict the yield of every plant. Breeders call this prediction a <strong>GEBV</strong> (Genomically Estimated Breeding Value): the model's best guess of how good a plant is, based purely on its markers. The big advantage is that you can compute a GEBV for a tiny seedling from its DNA alone, without growing it to maturity and measuring its yield.</p>
+    <p>We begin from a breeding population made by crossing today's elite variety with diverse material, so it already yields fairly well but still has genetic variation to work with. Each breeding cycle then does three things: predict the GEBV of every plant, keep the best ones as parents, and cross them to make the next generation. We run two programmes side by side from that <em>same</em> starting population: one that selects on GEBV, and a control that just crosses plants at random. The dashed line marks today's elite variety, the best crop farmers currently grow.</p>
+    <div class="controls">
+      <label>Keep the best
+        <input id="gs-nsel" type="range" min="2" max="20" value="5" step="1" />
+        <b id="gs-nsel-val">5</b> of 20 plants as parents
+      </label>
+      <button id="gs-run">▶ Run one breeding cycle</button>
+      <button id="gs-reset" class="secondary">↺ Start over</button>
+    </div>
+    <p id="gs-status" class="status"></p>
+    <div class="chartbox">
+      <canvas id="gs-chart" height="300"></canvas>
+      <div class="keyline" style="justify-content:center;margin-top:8px">
+        <span><span class="dot" style="background:var(--accent)"></span> Genomic selection</span>
+        <span><span class="dot" style="background:var(--accent-3)"></span> No selection (random crossing)</span>
+        <span><span class="dot" style="background:var(--muted)"></span> today's elite variety</span>
+      </div>
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>How can you tell from the graph whether genomic selection actually helped?</li>
+        <li>Today's elite variety is already very good. What does it mean that genomic selection can push the yield past that dashed line?</li>
+        <li>Do you think genomic selection would also work for a trait controlled by a single marker, like salt resistance? Why or why not?</li>
+        <li>What are some limitations of genomic selection? (What could go wrong if you used this exact model on a very different population of plants?)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="step">
+    <h2><span class="num">✓</span> Check your understanding</h2>
+    <div class="quiz" id="quiz"></div>
+  </section>
+
+  <footer>
+    Built for the EduXR plant-breeding minor · a no-code companion to the genomic-selection practical.<br/>
+    Some code and explanations were drafted with the help of Claude Code.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   Seeded RNG (mulberry32) — reproducible "random" numbers
+   ============================================================ */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gaussian(rng, mean, sd) {
+  let u = 0, v = 0;
+  while (u === 0) u = rng();
+  while (v === 0) v = rng();
+  return mean + sd * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+const N_MARKERS = 50;
+const SALT_MARKER = 12;
+const YIELD_POS = [0,1,2,3,4,5,6,7,8,9]; // raise yield
+const YIELD_NEG = [20,21,22];            // lower yield
+
+/* ============================================================
+   Phenotype model (yield). Same formula as the MAS page:
+   yield = sum(pos)*2 - sum(neg)*1 + noise(0,1)
+   ============================================================ */
+function yieldOf(markerRow, rng) {
+  let pos = YIELD_POS.reduce((s,i)=>s+markerRow[i],0) * 2;
+  let neg = YIELD_NEG.reduce((s,i)=>s+markerRow[i],0) * 1;
+  return pos - neg + gaussian(rng, 0, 1);
+}
+// noise-free expected yield, for stable chart lines
+function expectedYield(row){
+  let pos = YIELD_POS.reduce((s,i)=>s+row[i],0) * 2;
+  let neg = YIELD_NEG.reduce((s,i)=>s+row[i],0) * 1;
+  return pos - neg;
+}
+function meanExpectedYield(rows){
+  return rows.reduce((s,r)=>s+expectedYield(r),0)/rows.length;
+}
+
+/* ============================================================
+   Populations
+   ============================================================ */
+function naturalPopulation(nPlants, seed) {
+  const rng = mulberry32(seed);
+  const rows = [];
+  for (let p = 0; p < nPlants; p++) {
+    const row = [];
+    for (let m = 0; m < N_MARKERS; m++) row.push(rng() < 0.5 ? 0 : 1);
+    rows.push(row);
+  }
+  return rows;
+}
+// Elite variety: good but NOT perfect. It carries yield markers 0-8 but is
+// missing marker 9, so its yield is about 18 and genomic selection has room
+// to surpass it by assembling every favourable allele.
+function eliteVariety(seed) {
+  const rng = mulberry32(seed);
+  const row = [];
+  for (let m = 0; m < N_MARKERS; m++) row.push(rng() < 0.5 ? 0 : 1);
+  row[SALT_MARKER] = 0;
+  for (let i = 0; i <= 8; i++) row[i] = 1;   // markers 0..8 fixed favourable
+  row[9] = 0;                                 // marker 9 left unfavourable
+  YIELD_NEG.forEach(i => row[i] = 0);
+  return row;
+}
+const eliteRow = eliteVariety(420);
+
+// cross two plants: each child allele copied at random from either parent
+function crossRows(a, b, rng) {
+  const child = [];
+  for (let m = 0; m < N_MARKERS; m++) child.push(rng() < 0.5 ? a[m] : b[m]);
+  return child;
+}
+// cross two populations: sample one parent from each pool per offspring
+function crossPopulations(rowsA, rowsB, n, rng){
+  const out=[];
+  for (let i=0;i<n;i++){
+    const a = rowsA[Math.floor(rng()*rowsA.length)];
+    const b = rowsB[Math.floor(rng()*rowsB.length)];
+    out.push(crossRows(a,b,rng));
+  }
+  return out;
+}
+
+/* ============================================================
+   Statistics: Pearson r -> Student-t -> p-value (for the GWAS)
+   ============================================================ */
+function pearson(x, y) {
+  const n = x.length;
+  let mx = 0, my = 0;
+  for (let i=0;i<n;i++){ mx+=x[i]; my+=y[i]; }
+  mx/=n; my/=n;
+  let num=0, dx=0, dy=0;
+  for (let i=0;i<n;i++){
+    const a=x[i]-mx, b=y[i]-my;
+    num+=a*b; dx+=a*a; dy+=b*b;
+  }
+  if (dx===0 || dy===0) return 0;
+  return num/Math.sqrt(dx*dy);
+}
+function betacf(a,b,x){
+  const MAXIT=200, EPS=3e-12, FPMIN=1e-300;
+  let qab=a+b, qap=a+1, qam=a-1;
+  let c=1, d=1-qab*x/qap;
+  if (Math.abs(d)<FPMIN) d=FPMIN;
+  d=1/d; let h=d;
+  for (let m=1;m<=MAXIT;m++){
+    let m2=2*m;
+    let aa=m*(b-m)*x/((qam+m2)*(a+m2));
+    d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN;
+    c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN;
+    d=1/d; h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+    d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN;
+    c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN;
+    d=1/d; let del=d*c; h*=del;
+    if (Math.abs(del-1)<EPS) break;
+  }
+  return h;
+}
+function gammaln(x){
+  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,
+           -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y=x, tmp=x+5.5; tmp-=(x+0.5)*Math.log(tmp);
+  let ser=1.000000000190015;
+  for (let j=0;j<6;j++){ y++; ser+=c[j]/y; }
+  return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+function betai(a,b,x){
+  if (x<=0) return 0;
+  if (x>=1) return 1;
+  const bt=Math.exp(gammaln(a+b)-gammaln(a)-gammaln(b)+a*Math.log(x)+b*Math.log(1-x));
+  if (x < (a+1)/(a+b+2)) return bt*betacf(a,b,x)/a;
+  return 1-bt*betacf(b,a,1-x)/b;
+}
+function corrPValue(r, n){
+  if (n<3) return 1;
+  const df=n-2;
+  const denom=1-r*r;
+  if (denom<=0) return 0;
+  const t=r*Math.sqrt(df/denom);
+  const p=betai(df/2, 0.5, df/(df+t*t));
+  return Math.min(Math.max(p, 1e-300), 1);
+}
+
+/* ============================================================
+   Ridge regression — the genomic selection model.
+   Mirrors sklearn Ridge(alpha=1.0, fit_intercept=True):
+   centre X and y, solve (Xc'Xc + alpha I) w = Xc'yc, then
+   intercept = mean(y) - sum(colMean_j * w_j).
+   Verified against scikit-learn to machine precision.
+   ============================================================ */
+function ridgeFit(X, y, alpha){
+  const n = X.length, p = X[0].length;
+  const colMean = new Array(p).fill(0);
+  for (let j=0;j<p;j++){ let s=0; for(let i=0;i<n;i++) s+=X[i][j]; colMean[j]=s/n; }
+  let yMean=0; for(let i=0;i<n;i++) yMean+=y[i]; yMean/=n;
+
+  // A = Xc'Xc + alpha I  (symmetric p x p),  b = Xc'yc
+  const A = Array.from({length:p},()=>new Array(p).fill(0));
+  const b = new Array(p).fill(0);
+  for (let j=0;j<p;j++){
+    for (let k=j;k<p;k++){
+      let s=0;
+      for (let i=0;i<n;i++) s += (X[i][j]-colMean[j])*(X[i][k]-colMean[k]);
+      A[j][k]=s; A[k][j]=s;
+    }
+    A[j][j]+=alpha;
+    let sb=0; for(let i=0;i<n;i++) sb += (X[i][j]-colMean[j])*(y[i]-yMean);
+    b[j]=sb;
+  }
+  // Solve A w = b with Gaussian elimination (partial pivoting)
+  const M = A.map((row,i)=>row.concat([b[i]]));
+  for (let i=0;i<p;i++){
+    let piv=i;
+    for (let r=i+1;r<p;r++) if (Math.abs(M[r][i])>Math.abs(M[piv][i])) piv=r;
+    if (piv!==i){ const t=M[i]; M[i]=M[piv]; M[piv]=t; }
+    const dgn=M[i][i];
+    for (let cc=i;cc<=p;cc++) M[i][cc]/=dgn;
+    for (let r=0;r<p;r++){
+      if (r!==i){ const f=M[r][i]; if(f!==0) for(let cc=i;cc<=p;cc++) M[r][cc]-=f*M[i][cc]; }
+    }
+  }
+  const w = new Array(p); for(let i=0;i<p;i++) w[i]=M[i][p];
+  let intercept=yMean; for(let j=0;j<p;j++) intercept-=colMean[j]*w[j];
+  return { weights:w, intercept };
+}
+function gebv(row, model){
+  let s=model.intercept;
+  for (let j=0;j<model.weights.length;j++) s+=row[j]*model.weights[j];
+  return s;
+}
+
+/* ============================================================
+   Canvas helpers (HiDPI aware)
+   ============================================================ */
+function setupCanvas(canvas, cssHeight){
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = canvas.parentElement.clientWidth - 28;
+  canvas.style.width = cssWidth + "px";
+  canvas.style.height = cssHeight + "px";
+  canvas.width = Math.round(cssWidth*dpr);
+  canvas.height = Math.round(cssHeight*dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cssWidth,cssHeight);
+  return {ctx, W: cssWidth, H: cssHeight};
+}
+const CSS = getComputedStyle(document.documentElement);
+const col = n => CSS.getPropertyValue(n).trim();
+
+/* ============================================================
+   Shared training population + model
+   ============================================================ */
+const TRAIN_SEED = 421;
+let gsModel = null, trainRows = null, trainY = null;
+function trainModel(size){
+  trainRows = naturalPopulation(size, TRAIN_SEED);
+  const rng = mulberry32(TRAIN_SEED + 7);
+  trainY = trainRows.map(r => yieldOf(r, rng));
+  gsModel = ridgeFit(trainRows, trainY, 1.0);
+  document.getElementById('train-note').innerHTML =
+    `✅ Model trained on <b>${size}</b> plants, using all <b>${N_MARKERS}</b> markers to predict yield.`;
+}
+document.getElementById('train-size').addEventListener('input', e=>{
+  const size = +e.target.value;
+  document.getElementById('train-size-val').textContent = size;
+  trainModel(size);
+  renderWeights();
+  renderPva();
+});
+
+/* ============================================================
+   STEP 1 — marker table (with yield)
+   ============================================================ */
+function renderPopTable(){
+  const rows = naturalPopulation(12, TRAIN_SEED);
+  const rng = mulberry32(TRAIN_SEED + 7);
+  let html = '<table class="markers"><thead><tr><th class="rowlab">Plant</th>';
+  for (let m=0;m<N_MARKERS;m++) html += `<th>M${m}</th>`;
+  html += '<th>Yield</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{
+    html += `<tr><td class="rowlab">#${i+1}</td>`;
+    r.forEach((v)=>{ html += `<td class="allele-${v}">${v}</td>`; });
+    html += `<td class="pheno">${yieldOf(r,rng).toFixed(1)}</td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('pop-table').innerHTML = html;
+}
+
+/* ============================================================
+   STEP 2 — Manhattan plot for yield
+   ============================================================ */
+const yGwas = { size: 3, seed: TRAIN_SEED };
+function buildYieldGwas(size){
+  const rows = naturalPopulation(size, yGwas.seed);
+  const rng = mulberry32(yGwas.seed + 7);
+  const pheno = rows.map(r => yieldOf(r,rng));
+  const negLogP = [];
+  for (let m=0;m<N_MARKERS;m++){
+    const colv = rows.map(r=>r[m]);
+    const r = pearson(colv, pheno);
+    const p = corrPValue(r, rows.length);
+    negLogP.push(-Math.log10(p));
+  }
+  return negLogP;
+}
+function drawManhattan(canvas, data){
+  const {ctx, W, H} = setupCanvas(canvas, 300);
+  const padL=46, padR=12, padT=18, padB=34;
+  const plotW = W-padL-padR, plotH = H-padT-padB;
+  let maxY = Math.max(5, ...data.filter(v=>isFinite(v)));
+  maxY = Math.ceil(maxY/2)*2;
+  const bw = plotW/N_MARKERS;
+
+  ctx.strokeStyle = col('--line'); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  ctx.fillStyle = col('--muted'); ctx.font='11px system-ui'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for (let g=0; g<=maxY; g+=2){
+    const y = padT+plotH - (g/maxY)*plotH;
+    ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+plotW,y); ctx.stroke();
+    ctx.fillText(g, padL-6, y);
+  }
+  const sigY = padT+plotH - (3/maxY)*plotH;
+  ctx.strokeStyle = col('--danger'); ctx.setLineDash([5,4]); ctx.beginPath();
+  ctx.moveTo(padL,sigY); ctx.lineTo(padL+plotW,sigY); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = col('--danger'); ctx.textAlign='left'; ctx.fillText('significance', padL+4, sigY-8);
+
+  data.forEach((v,m)=>{
+    const h = Math.min(v/maxY,1)*plotH;
+    const x = padL + m*bw;
+    ctx.fillStyle = 'rgba(242,193,78,.7)';
+    ctx.fillRect(x+bw*0.15, padT+plotH-h, bw*0.7, h);
+  });
+  ctx.fillStyle=col('--muted'); ctx.textAlign='center'; ctx.textBaseline='top'; ctx.font='10px system-ui';
+  for (let m=0;m<N_MARKERS;m+=5) ctx.fillText(m, padL+m*bw+bw/2, padT+plotH+6);
+  ctx.font='11px system-ui'; ctx.fillText('Marker index', padL+plotW/2, padT+plotH+20);
+  ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center'; ctx.fillText('-log10(p-value)',0,0); ctx.restore();
+}
+function renderYieldManhattan(){
+  drawManhattan(document.getElementById('manhattan-yield'), buildYieldGwas(yGwas.size));
+}
+document.getElementById('y-size').addEventListener('input', e=>{
+  yGwas.size=+e.target.value;
+  document.getElementById('y-size-val').textContent=yGwas.size;
+  renderYieldManhattan();
+});
+
+/* ============================================================
+   STEP 4 — marker weights bar chart
+   ============================================================ */
+function drawWeights(canvas, weights){
+  const {ctx,W,H}=setupCanvas(canvas,300);
+  const padL=46,padR=12,padT=18,padB=34;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  let maxAbs=Math.max(0.5,...weights.map(Math.abs));
+  const m2=Math.ceil(maxAbs*2)/2;
+  const zeroY=padT+plotH/2;
+  const scale=(plotH/2)/m2;
+  const bw=plotW/N_MARKERS;
+
+  ctx.strokeStyle=col('--line'); ctx.beginPath();
+  ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.beginPath(); ctx.moveTo(padL,zeroY); ctx.lineTo(padL+plotW,zeroY); ctx.stroke();
+
+  ctx.fillStyle=col('--muted'); ctx.font='11px system-ui'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  [-m2,-m2/2,0,m2/2,m2].forEach(v=>{ const y=zeroY - v*scale; ctx.fillText(v,padL-6,y); });
+
+  weights.forEach((w,m)=>{
+    const x=padL+m*bw;
+    const h=w*scale;
+    ctx.fillStyle = w>=0 ? 'rgba(76,195,138,.8)' : 'rgba(226,114,91,.8)';
+    ctx.fillRect(x+bw*0.15, zeroY - Math.max(h,0), bw*0.7, Math.abs(h));
+  });
+  ctx.fillStyle=col('--muted'); ctx.textAlign='center'; ctx.textBaseline='top'; ctx.font='10px system-ui';
+  for (let m=0;m<N_MARKERS;m+=5) ctx.fillText(m, padL+m*bw+bw/2, padT+plotH+6);
+  ctx.font='11px system-ui'; ctx.fillText('Marker index', padL+plotW/2, padT+plotH+20);
+  ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center'; ctx.fillText('learned weight',0,0); ctx.restore();
+}
+function renderWeights(){
+  drawWeights(document.getElementById('weights'), gsModel.weights);
+}
+
+/* ============================================================
+   STEP 5 — predicted vs actual scatter
+   ============================================================ */
+function drawPredVsActual(canvas, actual, pred){
+  const {ctx,W,H}=setupCanvas(canvas,320);
+  const padL=52,padR=16,padT=16,padB=46;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const all=actual.concat(pred);
+  let lo=Math.min(...all), hi=Math.max(...all);
+  const pad=(hi-lo)*0.08||1; lo-=pad; hi+=pad;
+  const sx=v=>padL+((v-lo)/(hi-lo))*plotW;
+  const sy=v=>padT+plotH-((v-lo)/(hi-lo))*plotH;
+
+  ctx.strokeStyle=col('--line'); ctx.beginPath();
+  ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  ctx.strokeStyle=col('--danger'); ctx.setLineDash([5,4]); ctx.beginPath();
+  ctx.moveTo(sx(lo),sy(lo)); ctx.lineTo(sx(hi),sy(hi)); ctx.stroke(); ctx.setLineDash([]);
+
+  ctx.fillStyle='rgba(91,155,213,.8)';
+  for (let i=0;i<actual.length;i++){ ctx.beginPath(); ctx.arc(sx(pred[i]),sy(actual[i]),4,0,2*Math.PI); ctx.fill(); }
+
+  ctx.fillStyle=col('--muted'); ctx.font='11px system-ui';
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for (let k=0;k<=4;k++){ const v=lo+(hi-lo)*k/4; ctx.fillText(v.toFixed(0), sx(v), padT+plotH+6); }
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  for (let k=0;k<=4;k++){ const v=lo+(hi-lo)*k/4; ctx.fillText(v.toFixed(0), padL-6, sy(v)); }
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText('predicted yield (GEBV)', padL+plotW/2, padT+plotH+24);
+  ctx.save(); ctx.translate(14,padT+plotH/2); ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center'; ctx.fillText('actual yield',0,0); ctx.restore();
+}
+function renderPva(){
+  const pred = trainRows.map(r=>gebv(r,gsModel));
+  drawPredVsActual(document.getElementById('pva'), trainY, pred);
+  const r = pearson(trainY, pred);
+  document.getElementById('pva-caption').innerHTML =
+    `Correlation between predicted and actual yield: <b>${r.toFixed(2)}</b>. The closer to 1, the better the model tracks reality.`;
+}
+
+/* ============================================================
+   STEP 6 — GEBV breeding loop (selection vs no selection)
+   ============================================================ */
+const GEN_SIZE = 20;
+const gsState = { gsPop:null, ctrlPop:null, gsYields:[], ctrlYields:[], rng:null, eliteYield:0 };
+
+function selectTopN(rows, model, n){
+  return rows.map((r,i)=>[gebv(r,model),i])
+             .sort((a,b)=>b[0]-a[0])
+             .slice(0,n)
+             .map(x=>rows[x[1]]);
+}
+function selectRandom(rows, n, rng){
+  const idx = rows.map((_,i)=>i);
+  for (let i=idx.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const t=idx[i]; idx[i]=idx[j]; idx[j]=t; }
+  return idx.slice(0,n).map(i=>rows[i]);
+}
+function gsStatus(html){ document.getElementById('gs-status').innerHTML = html; }
+function gsReset(){
+  // Start from the elite variety crossed with diverse material: the population
+  // already performs reasonably well, yet still carries genetic variation to select on.
+  const buildRng = mulberry32(999);
+  const donors = naturalPopulation(30, 777);
+  const start = crossPopulations([eliteRow], donors, GEN_SIZE, buildRng);
+  gsState.gsPop  = start.map(r=>r.slice());
+  gsState.ctrlPop= start.map(r=>r.slice());
+  gsState.rng    = mulberry32(303);
+  gsState.eliteYield = expectedYield(eliteRow);
+  const y0 = meanExpectedYield(start);
+  gsState.gsYields=[y0];
+  gsState.ctrlYields=[y0];
+  gsStatus(`Generation 0: we start from the elite variety crossed with diverse material, a breeding population that already yields about <b>${y0.toFixed(1)}</b> and still carries plenty of genetic variation. Today's elite variety yields about <b>${gsState.eliteYield.toFixed(0)}</b>. Press "Run one breeding cycle".`);
+  drawBreedingChart();
+}
+function gsRunCycle(){
+  const n = +document.getElementById('gs-nsel').value;
+  const rng = gsState.rng;
+
+  const gsParents = selectTopN(gsState.gsPop, gsModel, n);
+  gsState.gsPop = crossPopulations(gsParents, gsParents, GEN_SIZE, rng);
+
+  const ctrlParents = selectRandom(gsState.ctrlPop, n, rng);
+  gsState.ctrlPop = crossPopulations(ctrlParents, ctrlParents, GEN_SIZE, rng);
+
+  const gsY = meanExpectedYield(gsState.gsPop);
+  const cY  = meanExpectedYield(gsState.ctrlPop);
+  gsState.gsYields.push(gsY);
+  gsState.ctrlYields.push(cY);
+
+  const gen = gsState.gsYields.length - 1;
+  const meanGebv = gsParents.reduce((s,r)=>s+gebv(r,gsModel),0)/gsParents.length;
+  const passed = gsY > gsState.eliteYield;
+  gsStatus(
+    `Cycle ${gen}: kept the best ${n} plants by GEBV (their mean GEBV was ${meanGebv.toFixed(1)}). ` +
+    `<b class="gs">Genomic selection yield ${gsY.toFixed(1)}</b> vs <b class="ctrl">random ${cY.toFixed(1)}</b>.` +
+    (passed ? ' 🎉 It has now overtaken the elite variety.' : '')
+  );
+  drawBreedingChart();
+}
+function drawBreedingChart(){
+  const canvas = document.getElementById('gs-chart');
+  const {ctx, W, H} = setupCanvas(canvas, 300);
+  const padL=48, padR=14, padT=18, padB=36;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const gsY=gsState.gsYields, cY=gsState.ctrlYields;
+  const nPts=gsY.length;
+  const maxGen=Math.max(6, nPts-1);
+  const yMax=Math.ceil(Math.max(20, gsState.eliteYield+2)/2)*2;
+  const xAt=g=> padL + (g/maxGen)*plotW;
+  const yAt=v=> padT+plotH - (v/yMax)*plotH;
+
+  // axes + y gridlines
+  ctx.strokeStyle=col('--line'); ctx.beginPath();
+  ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  ctx.fillStyle=col('--muted'); ctx.font='11px system-ui'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for (let g=0; g<=yMax; g+=4){
+    const y=yAt(g);
+    ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+plotW,y); ctx.stroke();
+    ctx.fillText(g, padL-6, y);
+  }
+  // elite reference line
+  ctx.strokeStyle=col('--muted'); ctx.setLineDash([4,4]); ctx.beginPath();
+  ctx.moveTo(padL,yAt(gsState.eliteYield)); ctx.lineTo(padL+plotW,yAt(gsState.eliteYield)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle=col('--muted'); ctx.textAlign='left'; ctx.textBaseline='bottom';
+  ctx.fillText("elite variety", padL+4, yAt(gsState.eliteYield)-3);
+
+  const drawSeries=(vals,color)=>{
+    ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.beginPath();
+    vals.forEach((v,i)=>{ const x=xAt(i),y=yAt(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+    ctx.stroke();
+    vals.forEach((v,i)=>{ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(xAt(i),yAt(v),3.5,0,2*Math.PI); ctx.fill(); });
+  };
+  drawSeries(cY, col('--accent-3'));
+  drawSeries(gsY, col('--accent'));
+
+  // x labels
+  ctx.fillStyle=col('--muted'); ctx.font='11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='top';
+  for (let g=0; g<=maxGen; g++) ctx.fillText(g, xAt(g), padT+plotH+8);
+  ctx.fillText('breeding cycle (generation)', padL+plotW/2, padT+plotH+22);
+  ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center'; ctx.fillText('mean yield',0,0); ctx.restore();
+}
+document.getElementById('gs-run').addEventListener('click', gsRunCycle);
+document.getElementById('gs-reset').addEventListener('click', gsReset);
+document.getElementById('gs-nsel').addEventListener('input', e=>{
+  document.getElementById('gs-nsel-val').textContent=e.target.value;
+});
+
+/* ============================================================
+   QUIZ
+   ============================================================ */
+const QUIZ = [
+  {
+    q: "What is a GEBV (Genomically Estimated Breeding Value)?",
+    opts: [
+      "The model's predicted performance of a plant, from its markers.",
+      "The number of favourable markers a plant carries in total.",
+      "The yield measured after a plant has been fully grown out.",
+    ],
+    correct: 0,
+    why: "A GEBV is the model's prediction from DNA alone, so you can compute it on a seedling before it is ever grown."
+  },
+  {
+    q: "Why does genomic selection handle yield better than marker assisted selection does?",
+    opts: [
+      "It grows far more plants in every breeding generation.",
+      "It replaces the field trials with a cheaper lab test.",
+      "It combines all markers at once instead of relying on one.",
+    ],
+    correct: 2,
+    why: "Yield is polygenic. There is no single marker to select on, but a model that weighs all markers together can still predict it."
+  },
+  {
+    q: "How does the marker-weights plot differ from a Manhattan plot?",
+    opts: [
+      "The weights can be negative, showing a marker's direction; Manhattan bars only show strength of evidence.",
+      "The weights plot uses a p-value on its axis, while the Manhattan plot does not.",
+      "They are the same plot drawn with two different colour schemes.",
+    ],
+    correct: 0,
+    why: "A Manhattan bar is -log10(p) and is always positive (evidence of association). A weight is signed: positive raises yield, negative lowers it."
+  },
+  {
+    q: "Would genomic selection also work for a single-marker trait like salt resistance?",
+    opts: [
+      "No, the model only works when many markers matter.",
+      "Yes, it would simply put almost all the weight on that one marker.",
+      "No, because a GEBV cannot be computed for salt resistance.",
+    ],
+    correct: 1,
+    why: "Genomic selection is general: for a monogenic trait the model just learns one large weight and near-zero weights elsewhere. It works, it is simply overkill compared with checking one marker."
+  },
+  {
+    q: "You trained the model on one population. What is a real limitation to keep in mind?",
+    opts: [
+      "The model can never be used to predict more than once.",
+      "Its weights may not transfer to a very different population.",
+      "It needs the plants to be grown out before it can predict.",
+    ],
+    correct: 1,
+    why: "The learned weights reflect the training population. On genetically distant material the marker-trait relationships can differ, so accuracy drops and the model may need retraining."
+  },
+];
+function renderQuiz(){
+  const root=document.getElementById('quiz');
+  QUIZ.forEach((item,qi)=>{
+    const div=document.createElement('div'); div.className='qitem';
+    div.innerHTML=`<p class="qtext">${qi+1}. ${item.q}</p>`;
+    item.opts.forEach((o,oi)=>{
+      const b=document.createElement('button'); b.className='opt'; b.textContent=o;
+      b.addEventListener('click',()=>{
+        div.querySelectorAll('.opt').forEach(x=>{x.disabled=true;});
+        b.classList.add(oi===item.correct?'correct':'wrong');
+        if(oi!==item.correct) div.querySelectorAll('.opt')[item.correct].classList.add('correct');
+        div.querySelector('.explain').classList.add('show');
+      });
+      div.appendChild(b);
+    });
+    const ex=document.createElement('p'); ex.className='explain'; ex.textContent='💡 '+item.why;
+    div.appendChild(ex);
+    root.appendChild(div);
+  });
+}
+
+/* ============================================================
+   INIT + responsive redraw
+   ============================================================ */
+function initAll(){
+  trainModel(+document.getElementById('train-size').value);
+  renderPopTable();
+  renderYieldManhattan();
+  renderWeights();
+  renderPva();
+  gsReset();
+  renderQuiz();
+}
+initAll();
+let rz;
+window.addEventListener('resize', ()=>{
+  clearTimeout(rz);
+  rz=setTimeout(()=>{
+    renderYieldManhattan();
+    renderWeights();
+    renderPva();
+    drawBreedingChart();
+  },200);
+});
+</script>
+</body>
+</html>
