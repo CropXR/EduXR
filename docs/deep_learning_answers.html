@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deep Learning on Leaf Images: Answer Model</title>
+<style>
+  :root {
+    --bg: #0f1720;
+    --panel: #172230;
+    --panel-2: #1e2c3d;
+    --ink: #e9eef5;
+    --muted: #9fb0c3;
+    --line: #2c3e54;
+    --accent: #4cc38a;
+    --accent-2: #f2c14e;
+    --accent-3: #5b9bd5;
+    --danger: #e2725b;
+    --radius: 14px;
+    --shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1b2a3d 0%, var(--bg) 55%);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+
+  header.hero { padding: 56px 20px 40px; text-align: center; max-width: 900px; margin: 0 auto; }
+  header.hero .badge {
+    display: inline-block; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; margin-bottom: 18px;
+  }
+  header.hero h1 { font-size: clamp(28px, 5vw, 46px); margin: 0 0 12px; line-height: 1.15; }
+  header.hero p { color: var(--muted); font-size: 18px; max-width: 680px; margin: 0 auto; }
+  header.hero .nav { margin-top: 16px; font-size: 15px; }
+
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .step { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+          box-shadow: var(--shadow); padding: 26px 28px; margin: 26px 0; }
+  .step h2 { margin: 0 0 6px; font-size: 24px; display: flex; align-items: center; gap: 12px; }
+  .step h2 .num { flex: none; width: 34px; height: 34px; display: grid; place-items: center;
+                  background: var(--accent); color: #06281b; border-radius: 10px; font-size: 17px; font-weight: 700; }
+  .step .lead { color: var(--ink); margin-top: 0; }
+  .step h3 { margin: 22px 0 8px; font-size: 17px; color: var(--ink); }
+
+  .callout { border-left: 3px solid var(--accent-3); background: var(--panel-2); padding: 12px 16px;
+             border-radius: 8px; margin: 16px 0; color: var(--muted); }
+  .callout.q { border-left-color: var(--accent-2); }
+  .callout.q strong { color: var(--accent-2); }
+  .callout ul { margin: 8px 0 0; padding-left: 20px; }
+  .callout li { margin: 4px 0; }
+  .callout.info { border-left-color: var(--accent); color: var(--ink); }
+  .callout.warn { border-left-color: var(--danger); color: var(--ink); }
+  .callout.warn strong { color: var(--danger); }
+  .callout.answer { border-left-color: var(--accent); color: var(--ink); margin-top: 12px; }
+  .callout.answer strong { color: var(--accent); }
+  .callout p:first-of-type { margin-top: 6px; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin: 18px 0; }
+  .controls label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .controls label b { color: var(--ink); min-width: 30px; display: inline-block; }
+  input[type="range"] { accent-color: var(--accent); vertical-align: middle; }
+  input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+  button { background: var(--accent); color: #06281b; border: none; border-radius: 10px; padding: 10px 16px;
+           font-size: 15px; font-weight: 600; cursor: pointer; transition: transform .05s ease, filter .15s ease; }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: translateY(1px); }
+  button:disabled { opacity: .5; cursor: not-allowed; filter: none; }
+  button.ghost { background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
+  button.toggle { background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); font-size: 14px; padding: 7px 13px; }
+  button.toggle.on { background: var(--accent); color: #06281b; border-color: var(--accent); }
+
+  canvas { max-width: 100%; display: block; }
+  .chartbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 14px 0; }
+  .chart-hint { font-size: 13px; color: var(--muted); text-align: center; margin: 6px 0 0; }
+  .chart-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .chart-row > .chartbox { flex: 1 1 300px; margin: 14px 0 0; }
+
+  /* thumbnail galleries */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+  .gallery .cell { text-align: center; }
+  .gallery canvas { width: 100%; height: auto; aspect-ratio: 1; border-radius: 6px; border: 1px solid var(--line); image-rendering: auto; }
+  .gallery .cap { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+  .gallery .cell.h canvas { border-color: var(--accent); }
+  .gallery .cell.i canvas { border-color: var(--danger); }
+  .legend-inline { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+  .legend-inline span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; border: 2px solid; display: inline-block; }
+
+  /* pixel inspector */
+  .inspect { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+  .inspect > div { flex: 1 1 300px; min-width: 260px; }
+  #zoom-canvas { width: 100%; max-width: 340px; aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--line); cursor: crosshair; }
+  .pixgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; max-width: 340px; }
+  .pixgrid div { aspect-ratio: 1; border-radius: 4px; display: grid; place-content: center;
+                 font-size: 9px; line-height: 1.15; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+                 text-align: center; }
+  .readout { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px;
+             background: #0d1520; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 10px;
+             color: var(--muted); white-space: pre-wrap; }
+  .readout b { color: var(--ink); }
+
+  /* stat tiles */
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0; }
+  .stat { flex: 1 1 130px; background: #0d1520; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .stat .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .stat .v { font-size: 24px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .stat.good .v { color: var(--accent); }
+  .stat.bad .v { color: var(--danger); }
+
+  /* confusion matrix */
+  .cmwrap { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+  table.cm { border-collapse: collapse; font-size: 14px; }
+  table.cm th { color: var(--muted); font-weight: 600; padding: 6px 10px; font-size: 13px; }
+  table.cm td { width: 104px; height: 66px; text-align: center; border: 1px solid var(--line);
+                font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  table.cm td .sub { display: block; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+  table.cm td.ok { background: rgba(76,195,138,.16); color: var(--accent); }
+  table.cm td.bad { background: rgba(226,114,91,.16); color: var(--danger); }
+  table.cm th.rot { writing-mode: vertical-rl; transform: rotate(180deg); }
+
+  /* training progress */
+  .progress { height: 8px; background: #0d1520; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; margin: 12px 0 4px; }
+  .progress > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .1s linear; }
+  .trainlog { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px;
+              color: var(--muted); background: #0d1520; border: 1px solid var(--line); border-radius: 8px;
+              padding: 10px 12px; margin-top: 10px; max-height: 150px; overflow-y: auto; white-space: pre; }
+
+  /* prediction strip */
+  .predstrip { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 10px; }
+  .predstrip .cell { text-align: center; }
+  .predstrip canvas { width: 100%; aspect-ratio: 1; border-radius: 6px; border: 1px solid var(--line); }
+  .predstrip .score { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; font-weight: 700; margin-top: 3px; }
+  .predstrip .truth { font-size: 11px; color: var(--muted); }
+
+  /* misclassification buckets */
+  .bucket { margin: 14px 0; }
+  .bucket h4 { margin: 0 0 6px; font-size: 14px; color: var(--ink); }
+  .bucket h4 em { font-style: normal; color: var(--muted); font-weight: 400; font-size: 13px; }
+  .bucket .gallery { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+
+  .quiz { margin-top: 10px; }
+  .quiz .qitem { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; background: var(--panel-2); }
+  .quiz .qitem p.qtext { margin: 0 0 10px; font-weight: 600; }
+  .quiz .opt { display: block; width: 100%; text-align: left; background: #0d1520; border: 1px solid var(--line); color: var(--ink);
+               border-radius: 8px; padding: 9px 12px; margin: 6px 0; cursor: pointer; font-weight: 500; }
+  .quiz .opt:hover { border-color: var(--accent-3); filter: none; }
+  .quiz .opt.correct { border-color: var(--accent); background: rgba(76,195,138,.14); }
+  .quiz .opt.wrong { border-color: var(--danger); background: rgba(226,114,91,.14); }
+  .quiz .explain { font-size: 13px; color: var(--muted); margin: 8px 0 0; display: none; }
+  .quiz .explain.show { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 30px 20px 60px; }
+  @media (max-width: 640px) { .step { padding: 20px 16px; } table.cm td { width: 78px; height: 56px; font-size: 18px; } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="badge">EduXR · Answer Model</div>
+  <h1>Deep Learning on Leaf Images: Answer Model</h1>
+  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the deep-learning practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep training models while you read, and the self-test quiz at the end is unchanged.</p>
+  <div class="nav"><a href="deep_learning.html">&larr; Student version</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a></div>
+</header>
+
+<div class="wrap">
+
+  <!-- STEP 0 -->
+  <section class="step">
+    <h2><span class="num">0</span> Teaching a computer to look at a leaf</h2>
+    <p class="lead">A grower walking through a tomato greenhouse can spot a sick plant at a glance. Doing that at the scale of a whole breeding programme, thousands of plants, several times per season, is a different problem. This is where <strong>image-based phenotyping</strong> comes in: a camera on a drone, a robot or a phone takes the pictures, and a model decides which leaves look diseased.</p>
+    <p>In this practical you will train such a model yourself. It runs <em>in your browser</em>, on real photographs of tomato leaves. But the real lesson is not "how do I train a model". That turns out to be the easy part, about ten lines of code. The lesson is <strong>how do I find out whether I should trust it</strong>. You will meet a model with 90% accuracy that is completely worthless, and a model that learns the wrong thing so convincingly that only careful evaluation reveals it.</p>
+
+    <h3>How this differs from last week's mechanistic model</h3>
+    <p>In the <a href="mechanistic_model.html">mechanistic modelling practical</a> you simulated a gene regulatory network. There, <em>we</em> supplied the biology: "ABA activates ABF2", "ANAC019 represses ICS1". Those rules were the <strong>input</strong>, written down by researchers after years of experiments, and the computer only worked out their consequences over time.</p>
+    <p>Deep learning turns this around completely. Nobody tells the model what a diseased leaf looks like. Nobody writes down "brown lesions with a yellow halo mean Septoria leaf spot". Instead we hand over a pile of photographs, each labelled healthy or infected, and the model <strong>works out the rules itself</strong> by looking for whatever distinguishes one pile from the other.</p>
+    <div class="callout info">
+      <strong>The trade-off, and the theme of this practical.</strong> A mechanistic model can only ever be as right as the biology you put into it, but you can read it, argue with it, and point at the step you disagree with. A deep learning model can pick up patterns nobody thought to encode, and it needs no theory at all, but you cannot look inside and see what it decided to pay attention to. It might have learned the disease. It might have learned something else entirely that happened to come along with the disease in your photos. Keep that possibility in mind; you will run into it in step 7.
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>Name one research question about plant resilience where you would rather build a mechanistic model, and one where you would rather train a model on data. What makes the difference?</li>
+        <li>The model you are about to train never receives any information about tomato biology. Is that a strength or a weakness? Argue both sides.</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Mechanistic vs. data-driven.</b> A question like <em>"how does a longer drought shift the trade-off between drought tolerance and pathogen defence?"</em> calls for a mechanistic model: you are asking <em>why</em>, you already have regulatory knowledge to encode, and you want to reason about interventions you have never tried. A question like <em>"which of these 40,000 field photographs show disease?"</em> calls for a data-driven model: nobody can write the rule down, but labelled examples are cheap. The deciding factors are whether you have mechanism you trust or data you trust, and whether you need an <em>explanation</em> or a <em>decision</em>.</li>
+      <li><b>Both at once.</b> It is a strength because no theory is required, so it works in areas where our understanding is incomplete, and it can pick up subtle cues a human could never put into words. It is a weakness because the model has no notion of what is <em>biologically</em> relevant: it cannot tell a causal cue (a lesion) from an incidental one (the lighting, the background, the camera). It cannot explain itself, cannot be checked against known biology, and will apply a nonsensical rule with complete confidence. Both statements are true simultaneously, which is what the rest of this practical is about.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 1 -->
+  <section class="step">
+    <h2><span class="num">1</span> The data, and what the model actually sees</h2>
+    <p class="lead">We use the <a href="https://github.com/gabrieldgf4/PlantVillage-Dataset" target="_blank" rel="noopener">PlantVillage</a> dataset: photographs of single tomato leaves against a grey background, each one labelled by a plant pathologist. There is one <strong>healthy</strong> category and nine disease categories: bacterial spot, early blight, late blight, leaf mold, Septoria leaf spot, spider mites, target spot, yellow leaf curl virus and mosaic virus.</p>
+    <p>We are going to group all nine diseases together into a single <strong>infected</strong> class, so the model has to answer one binary question: healthy, or not? We could equally well have trained it to name the specific disease. That is a nine-way problem, and a harder one.</p>
+    <div class="controls">
+      <button class="toggle on" id="gal-both">Show both</button>
+      <button class="toggle" id="gal-healthy">Healthy only</button>
+      <button class="toggle" id="gal-infected">Infected only</button>
+      <button class="ghost" id="gal-reshuffle">↻ Different leaves</button>
+    </div>
+    <div class="chartbox">
+      <div class="gallery" id="preview-gallery"></div>
+      <div class="legend-inline">
+        <span><span class="swatch" style="border-color:var(--accent)"></span> label 0, healthy</span>
+        <span><span class="swatch" style="border-color:var(--danger)"></span> label 1, infected</span>
+      </div>
+      <p class="chart-hint">Every image has been shrunk to 64 &times; 64 pixels, which is the size the model works with.</p>
+    </div>
+
+    <h3>A photograph is only numbers</h3>
+    <p>This is the single most important idea in this section, and it is worth slowing down for. The model has no eyes. It never sees a leaf, a lesion or a colour. What arrives at its input is a <strong>grid of numbers</strong>, and nothing else.</p>
+    <p>Each of the 64 &times; 64 pixels stores three numbers: how much <span style="color:#e2725b">red</span>, how much <span style="color:#4cc38a">green</span> and how much <span style="color:#5b9bd5">blue</span> that pixel contains. A camera records those as whole numbers from 0 to 255, and before feeding them to the model we divide by 255 so everything sits between 0 and 1.</p>
+    <p>Hover over the leaf below. The panel on the right shows you the actual numbers stored in the small square you are pointing at. This is, quite literally, the model's entire view of the world.</p>
+    <div class="chartbox">
+      <div class="inspect">
+        <div>
+          <canvas id="zoom-canvas" width="384" height="384"></canvas>
+          <p class="chart-hint">Move your mouse over the leaf. The white square marks the 6&times;6 patch shown on the right.</p>
+        </div>
+        <div>
+          <div class="pixgrid" id="pixgrid"></div>
+          <div class="readout" id="pix-readout"></div>
+          <div class="controls" style="margin-top:12px">
+            <button class="toggle on" id="fmt-255">Show 0&ndash;255</button>
+            <button class="toggle" id="fmt-01">Show 0&ndash;1 (what the model gets)</button>
+            <button class="ghost" id="zoom-next">↻ Another leaf</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="callout info">
+      <strong>Put together:</strong> one leaf photo is 64 &times; 64 &times; 3 = <b>12,288 numbers</b>. That is what a single training example <em>is</em>. Everything the model ever learns about tomato disease, it has to extract from patterns in lists of 12,288 numbers, paired with a label that says 0 or 1.
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>What do these numbers represent exactly? Explain what a single number in this grid means, and what the three numbers per pixel are for.</li>
+        <li>The original photographs are far larger than 64 &times; 64. What do we lose by shrinking them, and why might we do it anyway?</li>
+        <li>All of these photos were taken against the same plain grey background under similar lighting. Is that helpful or harmful for the model we are about to build?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>What the numbers are.</b> Each individual number is the intensity of <em>one colour channel at one pixel position</em>. There are three per pixel because any colour can be reconstructed by mixing red, green and blue light, so the camera records how much of each is present. Cameras store these as whole numbers from 0 (none) to 255 (maximum); we divide by 255 so every input sits between 0 and 1, a range in which neural networks train much more stably. One leaf is therefore 64 &times; 64 &times; 3 = 12,288 numbers, plus a single label of 0 or 1.</li>
+      <li><b>What shrinking costs.</b> We throw away fine detail: small or early lesions, spore structures, fine vein texture, anything smaller than roughly a pixel at the new size. We do it because compute and memory scale with the number of pixels, and because fewer inputs means fewer things the model can latch onto, which matters a lot when you only have a few hundred training images. It is a trade-off: too small and the symptom itself disappears. At 64 &times; 64 the larger blotches and colour changes still survive.</li>
+      <li><b>The uniform background: both.</b> Helpful, because it removes a large source of irrelevant variation and lets the model concentrate on the leaf. Harmful, because it is unrealistically easy, a model trained on studio photographs against grey card has never seen soil, neighbouring leaves, shadows or direct sunlight, and will very likely fall over on a real field photo. It also means anything systematic about the <em>setup</em> rather than the leaf becomes available as a shortcut, which is precisely the trap in step 7.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step">
+    <h2><span class="num">2</span> Splitting the data: train and test</h2>
+    <p class="lead">Before we train anything, we have to hold some data back. This is one of the most important habits in the whole of machine learning, so it is worth being precise about why.</p>
+    <p>A model that has already seen a photo can score well on it simply by having memorised it. Memorising tells you nothing about the next leaf, and the next leaf is the entire point: you want a model that works on plants it has never encountered. So we cut the dataset in two. The model learns from the <strong>training set</strong>, and is judged on the <strong>test set</strong> (also called the validation set), which it never learns from. Any number you quote about a model's performance should come from data it did not train on.</p>
+    <p>Below you control how big each half is. Watch what the split does to the number of images the model gets to learn from, and to the number of images your performance estimate is based on.</p>
+    <div class="controls">
+      <label>Training fraction:
+        <input id="split-frac" type="range" min="0.5" max="0.9" value="0.8" step="0.05" />
+        <b id="split-frac-val">0.80</b>
+      </label>
+    </div>
+    <div class="chartbox">
+      <canvas id="split-chart" height="200"></canvas>
+      <p class="chart-hint" id="split-caption"></p>
+    </div>
+    <div class="callout info">
+      Notice the tension. Give more data to training and the model has more to learn from, but your test set shrinks and your estimate of how good it is becomes noisier. Give more to testing and you get a more reliable estimate of a weaker model. Somewhere around 80/20 is a common compromise, but there is nothing magic about it.
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>Why do we split the data into train and test data?</li>
+        <li>List some things that should be taken into consideration when splitting data into train and test.</li>
+        <li>Suppose several photos in the dataset are different leaves from the <em>same plant</em>. Why is it a problem if some end up in training and others in testing?</li>
+        <li>You report your model's accuracy to a colleague. Which of the two numbers on this page should you quote, and why does the other one not count?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Why split.</b> To measure generalisation. A model can score perfectly on its training images simply by memorising them, which tells you nothing. Only performance on data it never learned from estimates how it will behave on the next leaf you show it, and that is the only thing you actually care about.</li>
+      <li><b>What to consider.</b> Keep the class distribution representative in both halves, ideally stratifying so the proportions match. Leave the test set large enough for the estimate to be stable, and the training set large enough to learn from. Make sure near-duplicates cannot straddle the split, such as the same plant, the same leaf photographed twice, or the same field session. Split along the axis you actually want to generalise over: if the model must work on a new farm, hold out whole farms rather than random images. And do not tune your model repeatedly against the test set, or it quietly stops being held out.</li>
+      <li><b>The same plant in both halves.</b> Two photos of one plant are near-identical: same leaf shape, same lighting, same disease stage, same camera. If one is in training, the model can recognise its twin in the test set without having learned anything general, so your test score partly measures memorisation and comes out optimistically biased. This is called <b>data leakage</b>, and it is one of the most common reasons a model that looked excellent in development disappoints in the field.</li>
+      <li><b>Which number to quote.</b> The test-set number, always. The training number describes how well the model reproduces answers it was explicitly fitted to, so it is not evidence about anything unseen. Quoting it is not just optimistic, it is measuring the wrong thing: a model that had simply memorised every training image would score 100% there while being useless in a greenhouse.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step">
+    <h2><span class="num">3</span> The best model ever</h2>
+    <p class="lead">Before you build your own, let me offer you mine. I have developed a classifier and it reaches roughly <strong>90% accuracy</strong> on the test set. Ninety percent, on a real biological problem, with no effort on your part. Press the button and see for yourself.</p>
+    <div class="controls">
+      <button id="run-magic">▶ Evaluate "the best model ever"</button>
+    </div>
+    <div class="stats" id="magic-stats"></div>
+    <div class="callout q">
+      <strong>❓ Questions, before you read any further</strong>
+      <ul>
+        <li>Do you trust this model? Would you be willing to deploy it in a greenhouse?</li>
+        <li>What would you want to know before deciding? Write down what you would ask for.</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Do you trust it? You should not,</b> and the honest answer at this point is that you do not yet have enough information to say. That is the real lesson: a single accuracy figure is not evidence, whatever its value.</li>
+      <li><b>What to ask for.</b> A good list would include: how many of each class are there, and what does the trivial "always guess the most common class" baseline score? How does the model do on each class separately? What kinds of mistakes does it make, in a confusion matrix? How well does it rank cases, via AUROC? What does it actually predict on a handful of images I can look at? How was the test set constructed, and could it leak? If you asked for most of these, you were already thinking like a sceptic. The rest of this step works through them.</li>
+      </ul>
+    </div>
+    <p style="color:var(--muted)">Answer those before scrolling on. The rest of this step works through what you should have asked for.</p>
+
+    <h3>First question: how many of each class are there?</h3>
+    <p>Accuracy is just the fraction of images the model gets right. That single number hides something important, and the something is the <strong>class distribution</strong>: how many of each kind of leaf there are in the first place. Drag the slider to change how many healthy leaves are in the dataset, and watch what happens to my model's accuracy.</p>
+    <div class="controls">
+      <label>Healthy leaves in the dataset:
+        <input id="pct-healthy" type="range" min="10" max="50" value="10" step="2" />
+        <b id="pct-healthy-val">10%</b>
+      </label>
+    </div>
+    <div class="chartbox">
+      <canvas id="class-chart" height="150"></canvas>
+      <p class="chart-hint" id="class-caption"></p>
+    </div>
+    <div class="callout info">
+      In the full PlantVillage tomato set only about <b>9%</b> of the leaves are healthy, because the dataset was built to study diseases. Real field data is often skewed the same way, and sometimes skewed the other way if most of your crop is fine. Either way, the number to beat is not 50%. It is whatever you get by always guessing the most common class.
+    </div>
+
+    <h3>Second question: which leaves does it get right?</h3>
+    <p>Overall accuracy averages over both classes, so a model can be excellent on one and hopeless on the other without the single number ever showing it. Split the score by class and look again.</p>
+    <div class="controls">
+      <button id="reveal-breakdown">▶ Break the score down by class</button>
+    </div>
+    <div class="stats" id="magic-breakdown"></div>
+
+    <h3>Third question: what kind of mistakes does it make?</h3>
+    <p>The <strong>confusion matrix</strong> lays out all four possible outcomes instead of collapsing them into one number. Each leaf is either truly healthy or truly infected (the two rows), and the model either called it healthy or infected (the two columns). Every leaf lands in exactly one of the four boxes. The two boxes on the diagonal are the correct answers, and the two off it are the two different ways of being wrong.</p>
+    <div class="chartbox" style="display:inline-block">
+      <div id="magic-cm"></div>
+      <p class="chart-hint">Confusion matrix on the test set</p>
+    </div>
+
+    <h3>Fourth question: does it rank the leaves sensibly?</h3>
+    <p>There is one more angle, and it takes a little more explaining, so let's build it up slowly.</p>
+    <p>A classifier does not really answer "healthy" or "infected". It produces a score, and we compare that score against a cut-off to get an answer. Change the cut-off and you get a different set of answers from exactly the same model. So judging a model at one cut-off only tells you about that one choice.</p>
+    <p>The <strong>ROC curve</strong> gets around this by trying <em>every possible cut-off</em> and plotting two things at each one:</p>
+    <ul>
+      <li>the <strong>true positive rate</strong> going up the vertical axis: of all the genuinely infected leaves, what fraction did we catch?</li>
+      <li>the <strong>false positive rate</strong> going along the horizontal axis: of all the genuinely healthy leaves, what fraction did we wrongly condemn?</li>
+    </ul>
+    <p>Both are things you want to trade off against each other. Catching more infections always means raising more false alarms, and the curve shows you the exchange rate. A model that is good at telling the classes apart can catch a lot of infections while raising few false alarms, so its curve bulges towards the <strong>top left</strong>. A model with no ability to discriminate can only buy catches by accepting an equal share of false alarms, so its curve runs along the <strong>diagonal</strong>. That diagonal is drawn dashed on the plot below as a reference for "no better than guessing".</p>
+    <p>The area under the curve, the <strong>AUROC</strong>, compresses that into one number: <b>1.0</b> is a perfect ranker, <b>0.5</b> is a coin flip.</p>
+    <div class="chartbox">
+      <canvas id="magic-roc" height="290"></canvas>
+      <p class="chart-hint" id="magic-roc-caption">ROC curve on the test set</p>
+    </div>
+    <p style="font-size:14px;color:var(--muted)">More background on these two: <a href="https://developers.google.com/machine-learning/crash-course/classification/thresholding" target="_blank" rel="noopener">thresholding and the confusion matrix</a> and <a href="https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc" target="_blank" rel="noopener">ROC and AUC</a>.</p>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>Does the class distribution change your view on the model's accuracy score?</li>
+        <li>Explain what both visualisations show exactly.</li>
+        <li>Based on these evaluations, does the model provide useful predictions?</li>
+        <li>Can you say, in one sentence, what rule this model is using to make its predictions?</li>
+        <li>Look back at what you wrote down earlier. Did you ask for the right things, and would you still deploy it?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Does the distribution change your view? Completely.</b> About 90% of these leaves are infected, so the rule "always say infected" scores about 90% by construction. The meaningful comparison for any model is against that majority-class baseline, not against 50%. Move the slider to 50% healthy and the same model drops to about 0.50, which shows the score was a property of the dataset rather than of the model.</li>
+      <li><b>What the two plots show.</b> The <b>confusion matrix</b> is a table of true label against predicted label at <em>one chosen threshold</em>, splitting outcomes into true negatives, false positives, false negatives and true positives. It shows <em>which</em> mistakes are made, not just how many. Here the entire "predicted healthy" column is empty, because the model never predicts healthy. The <b>ROC curve</b> plots the true positive rate against the false positive rate across <em>every possible threshold</em>, so it describes the quality of the model's ranking independently of where you cut. Its area, the <b>AUROC</b>, is 1.0 for a perfect ranker and 0.5 for one carrying no information. Here the curve lies on the diagonal.</li>
+      <li><b>Useful predictions? None whatsoever.</b> It never identifies a single healthy leaf, its accuracy on the healthy class is 0.00, and its AUROC of 0.50 says it cannot separate the classes at all. It contains no information about its input: you would get identical output with the lens cap on.</li>
+      <li><b>The rule in one sentence:</b> "always answer infected", regardless of the image. (In the notebook this is <code>MagicModel</code>, whose <code>predict</code> literally returns an array of ones.)</li>
+      <li><b>Looking back at your list.</b> The thing most people miss first time is the class distribution, because accuracy feels like it should already account for it. Everything else here follows from that one question. If you would still deploy this model, ask yourself what it would do in a greenhouse where most plants are healthy: it would flag every single one.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step">
+    <h2><span class="num">4</span> Training a real network</h2>
+    <p class="lead">Now let's train an actual neural network and see whether it can beat that. What follows is not a demonstration or a replay. The network really is built and trained in your browser, on your machine, from the images above. That is also why it takes a few seconds.</p>
+    <p>You do not need to know the internals to follow what happens. Training works like this: the network starts with random settings and therefore guesses randomly. We show it a training image, it produces a number between 0 and 1, and we compare that with the true label. If it was wrong, every internal setting is nudged a little in the direction that would have made the answer better. Then the next image. One full pass through all the training images is called an <strong>epoch</strong>.</p>
+    <p>The model we use is a small <em>convolutional</em> network, the variety designed for images, which looks for local patterns like edges, spots and patches of colour rather than treating each of the 12,288 numbers as unrelated.</p>
+
+    <h3>One thing to fix before you start</h3>
+    <p>Your dataset is currently about <b id="balance-echo">10%</b> healthy, because that is what step 3 needed in order to make its point. That is a bad setting to <em>train</em> on. If nine out of ten training images are infected, the laziest thing the network can do is answer "infected" almost every time, and that already scores well. You will have built your own version of the model you just rejected.</p>
+    <p>So before training, raise the healthy fraction. This is the same slider as in step 3, repeated here for convenience.</p>
+    <div class="controls">
+      <label>Healthy leaves in the dataset:
+        <input id="pct-healthy-2" type="range" min="10" max="50" value="10" step="2" />
+        <b id="pct-healthy-2-val">10%</b>
+      </label>
+      <button class="ghost" id="balance-fix">Set to 40% healthy</button>
+    </div>
+    <div class="callout warn" id="balance-warning">
+      <strong>Currently at <span id="balance-warn-pct">10%</span> healthy.</strong> Training here will probably collapse into predicting "infected" for nearly everything. Raise the slider and watch the difference, or train it at 10% first to see the collapse for yourself.
+    </div>
+
+    <h3>Now train it</h3>
+    <p>More epochs means more passes over the data and a better-fitted model, up to the point where it starts memorising. Watch the curves rather than trusting a fixed number: you want to train until the test curve stops improving.</p>
+    <div class="controls">
+      <label>Epochs:
+        <input id="epochs" type="range" min="1" max="50" value="25" step="1" />
+        <b id="epochs-val">25</b>
+      </label>
+      <button id="train-clean">▶ Train the network</button>
+      <span style="font-size:13px;color:var(--muted)" id="train-clean-time"></span>
+    </div>
+    <div class="progress"><i id="train-clean-bar"></i></div>
+    <div class="trainlog" id="train-clean-log">Not trained yet.</div>
+    <div class="chart-row">
+      <div class="chartbox"><canvas id="loss-chart" height="230"></canvas><p class="chart-hint">Loss, how wrong the model is. Lower is better.</p></div>
+      <div class="chartbox"><canvas id="acc-chart" height="230"></canvas><p class="chart-hint">Accuracy over the same run. Higher is better.</p></div>
+    </div>
+    <div class="callout info">
+      <strong>Why two lines on each chart?</strong> The solid line is measured on the training images, the dashed line on the test images the model never learns from. When the training line keeps improving while the test line stalls or gets worse, the model has started <strong>memorising</strong> its training set rather than learning something general. That is overfitting, and the test line is the only place you can see it.
+    </div>
+
+    <h3>What does the network actually output?</h3>
+    <p>The network does not answer "healthy" or "infected". Its final output is a single number between 0 and 1 for each image. Here are its raw outputs for ten test images:</p>
+    <div class="chartbox">
+      <div class="predstrip" id="raw-preds"></div>
+      <p class="chart-hint">The number under each leaf is the network's raw output; the line below it is the true label.</p>
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>What do these predicted numbers represent?</li>
+        <li>Look at an image where the number is close to 0.5. What does that tell you, and what would you want to happen to such a case in practice?</li>
+        <li>Run the training again with more epochs. What happens to the two lines on each chart, and what does the gap between them mean?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>What the outputs are.</b> A single number between 0 and 1 per image, produced by the final sigmoid. It expresses how strongly the network leans towards class 1 (infected): near 1 means confident infected, near 0 confident healthy. It is often loosely called a probability, but it only deserves that name if you have checked that it is calibrated, that among all images scored 0.7, roughly 70% really are infected.</li>
+      <li><b>A score near 0.5.</b> The model is undecided: whatever it extracted from the image does not clearly favour either class. In practice you would not want an automatic decision here at all. A sensible deployed system routes low-confidence cases to a human rather than forcing a call, which is often more valuable than squeezing out another percent of accuracy.</li>
+      <li><b>More epochs.</b> The training loss keeps falling and training accuracy keeps climbing, while the test curves flatten off and eventually turn the wrong way. The <em>gap</em> between the solid and dashed lines is overfitting made visible: it measures how much of the model's apparent skill is memorisation of these particular images rather than something that transfers. A widening gap is the signal to stop training, get more data, or regularise.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="step">
+    <h2><span class="num">5</span> Turning outputs into decisions</h2>
+    <p class="lead">To get from a number between 0 and 1 to an actual decision, we need a <strong>threshold</strong>: above it we call the leaf infected, below it we call it healthy. Nothing forces that threshold to be 0.5. Choosing it is a decision about which mistake you would rather make, and it is yours to make, not the model's.</p>
+    <div class="controls">
+      <label>Threshold:
+        <input id="threshold" type="range" min="0.02" max="0.98" value="0.5" step="0.02" />
+        <b id="threshold-val">0.50</b>
+      </label>
+      <button class="toggle" id="cm-train">Training set</button>
+      <button class="toggle on" id="cm-val">Test set</button>
+    </div>
+    <div class="cmwrap">
+      <div class="chartbox">
+        <div id="clean-cm"></div>
+        <p class="chart-hint" id="clean-cm-caption"></p>
+      </div>
+      <div class="chartbox" style="flex:1 1 300px">
+        <canvas id="clean-roc" height="290"></canvas>
+        <p class="chart-hint" id="clean-roc-caption"></p>
+      </div>
+    </div>
+    <div class="stats" id="clean-stats"></div>
+    <div class="callout info">
+      <strong>Note what the threshold does and does not change.</strong> Sliding it moves cases between the boxes of the confusion matrix, so accuracy, precision and recall all move with it. The ROC curve does not move at all: it already summarises every threshold at once. That is exactly why AUROC is a useful way to compare two models before you have decided how you want to use them.
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>Which confusion matrix is more useful? The one on the train dataset or the test dataset?</li>
+        <li>What effect does changing the threshold have on the confusion matrix?</li>
+        <li>Would you prefer this deep learning model over the model you tested earlier? Why?</li>
+        <li>Imagine this model screens incoming plant material at a quarantine station, where letting a diseased plant through is far worse than a false alarm. Which way would you move the threshold, and what does it cost you?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Which matrix is more useful? The test one.</b> The training matrix shows how well the model reproduces answers it was explicitly fitted to, which is almost always flattering. Only the test matrix estimates behaviour on new leaves. That said, the training matrix is still worth a look, because <em>comparing</em> the two is how you spot overfitting.</li>
+      <li><b>What the threshold does.</b> It moves cases between the columns. Raising it makes the model more reluctant to say "infected": true positives fall, false negatives rise, false positives fall, true negatives rise. Lowering it does the reverse. The row totals never change, because those are the true labels. So recall and precision move in opposite directions and accuracy has an optimum somewhere in between.</li>
+      <li><b>Prefer the neural network? Yes</b>, but not because its accuracy number is bigger. The reason is that it actually discriminates: an AUROC well above 0.5 means it genuinely ranks infected leaves above healthy ones, so it carries information about the image. It also identifies healthy leaves, which the previous model never did, and it gives you a threshold worth tuning, a meaningless notion for a model whose output is constant.</li>
+      <li><b>The quarantine station.</b> There, a missed infection is the expensive error, so you <em>lower</em> the threshold and call things infected on weaker evidence. That raises recall. What it costs is precision: more false alarms, more healthy consignments delayed, inspected or destroyed. Note that this is a policy decision about which error you can better afford, not a modelling decision, the model is the same either way.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 6 -->
+  <section class="step">
+    <h2><span class="num">6</span> Looking at the mistakes</h2>
+    <p class="lead">Numbers tell you how often the model is wrong. Looking at the images tells you <em>why</em>. This is one of the most useful habits you can pick up: whenever a model disappoints you, go and look at the cases it got wrong. Each group below corresponds to one box of the confusion matrix, and the groups re-sort themselves as you move the threshold.</p>
+    <div class="controls">
+      <label>Threshold:
+        <input id="threshold2" type="range" min="0.02" max="0.98" value="0.5" step="0.02" />
+        <b id="threshold2-val">0.50</b>
+      </label>
+    </div>
+    <div class="chartbox" id="buckets"></div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>Look at the false negatives, the infected leaves the model called healthy. Can you see, by eye, why these were hard?</li>
+        <li>Move the threshold up and down. Which group grows, which shrinks, and can you get both error groups to be empty at once?</li>
+        <li>If you had budget to photograph 200 more leaves, which kind would you go and collect, based on what you see here?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>The false negatives.</b> They tend to be leaves where the symptoms are small, sparse or early-stage, or diseases that simply look close to healthy at 64 &times; 64, faint viral mottling, or a handful of tiny spots. Some are just blurry or awkwardly lit. Grouping them by disease is informative: if one category dominates, that is a concrete instruction about which data to collect next.</li>
+      <li><b>Moving the threshold.</b> Raise it and false negatives grow while false positives shrink; lower it and the reverse. You cannot empty both at once unless the score distributions of the two classes do not overlap at all, that is, unless the model is perfect. That overlap <em>is</em> the model's real limitation; the threshold only lets you choose where within it you want to stand.</li>
+      <li><b>The next 200 leaves.</b> Collect more of what it gets wrong, not more of what it already handles. Concretely: more healthy leaves, since they are the minority class and carry most of the relative error, and more of whichever disease dominates the false negatives, specifically mild and early-stage cases rather than more textbook-obvious ones. Adding easy examples of a class the model already nails buys you almost nothing.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 7 -->
+  <section class="step">
+    <h2><span class="num">7</span> When the data lies to you</h2>
+    <p class="lead">Here is a story that happens more often than anyone would like. A grower photographs the healthy part of the field in the morning and walks over to the infected part later in the day, when the light has changed. Nobody notices; the photos all look fine. But every healthy photo is now slightly darker than every infected one.</p>
+    <p>Let's simulate exactly that. In the <strong>training</strong> set we darken every healthy leaf a little. And because the model will be used by other growers whose habits differ, in the <strong>test</strong> set we darken the infected ones instead. Nothing about the leaves themselves has changed. Only the lighting has.</p>
+    <div class="chart-row">
+      <div class="chartbox">
+        <div class="gallery" id="conf-train-gallery"></div>
+        <p class="chart-hint"><b>Training set</b>, healthy leaves darkened</p>
+      </div>
+      <div class="chartbox">
+        <div class="gallery" id="conf-val-gallery"></div>
+        <p class="chart-hint"><b>Test set</b>, infected leaves darkened</p>
+      </div>
+    </div>
+    <div class="callout q">
+      <strong>❓ Question, commit to an answer before you press the button</strong>
+      <ul>
+        <li>How do you think this will affect the model's performance on the training set, and on the test set?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <p><b>The prediction to make:</b> training performance will look <em>excellent</em>, quite possibly better than before, because brightness has become a perfectly reliable clue within the training set. Test performance will be dreadful, most likely worse than guessing, because in the test set that same clue points the wrong way.</p>
+      <p>If your instinct was "it should be fine, the leaves themselves have not changed", that is exactly the intuition this step is designed to break. The model does not see leaves. It sees numbers, and we changed the numbers.</p>
+    </div>
+    <div class="controls">
+      <label>Epochs:
+        <input id="epochs-conf" type="range" min="1" max="50" value="25" step="1" />
+        <b id="epochs-conf-val">25</b>
+      </label>
+      <button id="train-conf">▶ Train on the confounded data</button>
+      <span style="font-size:13px;color:var(--muted)" id="train-conf-time"></span>
+    </div>
+    <div class="progress"><i id="train-conf-bar"></i></div>
+    <div class="trainlog" id="train-conf-log">Not trained yet.</div>
+    <div class="chart-row">
+      <div class="chartbox"><canvas id="conf-loss-chart" height="230"></canvas><p class="chart-hint">Loss. Watch the two lines pull apart.</p></div>
+      <div class="chartbox"><canvas id="conf-acc-chart" height="230"></canvas><p class="chart-hint">Accuracy on the training set against the test set.</p></div>
+    </div>
+    <div class="stats" id="conf-stats"></div>
+    <div class="cmwrap">
+      <div class="chartbox">
+        <div id="conf-cm"></div>
+        <p class="chart-hint">Confusion matrix on the test set (threshold 0.5)</p>
+      </div>
+      <div class="chartbox" style="flex:1 1 300px">
+        <canvas id="conf-roc" height="290"></canvas>
+        <p class="chart-hint" id="conf-roc-caption"></p>
+      </div>
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>What do you think of the model performance?</li>
+        <li>How would you explain these results?</li>
+        <li>An AUROC <em>below</em> 0.5 is a strange thing to see. What does it mean about the model's ranking, and how could that come about here?</li>
+        <li>Nothing in the training run itself looked wrong. What would have had to happen for someone to catch this before deployment?</li>
+        <li>Could you think of one or more method(s) to mitigate this?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>The performance.</b> Training accuracy is high, test accuracy is poor, and the test AUROC lands around or below 0.5. Note carefully that the model has <em>not</em> failed to learn. It has learned extremely well, it has just learned the wrong thing.</li>
+      <li><b>The explanation.</b> In the training data every healthy leaf was darker. Brightness is a far simpler and more reliable pattern than lesion shape or texture, so gradient descent found it first and leaned on it: "dark means healthy". There was never any pressure to look at the disease, because the shortcut already gave a perfect answer. In the test set the darkening was applied to the infected leaves instead, so that learned rule now points precisely the wrong way.</li>
+      <li><b>AUROC below 0.5.</b> AUROC is the probability that the model scores a randomly chosen infected leaf above a randomly chosen healthy one. 0.5 is a coin flip. <em>Below</em> 0.5 means it reliably ranks them the wrong way round, which is not an absence of information, it is real information being applied backwards. (Inverting every prediction would score above 0.5.) It arises exactly when a cue the model learned is anti-correlated with the label in the new data, which is what we engineered here.</li>
+      <li><b>Catching it beforehand.</b> Nothing in the loss curves could have revealed it, and that is the uncomfortable part. In a normal project the training and test sets come from the same batch of photos, so they share the same bias and both look fine. The failure only surfaced because our test set came from a different regime. The general defences: build validation sets that genuinely differ in conditions (other farms, other days, other cameras) instead of randomly splitting one batch; record metadata such as time of day, device and operator, and check whether it predicts the label; probe what the model responds to, for instance by occluding parts of the image or testing on deliberately manipulated versions; and look at the images and how they were acquired, not only at the metrics.</li>
+      <li><b>Mitigations.</b> Image augmentation (step 8). Standardising the acquisition protocol so lighting cannot vary with class. Per-image normalisation, so absolute brightness carries no information at all. Deliberately balancing the confounder across classes at collection time. Holding out a validation set from a different session. Best of all, fixing the data collection rather than patching it afterwards.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- STEP 8 -->
+  <section class="step">
+    <h2><span class="num">8</span> Fixing it with image augmentation</h2>
+    <p class="lead">The model latched onto brightness because, in its training set, brightness was a perfectly reliable clue. One way to take that clue away is <strong>image augmentation</strong>. Before each pass we randomly mess with the training images: mirror them, brighten or darken them, nudge their contrast. The labels stay the same.</p>
+    <p>Crucially, this is re-rolled every epoch, so the model never sees the same version of an image twice. Press the button below a few times to see different random versions of the same training leaves.</p>
+    <div class="controls">
+      <button class="ghost" id="aug-reroll">↻ Re-roll the augmentation</button>
+    </div>
+    <div class="chartbox">
+      <div class="gallery" id="aug-gallery"></div>
+      <p class="chart-hint">The same confounded training leaves as in step 7, randomly flipped, brightened/darkened and contrast-adjusted.</p>
+    </div>
+    <p>Augmented images are harder to learn from, so this model usually needs <em>more</em> epochs than the others before it catches up. If the improvement looks disappointing, train it for longer before concluding that augmentation did not work.</p>
+    <div class="controls">
+      <label>Epochs:
+        <input id="epochs-aug" type="range" min="1" max="50" value="25" step="1" />
+        <b id="epochs-aug-val">25</b>
+      </label>
+      <button id="train-aug">▶ Train on augmented confounded data</button>
+      <span style="font-size:13px;color:var(--muted)" id="train-aug-time"></span>
+    </div>
+    <div class="progress"><i id="train-aug-bar"></i></div>
+    <div class="trainlog" id="train-aug-log">Not trained yet.</div>
+    <div class="chart-row">
+      <div class="chartbox"><canvas id="aug-loss-chart" height="230"></canvas><p class="chart-hint">Loss. Compare the gap with the one in step 7.</p></div>
+      <div class="chartbox"><canvas id="aug-acc-chart" height="230"></canvas><p class="chart-hint">Accuracy on the training set against the test set.</p></div>
+    </div>
+    <div class="stats" id="aug-stats"></div>
+
+    <h3>Where are its mistakes now?</h3>
+    <p>The same confusion matrix and threshold slider as in step 5, this time on the augmented model. Compare the shape of the errors against step 7. A model that has stopped leaning on brightness should spread its mistakes around rather than piling them all into one box.</p>
+    <div class="controls">
+      <label>Threshold:
+        <input id="threshold-aug" type="range" min="0.02" max="0.98" value="0.5" step="0.02" />
+        <b id="threshold-aug-val">0.50</b>
+      </label>
+    </div>
+    <div class="chartbox" style="display:inline-block">
+      <div id="aug-cm"></div>
+      <p class="chart-hint" id="aug-cm-caption">Train the model above to see its confusion matrix.</p>
+    </div>
+
+    <div class="chartbox">
+      <canvas id="compare-roc" height="300"></canvas>
+      <p class="chart-hint" id="compare-caption">Test-set ROC curves compared. Train the step&nbsp;7 model first so there is something to compare against.</p>
+    </div>
+    <div class="callout q">
+      <strong>❓ Questions</strong>
+      <ul>
+        <li>Explain how image augmentation aids generalisability.</li>
+        <li>Augmentation did not add a single new photograph. Where, then, did the improvement come from?</li>
+        <li>Is augmentation a complete fix here? Compare this model against the one you trained in step 4 on clean data, and explain the difference that remains.</li>
+        <li>We randomly changed brightness, contrast and left&ndash;right mirroring. Why would randomly rotating leaves by 180° be fine here, but randomly changing the <em>colour</em> from green to brown be a terrible idea?</li>
+        <li>If you have extra time, pick one or more of these to investigate:
+          <ul>
+            <li>How is model performance changed if you shrink the dataset or change the class distribution (the slider in step 3)?</li>
+            <li>Could this classifier be applied to a species other than tomato? What would you need to check first?</li>
+            <li>Can you think of, or find, other evaluation metrics that would be useful here?</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>How augmentation helps.</b> By randomly re-rolling brightness, contrast and mirroring on every pass, those properties stop predicting the label: the same healthy leaf is sometimes dark and sometimes bright. The shortcut becomes useless, so the only way left to reduce the loss is to rely on cues that survive the randomisation, the lesions and colour patterns of the leaf itself. As a bonus it enlarges the effective variety of the training set, which reduces plain memorisation too.</li>
+      <li><b>Where the improvement came from.</b> Not from new information, from <em>destroying misleading</em> information. We injected our own knowledge, namely "brightness and mirroring must not matter for this task", as a constraint on what the model is permitted to rely on. That is prior biological knowledge supplied through the data rather than through equations, which is a nice echo of the mechanistic-versus-data-driven contrast from step 0.</li>
+      <li><b>Is it a complete fix? No.</b> Compare it against the step 4 model: augmentation recovers a great deal, but it usually still falls short of the model trained on clean data. Augmentation makes brightness harder to exploit, but the training set is still biased, the model has less clean signal to work with, and the random perturbations add noise to every image. Repairing the data collection would always have been better than patching around it afterwards.</li>
+      <li><b>Rotation versus recolouring.</b> Rotating a leaf by 180&deg; is safe because an upside-down leaf is still the same leaf with the same disease: the label is unchanged, so you are teaching the model a true fact, that orientation is irrelevant. Recolouring green to brown is a disaster because colour <em>is</em> the symptom, browning, yellowing and mottling are how several of these diseases present. You would be manufacturing images whose label no longer matches their content, teaching the model that a brown leaf can be healthy. The rule of thumb: only augment with transformations that genuinely leave the label untouched.</li>
+      <li><b>The optional investigations.</b>
+        <ul>
+          <li><em>Smaller dataset or different class balance:</em> shrinking the data lowers test performance and widens the train/test gap, because small datasets are memorised faster. Pushing the balance towards extreme imbalance makes accuracy look better while AUROC and minority-class recall get worse, the step 3 lesson all over again.</li>
+          <li><em>Another species:</em> almost certainly poor without retraining. The model has only ever seen tomato leaf shapes and tomato symptoms, and other species differ in both morphology and disease repertoire. You would measure performance on a labelled sample of the new species first, and most likely fine-tune on it rather than assume transfer.</li>
+          <li><em>Other metrics:</em> precision, recall and F1; balanced accuracy; Cohen's kappa; Matthews correlation coefficient; the area under the <em>precision-recall</em> curve, which is more informative than ROC AUC under strong class imbalance; recall broken down per disease; and calibration measures if you intend to treat the scores as probabilities.</li>
+        </ul>
+      </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="step">
+    <h2><span class="num">✓</span> Check your understanding</h2>
+    <div class="quiz" id="quiz"></div>
+  </section>
+
+  <footer>
+    This HTML and JavaScript was created with the help of Claude Code, based on the original Jupyter notebooks.<br />
+    Leaf photographs from the <a href="https://github.com/gabrieldgf4/PlantVillage-Dataset" target="_blank" rel="noopener">PlantVillage dataset</a>.
+  </footer>
+</div>
+
+<!-- 700 real tomato leaf photos, 64x64, packed into one base64 JPEG sprite sheet.
+     Generated by tools/build_leaf_sprite.py; shared with deep_learning_answers.html. -->
+<script src="leaf_data.js"></script>
+
+<script>
+/* ============================================================
+   Week 3 Practical 1, Deep learning on leaf images.
+   Ported from notebooks/W3_practical_1_deep_learning.ipynb and the
+   dsplantbreeding package:
+     - the CNN matches Models.py::train_dl_model exactly
+       (Conv2D 32 3x3 relu -> MaxPool 4x4 -> Flatten -> Dense 128 relu
+        -> Dense 1 sigmoid, Adam lr=1e-3, binary crossentropy, batch 32)
+     - MagicModel (Models.py) always predicts 1 -> "the best model ever"
+     - decrease_brightness_on_label / augment_image from actions.py
+     - accuracy / confusion matrix / AUROC from metrics.py
+   Images are 64x64 RGB, /255 normalised, as in
+   Datasets/biotic_stress_images.py.
+   ============================================================ */
+
+const TILE = LEAF_TILE, PIX = TILE * TILE, VALS = PIX * 3;
+const WORKING_N = 500;          // images actually used, kept fixed so training time is predictable
+const BATCH = 32;
+const CONFOUND_DELTA = -0.2;    // matches decrease_brightness_on_label
+
+/* ---------- seeded RNG so every student sees the same numbers ---------- */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shuffled(arr, seed){
+  const a = arr.slice(), rnd = mulberry32(seed);
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ============================================================
+   Image store: decode the sprite sheet into one big Uint8Array
+   ============================================================ */
+let PIXELS = null;              // Uint8Array, LEAF_N * 64 * 64 * 3
+const healthyPool = [], infectedPool = [];
+
+function loadSprite(){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const rows = Math.ceil(LEAF_N / LEAF_COLS);
+      const cv = document.createElement("canvas");
+      cv.width = LEAF_COLS * TILE; cv.height = rows * TILE;
+      const c = cv.getContext("2d", { willReadFrequently: true });
+      c.drawImage(img, 0, 0);
+      const data = c.getImageData(0, 0, cv.width, cv.height).data;   // RGBA
+      PIXELS = new Uint8Array(LEAF_N * VALS);
+      for (let i = 0; i < LEAF_N; i++){
+        const ox = (i % LEAF_COLS) * TILE, oy = Math.floor(i / LEAF_COLS) * TILE;
+        for (let y = 0; y < TILE; y++){
+          let src = ((oy + y) * cv.width + ox) * 4;
+          let dst = i * VALS + y * TILE * 3;
+          for (let x = 0; x < TILE; x++){
+            PIXELS[dst++] = data[src];
+            PIXELS[dst++] = data[src + 1];
+            PIXELS[dst++] = data[src + 2];
+            src += 4;
+          }
+        }
+        (LEAF_LABELS[i] === 0 ? healthyPool : infectedPool).push(i);
+      }
+      resolve();
+    };
+    img.onerror = reject;
+    img.src = LEAF_SPRITE;
+  });
+}
+
+/* Draw one leaf onto a canvas, optionally with a brightness delta (0-1 space),
+   a left-right flip and a contrast factor, the same operations the model sees. */
+function drawLeaf(canvas, idx, opts){
+  const o = opts || {};
+  const delta = (o.delta || 0) * 255;
+  const factor = o.contrast === undefined ? 1 : o.contrast;
+  const flip = !!o.flip;
+  const c = canvas.getContext("2d");
+  const im = c.createImageData(TILE, TILE);
+  const base = idx * VALS;
+  let mean = [0, 0, 0];
+  if (factor !== 1){
+    for (let p = 0; p < PIX; p++)
+      for (let k = 0; k < 3; k++) mean[k] += PIXELS[base + p * 3 + k];
+    mean = mean.map(m => m / PIX);
+  }
+  for (let y = 0; y < TILE; y++){
+    for (let x = 0; x < TILE; x++){
+      const sx = flip ? (TILE - 1 - x) : x;
+      const s = base + (y * TILE + sx) * 3;
+      const d = (y * TILE + x) * 4;
+      for (let k = 0; k < 3; k++){
+        let v = PIXELS[s + k] + delta;
+        if (factor !== 1) v = (v - mean[k]) * factor + mean[k];
+        im.data[d + k] = v < 0 ? 0 : v > 255 ? 255 : v;
+      }
+      im.data[d + 3] = 255;
+    }
+  }
+  canvas.width = TILE; canvas.height = TILE;
+  c.putImageData(im, 0, 0);
+}
+
+function makeCell(idx, caption, opts, cls){
+  const cell = document.createElement("div");
+  cell.className = "cell " + (cls !== undefined ? cls : (LEAF_LABELS[idx] === 0 ? "h" : "i"));
+  const cv = document.createElement("canvas");
+  cell.appendChild(cv);
+  if (caption){
+    const cap = document.createElement("div");
+    cap.className = "cap"; cap.innerHTML = caption;
+    cell.appendChild(cap);
+  }
+  drawLeaf(cv, idx, opts);
+  return cell;
+}
+
+/* ============================================================
+   The working dataset: pick images, split into train / test
+   ============================================================ */
+const DS = { train: [], val: [], all: [], nHealthy: 0 };
+
+function rebuildDataset(){
+  const pct = +document.getElementById("pct-healthy").value / 100;
+  const nH = Math.round(WORKING_N * pct);
+  const nI = WORKING_N - nH;
+  // Deterministic pick from each pool, so every student sees the same dataset.
+  const chosen = shuffled(healthyPool, 7).slice(0, nH)
+        .concat(shuffled(infectedPool, 11).slice(0, nI));
+  DS.nHealthy = nH;
+  DS.all = chosen;
+
+  const frac = +document.getElementById("split-frac").value;
+  const ordered = shuffled(chosen, 23);   // always shuffled before splitting
+  const cut = Math.round(ordered.length * frac);
+  DS.train = ordered.slice(0, cut);
+  DS.val = ordered.slice(cut);
+}
+
+const labelOf = i => LEAF_LABELS[i];
+const countHealthy = ids => ids.reduce((n, i) => n + (LEAF_LABELS[i] === 0 ? 1 : 0), 0);
+
+/* ============================================================
+   Metrics, mirrors dsplantbreeding/metrics.py
+   ============================================================ */
+function confusion(labels, scores, threshold){
+  let TP = 0, FP = 0, FN = 0, TN = 0;
+  for (let i = 0; i < labels.length; i++){
+    const pred = scores[i] > threshold ? 1 : 0;
+    if (labels[i] === 1) pred === 1 ? TP++ : FN++;
+    else                 pred === 1 ? FP++ : TN++;
+  }
+  return { TP, FP, FN, TN, n: labels.length,
+           accuracy: (TP + TN) / labels.length,
+           precision: TP + FP ? TP / (TP + FP) : 0,
+           recall: TP + FN ? TP / (TP + FN) : 0 };
+}
+
+function rocCurve(labels, scores){
+  const idx = labels.map((_, i) => i).sort((a, b) => scores[b] - scores[a]);
+  const P = labels.reduce((n, l) => n + l, 0), N = labels.length - P;
+  const pts = [[0, 0]];
+  let tp = 0, fp = 0, prev = Infinity;
+  for (const i of idx){
+    if (scores[i] !== prev){ pts.push([N ? fp / N : 0, P ? tp / P : 0]); prev = scores[i]; }
+    labels[i] === 1 ? tp++ : fp++;
+  }
+  pts.push([N ? fp / N : 0, P ? tp / P : 0]);
+  pts.push([1, 1]);
+  let auc = 0;
+  for (let i = 1; i < pts.length; i++)
+    auc += (pts[i][0] - pts[i - 1][0]) * (pts[i][1] + pts[i - 1][1]) / 2;
+  return { pts, auc };
+}
+
+/* ============================================================
+   Small canvas charting helpers (same house style as the other practicals)
+   ============================================================ */
+function setupCanvas(cv, height){
+  const cssW = cv.clientWidth || cv.parentElement.clientWidth - 28;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = cssW * dpr; cv.height = height * dpr;
+  cv.style.height = height + "px";
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, height);
+  return { ctx, W: cssW, H: height };
+}
+
+function drawRoc(canvasId, curves, caption){
+  const cv = document.getElementById(canvasId);
+  const { ctx, W, H } = setupCanvas(cv, 290);
+  const m = { l: 48, r: 14, t: 14, b: 40 };
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const X = v => m.l + v * pw, Y = v => m.t + ph - v * ph;
+
+  ctx.strokeStyle = "#2c3e54"; ctx.fillStyle = "#9fb0c3"; ctx.font = "11px system-ui"; ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++){
+    const v = i / 5;
+    ctx.globalAlpha = .5;
+    ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(m.l + pw, Y(v)); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText(v.toFixed(1), m.l - 7, Y(v));
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(v.toFixed(1), X(v), m.t + ph + 7);
+  }
+  // chance diagonal
+  ctx.strokeStyle = "#5b9bd5"; ctx.setLineDash([5, 5]); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(1), Y(1)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  curves.forEach(cur => {
+    ctx.strokeStyle = cur.color; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    cur.roc.pts.forEach((p, i) => i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])));
+    ctx.stroke();
+    if (cur.marker){
+      ctx.fillStyle = cur.color;
+      ctx.beginPath(); ctx.arc(X(cur.marker[0]), Y(cur.marker[1]), 5, 0, 7); ctx.fill();
+      ctx.strokeStyle = "#0f1720"; ctx.lineWidth = 1.6; ctx.stroke();
+    }
+  });
+
+  // legend
+  ctx.font = "12px system-ui"; ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+  curves.forEach((cur, i) => {
+    ctx.fillStyle = cur.color;
+    ctx.fillText(cur.label + " (AUC " + cur.roc.auc.toFixed(2) + ")",
+                 m.l + pw - 6, m.t + ph - 8 - i * 16);
+  });
+  ctx.fillStyle = "#9fb0c3"; ctx.font = "12px system-ui";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("False positive rate", m.l + pw / 2, H - 18);
+  ctx.save(); ctx.translate(13, m.t + ph / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textBaseline = "middle"; ctx.fillText("True positive rate", 0, 0); ctx.restore();
+  if (caption) document.getElementById(caption.id).innerHTML = caption.text;
+}
+
+function drawCurves(canvasId, series, yLabel, height){
+  const cv = document.getElementById(canvasId);
+  const { ctx, W, H } = setupCanvas(cv, height || 230);
+  const m = { l: 46, r: 12, t: 14, b: 36 };
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  let xmax = 1, ymin = Infinity, ymax = -Infinity;
+  series.forEach(s => s.data.forEach(p => {
+    if (p[0] > xmax) xmax = p[0];
+    if (p[1] < ymin) ymin = p[1];
+    if (p[1] > ymax) ymax = p[1];
+  }));
+  if (!isFinite(ymin)){ ymin = 0; ymax = 1; }
+  const pad = (ymax - ymin) * .12 || .1;
+  ymin = Math.max(0, ymin - pad); ymax = ymax + pad;
+  const X = v => m.l + (v / xmax) * pw;
+  const Y = v => m.t + ph - ((v - ymin) / (ymax - ymin || 1)) * ph;
+
+  ctx.strokeStyle = "#2c3e54"; ctx.fillStyle = "#9fb0c3"; ctx.font = "11px system-ui"; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++){
+    const v = ymin + (ymax - ymin) * i / 4;
+    ctx.globalAlpha = .5;
+    ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(m.l + pw, Y(v)); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText(v.toFixed(2), m.l - 7, Y(v));
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  const step = Math.max(1, Math.round(xmax / 5));
+  for (let e = 0; e <= xmax; e += step) ctx.fillText(String(e), X(e), m.t + ph + 7);
+  ctx.fillText("Epoch", m.l + pw / 2, H - 16);
+  ctx.save(); ctx.translate(13, m.t + ph / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textBaseline = "middle"; ctx.fillText(yLabel, 0, 0); ctx.restore();
+
+  series.forEach(s => {
+    if (!s.data.length) return;
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2.2;
+    ctx.setLineDash(s.dashed ? [5, 4] : []);
+    ctx.beginPath();
+    s.data.forEach((p, i) => i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    if (s.data.length === 1){
+      ctx.fillStyle = s.color;
+      ctx.beginPath(); ctx.arc(X(s.data[0][0]), Y(s.data[0][1]), 3.5, 0, 7); ctx.fill();
+    }
+  });
+  ctx.font = "12px system-ui"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  series.forEach((s, i) => { ctx.fillStyle = s.color; ctx.fillText(s.label, m.l + 8, m.t + 4 + i * 15); });
+}
+
+function cmHTML(cm){
+  return `<table class="cm">
+    <tr><th></th><th></th><th colspan="2" style="padding-bottom:2px">Predicted</th></tr>
+    <tr><th></th><th></th><th>Healthy (0)</th><th>Infected (1)</th></tr>
+    <tr><th class="rot" rowspan="2">True</th><th>Healthy (0)</th>
+        <td class="ok">${cm.TN}<span class="sub">true neg.</span></td>
+        <td class="bad">${cm.FP}<span class="sub">false pos.</span></td></tr>
+    <tr><th>Infected (1)</th>
+        <td class="bad">${cm.FN}<span class="sub">false neg.</span></td>
+        <td class="ok">${cm.TP}<span class="sub">true pos.</span></td></tr>
+  </table>`;
+}
+
+function statsHTML(items){
+  return items.map(it =>
+    `<div class="stat ${it.cls || ""}"><div class="k">${it.k}</div><div class="v">${it.v}</div></div>`
+  ).join("");
+}
+
+/* ============================================================
+   STEP 1, preview gallery and the pixel inspector
+   ============================================================ */
+let galleryFilter = "both", gallerySeed = 3;
+
+function renderPreviewGallery(){
+  const root = document.getElementById("preview-gallery");
+  root.innerHTML = "";
+  let ids;
+  const h = shuffled(healthyPool, gallerySeed), i = shuffled(infectedPool, gallerySeed + 1);
+  if (galleryFilter === "healthy") ids = h.slice(0, 16);
+  else if (galleryFilter === "infected") ids = i.slice(0, 16);
+  else {
+    ids = [];
+    for (let k = 0; k < 8; k++){ ids.push(h[k]); ids.push(i[k]); }
+  }
+  ids.forEach(id => root.appendChild(
+    makeCell(id, `label ${LEAF_LABELS[id]}<br>${LEAF_CLASS_NAMES[LEAF_CLASS[id]]}`)));
+}
+
+let zoomIdx = 0, pixFormat = 255, patchX = 29, patchY = 29;
+
+function renderZoom(){
+  const cv = document.getElementById("zoom-canvas");
+  const dpr = window.devicePixelRatio || 1;
+  const size = 384;
+  cv.width = size * dpr; cv.height = size * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  const tmp = document.createElement("canvas");
+  drawLeaf(tmp, zoomIdx, {});
+  ctx.drawImage(tmp, 0, 0, size, size);
+  // highlight the 6x6 patch
+  const s = size / TILE;
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+  ctx.strokeRect(patchX * s, patchY * s, 6 * s, 6 * s);
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1;
+  ctx.strokeRect(patchX * s - 1.5, patchY * s - 1.5, 6 * s + 3, 6 * s + 3);
+  renderPatch();
+}
+
+function renderPatch(){
+  const grid = document.getElementById("pixgrid");
+  grid.innerHTML = "";
+  const base = zoomIdx * VALS;
+  for (let y = 0; y < 6; y++){
+    for (let x = 0; x < 6; x++){
+      const s = base + ((patchY + y) * TILE + (patchX + x)) * 3;
+      const r = PIXELS[s], g = PIXELS[s + 1], b = PIXELS[s + 2];
+      const d = document.createElement("div");
+      d.style.background = `rgb(${r},${g},${b})`;
+      // pick a readable text colour for this swatch
+      d.style.color = (0.299 * r + 0.587 * g + 0.114 * b) > 130 ? "#0d1520" : "#e9eef5";
+      d.innerHTML = pixFormat === 255
+        ? `${r}<br>${g}<br>${b}`
+        : `${(r / 255).toFixed(2)}<br>${(g / 255).toFixed(2)}<br>${(b / 255).toFixed(2)}`;
+      grid.appendChild(d);
+    }
+  }
+  const base0 = base + (patchY * TILE + patchX) * 3;
+  const fmt = v => pixFormat === 255 ? v : (v / 255).toFixed(3);
+  document.getElementById("pix-readout").innerHTML =
+    `<b>Top-left pixel of the patch</b>\n` +
+    `row ${patchY}, column ${patchX}\n` +
+    `red   ${fmt(PIXELS[base0])}\n` +
+    `green ${fmt(PIXELS[base0 + 1])}\n` +
+    `blue  ${fmt(PIXELS[base0 + 2])}\n\n` +
+    `<b>Whole image</b>\nshape (64, 64, 3) = 12,288 numbers\nlabel ${LEAF_LABELS[zoomIdx]} ` +
+    `(${LEAF_CLASS_NAMES[LEAF_CLASS[zoomIdx]]})`;
+}
+
+/* ============================================================
+   STEP 2, the split chart
+   ============================================================ */
+function renderSplit(){
+  document.getElementById("split-frac-val").textContent =
+    (+document.getElementById("split-frac").value).toFixed(2);
+  rebuildDataset();
+
+  const cv = document.getElementById("split-chart");
+  const { ctx, W, H } = setupCanvas(cv, 200);
+  const groups = [
+    { name: "Training set", ids: DS.train },
+    { name: "Test set", ids: DS.val },
+  ];
+  const m = { l: 14, r: 14, t: 26, b: 24 };
+  const barH = 42, gap = 34;
+  groups.forEach((grp, gi) => {
+    const nH = countHealthy(grp.ids), nI = grp.ids.length - nH;
+    const y = m.t + gi * (barH + gap);
+    const total = DS.all.length;
+    const wAll = W - m.l - m.r;
+    const w = grp.ids.length / total * wAll;
+    const wH = grp.ids.length ? nH / grp.ids.length * w : 0;
+    ctx.fillStyle = "#9fb0c3"; ctx.font = "13px system-ui";
+    ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+    ctx.fillText(`${grp.name}, ${grp.ids.length} images`, m.l, y - 5);
+    ctx.fillStyle = "#4cc38a"; ctx.fillRect(m.l, y, wH, barH);
+    ctx.fillStyle = "#e2725b"; ctx.fillRect(m.l + wH, y, w - wH, barH);
+    ctx.strokeStyle = "#2c3e54"; ctx.lineWidth = 1; ctx.strokeRect(m.l, y, w, barH);
+    ctx.font = "12px system-ui"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#06281b"; ctx.textAlign = "center";
+    if (wH > 46) ctx.fillText(`${nH} healthy`, m.l + wH / 2, y + barH / 2);
+    ctx.fillStyle = "#2a0f09";
+    if (w - wH > 48) ctx.fillText(`${nI} infected`, m.l + wH + (w - wH) / 2, y + barH / 2);
+  });
+
+  const trH = countHealthy(DS.train), vaH = countHealthy(DS.val);
+  document.getElementById("split-caption").innerHTML =
+    `Training: <b>${(100 * trH / (DS.train.length || 1)).toFixed(0)}%</b> healthy &nbsp;·&nbsp; ` +
+    `Test: <b>${(100 * vaH / (DS.val.length || 1)).toFixed(0)}%</b> healthy`;
+
+  refreshMagic();
+}
+
+/* ============================================================
+   STEP 3, MagicModel (Models.py: predict() returns all ones)
+   ============================================================ */
+function refreshMagic(){
+  const pct = +document.getElementById("pct-healthy").value;
+  document.getElementById("pct-healthy-val").textContent = pct + "%";
+  document.getElementById("pct-healthy-2").value = pct;
+  document.getElementById("pct-healthy-2-val").textContent = pct + "%";
+  document.getElementById("balance-echo").textContent = pct + "%";
+  document.getElementById("balance-warn-pct").textContent = pct + "%";
+  document.getElementById("balance-warning").style.display = pct < 30 ? "" : "none";
+
+  // class distribution chart
+  const cv = document.getElementById("class-chart");
+  const { ctx, W, H } = setupCanvas(cv, 150);
+  const nH = countHealthy(DS.all), nI = DS.all.length - nH;
+  const m = { l: 14, r: 14, t: 18, b: 22 };
+  const w = W - m.l - m.r, barH = 46;
+  const wH = nH / DS.all.length * w;
+  ctx.fillStyle = "#4cc38a"; ctx.fillRect(m.l, m.t + 26, wH, barH);
+  ctx.fillStyle = "#e2725b"; ctx.fillRect(m.l + wH, m.t + 26, w - wH, barH);
+  ctx.font = "13px system-ui"; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+  ctx.fillStyle = "#9fb0c3";
+  ctx.fillText(`Whole dataset, ${DS.all.length} images`, m.l, m.t + 20);
+  ctx.textBaseline = "middle"; ctx.textAlign = "center"; ctx.font = "12px system-ui";
+  ctx.fillStyle = "#06281b"; if (wH > 60) ctx.fillText(`${nH} healthy`, m.l + wH / 2, m.t + 26 + barH / 2);
+  ctx.fillStyle = "#2a0f09"; ctx.fillText(`${nI} infected`, m.l + wH + (w - wH) / 2, m.t + 26 + barH / 2);
+  document.getElementById("class-caption").innerHTML =
+    `Counter({'Label=1': ${nI}, 'Label=0': ${nH}}) &nbsp;→&nbsp; ` +
+    `${(100 * nI / DS.all.length).toFixed(0)}% of the dataset is infected.`;
+
+  // MagicModel: score 1.0 for everything
+  const labels = DS.val.map(labelOf);
+  const scores = labels.map(() => 1.0);
+  const cm = confusion(labels, scores, 0.5);
+  const roc = rocCurve(labels, scores);
+
+  if (magicRevealed){
+    document.getElementById("magic-stats").innerHTML = statsHTML([
+      { k: "Accuracy", v: cm.accuracy.toFixed(2), cls: "good" },
+      { k: "Test images", v: cm.n },
+    ]);
+  }
+  if (breakdownRevealed){
+    document.getElementById("magic-breakdown").innerHTML = statsHTML([
+      { k: "Infected found", v: `${cm.TP}/${cm.TP + cm.FN}`, cls: "good" },
+      { k: "Healthy found", v: `${cm.TN}/${cm.TN + cm.FP}`, cls: "bad" },
+      { k: "Accuracy on infected", v: (cm.TP + cm.FN ? cm.TP / (cm.TP + cm.FN) : 0).toFixed(2), cls: "good" },
+      { k: "Accuracy on healthy", v: (cm.TN + cm.FP ? cm.TN / (cm.TN + cm.FP) : 0).toFixed(2), cls: "bad" },
+    ]);
+  }
+  document.getElementById("magic-cm").innerHTML = cmHTML(cm);
+  drawRoc("magic-roc", [{ roc, color: "#f2c14e", label: "best model ever" }],
+          { id: "magic-roc-caption",
+            text: `ROC on the test set. An AUC of <b>${roc.auc.toFixed(2)}</b> is exactly what you get from a model that cannot tell the two classes apart at all.` });
+}
+
+let magicRevealed = false, breakdownRevealed = false;
+document.getElementById("run-magic").addEventListener("click", () => {
+  magicRevealed = true;
+  document.getElementById("run-magic").textContent = "▶ Re-evaluate";
+  refreshMagic();
+});
+document.getElementById("reveal-breakdown").addEventListener("click", () => {
+  magicRevealed = breakdownRevealed = true;
+  document.getElementById("reveal-breakdown").style.display = "none";
+  refreshMagic();
+});
+
+/* ============================================================
+   TensorFlow.js, the model from Models.py::train_dl_model
+   ============================================================ */
+const TF_OK = typeof tf !== "undefined";
+let backendNote = "";
+
+function buildModel(){
+  const m = tf.sequential();
+  m.add(tf.layers.conv2d({
+    filters: 32, kernelSize: 3, activation: "relu", inputShape: [TILE, TILE, 3],
+    kernelInitializer: tf.initializers.glorotUniform({ seed: 1 })
+  }));
+  m.add(tf.layers.maxPooling2d({ poolSize: [4, 4] }));
+  m.add(tf.layers.flatten());
+  m.add(tf.layers.dense({
+    units: 128, activation: "relu",
+    kernelInitializer: tf.initializers.glorotUniform({ seed: 2 })
+  }));
+  m.add(tf.layers.dense({
+    units: 1, activation: "sigmoid",
+    kernelInitializer: tf.initializers.glorotUniform({ seed: 3 })
+  }));
+  m.compile({ loss: "binaryCrossentropy", optimizer: tf.train.adam(0.001), metrics: ["accuracy"] });
+  return m;
+}
+
+/* Build a [n,64,64,3] float tensor from image ids, applying the brightness
+   confounder to whichever label is being dimmed (null = none). */
+function makeTensor(ids, dimLabel){
+  const buf = new Float32Array(ids.length * VALS);
+  ids.forEach((id, n) => {
+    const dim = (dimLabel !== null && LEAF_LABELS[id] === dimLabel) ? CONFOUND_DELTA : 0;
+    const src = id * VALS, dst = n * VALS;
+    for (let k = 0; k < VALS; k++) buf[dst + k] = PIXELS[src + k] / 255 + dim;
+  });
+  return tf.tensor4d(buf, [ids.length, TILE, TILE, 3]);
+}
+const makeLabels = ids => tf.tensor2d(ids.map(labelOf), [ids.length, 1]);
+
+/* actions.py::augment_image, random flip, brightness ±0.3, contrast 0.9–1.1.
+   Re-rolled every epoch, exactly as tf.data's .map() does. */
+function augmentBatch(x){
+  return tf.tidy(() => {
+    const n = x.shape[0];
+    const flipMask = tf.randomUniform([n, 1, 1, 1], 0, 1).less(0.5).tile([1, TILE, TILE, 3]);
+    let out = tf.where(flipMask, tf.image.flipLeftRight(x), x);
+    out = out.add(tf.randomUniform([n, 1, 1, 1], -0.3, 0.3));
+    const factor = tf.randomUniform([n, 1, 1, 1], 0.9, 1.1);
+    const mean = out.mean([1, 2], true);
+    return out.sub(mean).mul(factor).add(mean);
+  });
+}
+
+/* One training run. Returns cached per-image scores so every downstream
+   control (threshold slider, galleries) is instant. */
+async function trainRun(cfg){
+  const t0 = performance.now();
+  const epochs = cfg.epochs;
+  const log = document.getElementById(cfg.logId);
+  const bar = document.getElementById(cfg.barId);
+  log.textContent = "Building the network…\n";
+
+  const xTrain = makeTensor(DS.train, cfg.dimTrainLabel);
+  const yTrain = makeLabels(DS.train);
+  const xVal = makeTensor(DS.val, cfg.dimValLabel);
+  const yVal = makeLabels(DS.val);
+
+  const model = buildModel();
+  const hist = { loss: [], vloss: [], acc: [], vacc: [] };
+  const batches = Math.ceil(DS.train.length / BATCH);
+  let done = 0;
+
+  for (let e = 1; e <= epochs; e++){
+    const xs = cfg.augment ? augmentBatch(xTrain) : xTrain;
+    const h = await model.fit(xs, yTrain, {
+      epochs: 1, batchSize: BATCH, shuffle: false, validationData: [xVal, yVal],
+      callbacks: {
+        onBatchEnd: async () => {
+          done++;
+          bar.style.width = (100 * done / (batches * epochs)).toFixed(1) + "%";
+          await tf.nextFrame();
+        }
+      }
+    });
+    if (cfg.augment) xs.dispose();
+    hist.loss.push([e, h.history.loss[0]]);
+    hist.vloss.push([e, h.history.val_loss[0]]);
+    hist.acc.push([e, h.history.acc[0]]);
+    hist.vacc.push([e, h.history.val_acc[0]]);
+    log.textContent +=
+      `Epoch ${e}/${epochs}  loss ${h.history.loss[0].toFixed(4)}  acc ${h.history.acc[0].toFixed(4)}` +
+      `, val_loss ${h.history.val_loss[0].toFixed(4)}  val_acc ${h.history.val_acc[0].toFixed(4)}\n`;
+    log.scrollTop = log.scrollHeight;
+    if (cfg.onEpoch) cfg.onEpoch(hist);
+    await tf.nextFrame();
+  }
+
+  const pTrain = model.predict(xTrain, { batchSize: BATCH });
+  const pVal = model.predict(xVal, { batchSize: BATCH });
+  const trainScores = Array.from(pTrain.dataSync());
+  const valScores = Array.from(pVal.dataSync());
+  pTrain.dispose(); pVal.dispose();
+
+  xTrain.dispose(); yTrain.dispose(); xVal.dispose(); yVal.dispose(); model.dispose();
+  bar.style.width = "100%";
+  const secs = (performance.now() - t0) / 1000;
+  log.textContent += `Done in ${secs.toFixed(1)} s.\n`;
+  secsPerEpoch = secs / epochs;
+  updateEpochEstimates();
+  return {
+    hist,
+    trainScores, valScores,
+    trainLabels: DS.train.map(labelOf), valLabels: DS.val.map(labelOf),
+    trainIds: DS.train.slice(), valIds: DS.val.slice(),
+    dimTrainLabel: cfg.dimTrainLabel, dimValLabel: cfg.dimValLabel,
+    seconds: secs
+  };
+}
+
+function noTf(){
+  document.querySelectorAll("#train-clean,#train-conf,#train-aug").forEach(b => {
+    b.disabled = true; b.title = "TensorFlow.js could not be loaded";
+  });
+  const note = document.createElement("div");
+  note.className = "callout warn";
+  note.innerHTML = "<strong>TensorFlow.js could not be loaded.</strong> The training steps of this practical " +
+    "need it, and it is fetched from a CDN, are you offline, or is a network filter blocking " +
+    "<code>cdn.jsdelivr.net</code>? Everything up to and including step 3 still works.";
+  document.querySelector(".wrap").prepend(note);
+}
+
+/* ============================================================
+   STEP 4/5/6, the clean run
+   ============================================================ */
+let RUN_CLEAN = null, RUN_CONF = null, RUN_AUG = null;
+let cmSet = "val";
+
+function drawTrainingCharts(hist, lossId, accId){
+  drawCurves(lossId || "loss-chart", [
+    { label: "training loss", data: hist.loss, color: "#4cc38a" },
+    { label: "test loss", data: hist.vloss, color: "#f2c14e", dashed: true },
+  ], "Loss");
+  drawCurves(accId || "acc-chart", [
+    { label: "training accuracy", data: hist.acc, color: "#4cc38a" },
+    { label: "test accuracy", data: hist.vacc, color: "#f2c14e", dashed: true },
+  ], "Accuracy");
+}
+
+/* Each training step has its own epoch slider. Once we know how long an epoch
+   actually takes on this machine, show an estimate next to the slider. */
+let secsPerEpoch = null;
+function wireEpochSlider(id){
+  const el = document.getElementById(id);
+  el.addEventListener("input", () => {
+    document.getElementById(id + "-val").textContent = el.value;
+    updateEpochEstimates();
+  });
+}
+function updateEpochEstimates(){
+  ["epochs", "epochs-conf", "epochs-aug"].forEach(id => {
+    const el = document.getElementById(id);
+    const out = document.getElementById(id + "-val");
+    out.textContent = el.value;
+    if (secsPerEpoch){
+      const est = secsPerEpoch * +el.value;
+      out.textContent = el.value + (est > 1 ? ` (about ${est < 60 ? est.toFixed(0) + " s" : (est / 60).toFixed(1) + " min"})` : "");
+    }
+  });
+}
+["epochs", "epochs-conf", "epochs-aug"].forEach(wireEpochSlider);
+
+document.getElementById("train-clean").addEventListener("click", async () => {
+  const btn = document.getElementById("train-clean");
+  btn.disabled = true; btn.textContent = "Training…";
+  try {
+    RUN_CLEAN = await trainRun({
+      epochs: +document.getElementById("epochs").value,
+      dimTrainLabel: null, dimValLabel: null, augment: false,
+      logId: "train-clean-log", barId: "train-clean-bar",
+      onEpoch: drawTrainingCharts,
+    });
+    drawTrainingCharts(RUN_CLEAN.hist);
+    document.getElementById("train-clean-time").textContent =
+      `finished in ${RUN_CLEAN.seconds.toFixed(1)} s${backendNote}`;
+    renderRawPreds();
+    renderCleanEval();
+    renderBuckets();
+    renderCompare();
+  } finally {
+    btn.disabled = false; btn.textContent = "▶ Train again";
+  }
+});
+
+function renderRawPreds(){
+  const root = document.getElementById("raw-preds");
+  root.innerHTML = "";
+  if (!RUN_CLEAN) return;
+  // ten test images, mixed classes
+  const order = shuffled(RUN_CLEAN.valIds.map((_, i) => i), 5).slice(0, 10);
+  order.forEach(i => {
+    const id = RUN_CLEAN.valIds[i], s = RUN_CLEAN.valScores[i];
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    const cv = document.createElement("canvas");
+    cell.appendChild(cv);
+    drawLeaf(cv, id, {});
+    const sc = document.createElement("div");
+    sc.className = "score";
+    sc.style.color = s > 0.5 ? "#e2725b" : "#4cc38a";
+    sc.textContent = s.toFixed(3);
+    cell.appendChild(sc);
+    const tr = document.createElement("div");
+    tr.className = "truth";
+    tr.textContent = `true: ${RUN_CLEAN.valLabels[i]}`;
+    cell.appendChild(tr);
+    root.appendChild(cell);
+  });
+}
+
+function renderCleanEval(){
+  if (!RUN_CLEAN) return;
+  const th = +document.getElementById("threshold").value;
+  document.getElementById("threshold-val").textContent = th.toFixed(2);
+  const labels = cmSet === "val" ? RUN_CLEAN.valLabels : RUN_CLEAN.trainLabels;
+  const scores = cmSet === "val" ? RUN_CLEAN.valScores : RUN_CLEAN.trainScores;
+  const cm = confusion(labels, scores, th);
+  const roc = rocCurve(labels, scores);
+
+  document.getElementById("clean-cm").innerHTML = cmHTML(cm);
+  document.getElementById("clean-cm-caption").innerHTML =
+    `${cmSet === "val" ? "Test" : "Training"} set, threshold ${th.toFixed(2)}`;
+  document.getElementById("clean-stats").innerHTML = statsHTML([
+    { k: "Accuracy", v: cm.accuracy.toFixed(3), cls: cm.accuracy > .8 ? "good" : "" },
+    { k: "Precision", v: cm.precision.toFixed(3) },
+    { k: "Recall", v: cm.recall.toFixed(3) },
+    { k: "AUROC", v: roc.auc.toFixed(3), cls: roc.auc > .8 ? "good" : "bad" },
+  ]);
+  drawRoc("clean-roc",
+    [{ roc, color: "#4cc38a", label: cmSet === "val" ? "test set" : "training set",
+       marker: [cm.FP + cm.TN ? cm.FP / (cm.FP + cm.TN) : 0, cm.recall] }],
+    { id: "clean-roc-caption",
+      text: `The dot is where your current threshold (${th.toFixed(2)}) sits on the curve. Move the slider and watch it travel.` });
+}
+document.getElementById("threshold").addEventListener("input", renderCleanEval);
+document.getElementById("cm-train").addEventListener("click", () => {
+  cmSet = "train";
+  document.getElementById("cm-train").classList.add("on");
+  document.getElementById("cm-val").classList.remove("on");
+  renderCleanEval();
+});
+document.getElementById("cm-val").addEventListener("click", () => {
+  cmSet = "val";
+  document.getElementById("cm-val").classList.add("on");
+  document.getElementById("cm-train").classList.remove("on");
+  renderCleanEval();
+});
+
+/* STEP 6, TP/FP/FN/TN galleries (actions.py::show_classification_examples) */
+const BUCKET_INFO = [
+  ["TP", "True positives", "infected, and correctly called infected"],
+  ["FP", "False positives", "healthy, but wrongly called infected"],
+  ["FN", "False negatives", "infected, but missed and called healthy"],
+  ["TN", "True negatives", "healthy, and correctly called healthy"],
+];
+
+function renderBuckets(){
+  const root = document.getElementById("buckets");
+  root.innerHTML = "";
+  if (!RUN_CLEAN){
+    root.innerHTML = '<p class="chart-hint">Train the network in step 4 first.</p>';
+    return;
+  }
+  const th = +document.getElementById("threshold2").value;
+  document.getElementById("threshold2-val").textContent = th.toFixed(2);
+  const buckets = { TP: [], FP: [], FN: [], TN: [] };
+  RUN_CLEAN.valIds.forEach((id, i) => {
+    const t = RUN_CLEAN.valLabels[i], p = RUN_CLEAN.valScores[i] > th ? 1 : 0;
+    const key = t === 1 ? (p === 1 ? "TP" : "FN") : (p === 1 ? "FP" : "TN");
+    buckets[key].push([id, RUN_CLEAN.valScores[i]]);
+  });
+  BUCKET_INFO.forEach(([key, title, sub]) => {
+    const div = document.createElement("div");
+    div.className = "bucket";
+    div.innerHTML = `<h4>${title}, ${buckets[key].length} images <em>(${sub})</em></h4>`;
+    const g = document.createElement("div");
+    g.className = "gallery";
+    if (!buckets[key].length){
+      g.innerHTML = '<p class="chart-hint" style="grid-column:1/-1;text-align:left">None at this threshold.</p>';
+    } else {
+      buckets[key].slice(0, 6).forEach(([id, s]) =>
+        g.appendChild(makeCell(id, `score ${s.toFixed(2)}`)));
+    }
+    div.appendChild(g);
+    root.appendChild(div);
+  });
+}
+document.getElementById("threshold2").addEventListener("input", renderBuckets);
+
+/* ============================================================
+   STEP 7, the confounded run
+   ============================================================ */
+function renderConfPreviews(){
+  const tr = document.getElementById("conf-train-gallery");
+  const va = document.getElementById("conf-val-gallery");
+  tr.innerHTML = ""; va.innerHTML = "";
+  const h = shuffled(healthyPool, 41), i = shuffled(infectedPool, 43);
+  for (let k = 0; k < 4; k++){
+    tr.appendChild(makeCell(h[k], "healthy", { delta: CONFOUND_DELTA }));
+    tr.appendChild(makeCell(i[k], "infected", {}));
+    va.appendChild(makeCell(h[k + 4], "healthy", {}));
+    va.appendChild(makeCell(i[k + 4], "infected", { delta: CONFOUND_DELTA }));
+  }
+}
+
+document.getElementById("train-conf").addEventListener("click", async () => {
+  const btn = document.getElementById("train-conf");
+  btn.disabled = true; btn.textContent = "Training…";
+  try {
+    RUN_CONF = await trainRun({
+      epochs: +document.getElementById("epochs-conf").value,
+      dimTrainLabel: 0,   // healthy dimmed in training  (decrease_brightness_on_label(0))
+      dimValLabel: 1,     // infected dimmed in test     (decrease_brightness_on_label(1))
+      augment: false,
+      logId: "train-conf-log", barId: "train-conf-bar",
+      onEpoch: h => drawTrainingCharts(h, "conf-loss-chart", "conf-acc-chart"),
+    });
+    drawTrainingCharts(RUN_CONF.hist, "conf-loss-chart", "conf-acc-chart");
+    document.getElementById("train-conf-time").textContent =
+      `finished in ${RUN_CONF.seconds.toFixed(1)} s`;
+    const cm = confusion(RUN_CONF.valLabels, RUN_CONF.valScores, 0.5);
+    const cmTr = confusion(RUN_CONF.trainLabels, RUN_CONF.trainScores, 0.5);
+    const roc = rocCurve(RUN_CONF.valLabels, RUN_CONF.valScores);
+    document.getElementById("conf-stats").innerHTML = statsHTML([
+      { k: "Training accuracy", v: cmTr.accuracy.toFixed(3), cls: "good" },
+      { k: "Test accuracy", v: cm.accuracy.toFixed(3), cls: "bad" },
+      { k: "Test AUROC", v: roc.auc.toFixed(3), cls: "bad" },
+      { k: "Infected found", v: `${cm.TP}/${cm.TP + cm.FN}`, cls: "bad" },
+    ]);
+    document.getElementById("conf-cm").innerHTML = cmHTML(cm);
+    drawRoc("conf-roc", [{ roc, color: "#e2725b", label: "confounded model" }],
+      { id: "conf-roc-caption",
+        text: `Test-set ROC, AUC <b>${roc.auc.toFixed(2)}</b>. Compare that with the dashed chance line, and with the clean model from step 4.` });
+    renderCompare();
+  } finally {
+    btn.disabled = false; btn.textContent = "▶ Train again";
+  }
+});
+
+/* ============================================================
+   STEP 8, augmentation
+   ============================================================ */
+function renderAugPreviews(){
+  const root = document.getElementById("aug-gallery");
+  root.innerHTML = "";
+  const h = shuffled(healthyPool, 41), i = shuffled(infectedPool, 43);
+  const rnd = Math.random;
+  for (let k = 0; k < 4; k++){
+    root.appendChild(makeCell(h[k], "healthy", {
+      delta: CONFOUND_DELTA + (rnd() * 0.6 - 0.3), flip: rnd() < 0.5, contrast: 0.9 + rnd() * 0.2 }));
+    root.appendChild(makeCell(i[k], "infected", {
+      delta: rnd() * 0.6 - 0.3, flip: rnd() < 0.5, contrast: 0.9 + rnd() * 0.2 }));
+  }
+}
+document.getElementById("aug-reroll").addEventListener("click", renderAugPreviews);
+
+document.getElementById("train-aug").addEventListener("click", async () => {
+  const btn = document.getElementById("train-aug");
+  btn.disabled = true; btn.textContent = "Training…";
+  try {
+    RUN_AUG = await trainRun({
+      epochs: +document.getElementById("epochs-aug").value,
+      dimTrainLabel: 0, dimValLabel: 1, augment: true,
+      logId: "train-aug-log", barId: "train-aug-bar",
+      onEpoch: h => drawTrainingCharts(h, "aug-loss-chart", "aug-acc-chart"),
+    });
+    drawTrainingCharts(RUN_AUG.hist, "aug-loss-chart", "aug-acc-chart");
+    document.getElementById("train-aug-time").textContent =
+      `finished in ${RUN_AUG.seconds.toFixed(1)} s`;
+    renderAugEval();
+    renderCompare();
+  } finally {
+    btn.disabled = false; btn.textContent = "▶ Train again";
+  }
+});
+
+/* Step 8 readout. Recomputed from cached scores, so the slider is instant. */
+function renderAugEval(){
+  const th = +document.getElementById("threshold-aug").value;
+  document.getElementById("threshold-aug-val").textContent = th.toFixed(2);
+  if (!RUN_AUG) return;
+  const cm = confusion(RUN_AUG.valLabels, RUN_AUG.valScores, th);
+  const roc = rocCurve(RUN_AUG.valLabels, RUN_AUG.valScores);
+  const before = RUN_CONF ? rocCurve(RUN_CONF.valLabels, RUN_CONF.valScores).auc : null;
+  document.getElementById("aug-stats").innerHTML = statsHTML([
+    { k: "Test accuracy", v: cm.accuracy.toFixed(3) },
+    { k: "Test AUROC", v: roc.auc.toFixed(3), cls: roc.auc > .7 ? "good" : "bad" },
+    { k: "AUROC in step 7", v: before === null ? "not run" : before.toFixed(3), cls: "bad" },
+    { k: "Infected found", v: `${cm.TP}/${cm.TP + cm.FN}` },
+  ]);
+  document.getElementById("aug-cm").innerHTML = cmHTML(cm);
+  document.getElementById("aug-cm-caption").innerHTML =
+    `Test set, threshold ${th.toFixed(2)}. AUROC does not move with the slider, everything else does.`;
+}
+document.getElementById("threshold-aug").addEventListener("input", renderAugEval);
+
+function renderCompare(){
+  const curves = [];
+  if (RUN_CLEAN) curves.push({ roc: rocCurve(RUN_CLEAN.valLabels, RUN_CLEAN.valScores),
+                               color: "#4cc38a", label: "step 4, clean data" });
+  if (RUN_CONF)  curves.push({ roc: rocCurve(RUN_CONF.valLabels, RUN_CONF.valScores),
+                               color: "#e2725b", label: "step 7, confounded" });
+  if (RUN_AUG)   curves.push({ roc: rocCurve(RUN_AUG.valLabels, RUN_AUG.valScores),
+                               color: "#5b9bd5", label: "step 8, confounded + augmented" });
+  if (!curves.length) return;
+  drawRoc("compare-roc", curves, {
+    id: "compare-caption",
+    text: "Test-set ROC curves for every model you have trained on this page. Anything below the dashed chance line is ranking the classes the wrong way round."
+  });
+}
+
+/* ============================================================
+   QUIZ (self-test, separate from the open ❓ questions above)
+   ============================================================ */
+const QUIZ = [
+  {
+    q: "Why is a train/test split necessary?",
+    opts: [
+      "It makes the model train faster on less data.",
+      "It measures the model on images it never learned from.",
+      "It balances the number of healthy and infected leaves.",
+    ],
+    correct: 1,
+    why: "A model can score well on images it has already seen by memorising them. Only performance on held-out data tells you whether it learned something that transfers to new leaves."
+  },
+  {
+    q: "A model reaching 90% accuracy on this dataset is impressive.",
+    opts: [
+      "True, 90% is far above chance.",
+      "False, 90% of the leaves are infected, so always answering 'infected' scores 90%.",
+      "True, as long as the test set was shuffled.",
+    ],
+    correct: 1,
+    why: "With a 90/10 class split, the naive rule 'everything is infected' already scores 90%. Accuracy always has to be read against the class distribution, which is exactly what the confusion matrix and AUROC let you do."
+  },
+  {
+    q: "What is the model's input for one leaf photograph?",
+    opts: [
+      "A 64 × 64 × 3 grid of numbers, each scaled between 0 and 1.",
+      "The name of the disease category.",
+      "A written description of the visible symptoms.",
+    ],
+    correct: 0,
+    why: "The model has no eyes and no vocabulary. One image is 12,288 numbers, three colour values per pixel, divided by 255, and a label of 0 or 1."
+  },
+  {
+    q: "Training accuracy keeps climbing while test accuracy stalls. What is happening?",
+    opts: [
+      "The learning rate is too low.",
+      "The model is overfitting to its training images.",
+      "The test set must be corrupted.",
+    ],
+    correct: 1,
+    why: "A widening gap between the two curves is the signature of overfitting: the model is memorising quirks of the training images rather than learning features that generalise to new ones."
+  },
+  {
+    q: "Raising the decision threshold from 0.5 to 0.9 will:",
+    opts: [
+      "Improve every metric at once.",
+      "Produce fewer false positives but more missed infections.",
+      "Change the ROC curve's shape.",
+    ],
+    correct: 1,
+    why: "A higher threshold makes the model more reluctant to say 'infected': false positives drop, false negatives rise. The ROC curve itself never moves, because it already covers every threshold."
+  },
+  {
+    q: "In step 7 the model reached a test AUROC below 0.5. What does that tell you?",
+    opts: [
+      "It ranks the classes the wrong way round on this data.",
+      "The model failed to train at all.",
+      "AUROC below 0.5 is impossible and indicates a bug.",
+    ],
+    correct: 0,
+    why: "It learned 'darker = healthy' from the training photos. In the test set the darkening was applied to the infected leaves instead, so that rule is now systematically backwards, worse than guessing."
+  },
+  {
+    q: "Why does image augmentation help even though it adds no new photographs?",
+    opts: [
+      "It increases the number of training epochs.",
+      "It removes the shortcut, forcing the model to use features that survive the random changes.",
+      "It deletes the confusing images from the training set.",
+    ],
+    correct: 1,
+    why: "Randomly changing brightness, contrast and orientation each epoch means those properties no longer predict the label. The only clues left that still work are the ones actually tied to disease."
+  },
+];
+function renderQuiz(){
+  const root = document.getElementById("quiz");
+  QUIZ.forEach((item, qi) => {
+    const div = document.createElement("div"); div.className = "qitem";
+    div.innerHTML = `<p class="qtext">${qi + 1}. ${item.q}</p>`;
+    item.opts.forEach((o, oi) => {
+      const b = document.createElement("button"); b.className = "opt"; b.textContent = o;
+      b.addEventListener("click", () => {
+        div.querySelectorAll(".opt").forEach(x => { x.disabled = true; });
+        b.classList.add(oi === item.correct ? "correct" : "wrong");
+        if (oi !== item.correct) div.querySelectorAll(".opt")[item.correct].classList.add("correct");
+        div.querySelector(".explain").classList.add("show");
+      });
+      div.appendChild(b);
+    });
+    const ex = document.createElement("p"); ex.className = "explain"; ex.textContent = "💡 " + item.why;
+    div.appendChild(ex);
+    root.appendChild(div);
+  });
+}
+
+/* ============================================================
+   Wiring + init
+   ============================================================ */
+document.getElementById("gal-both").addEventListener("click", e => setGallery("both", e.target));
+document.getElementById("gal-healthy").addEventListener("click", e => setGallery("healthy", e.target));
+document.getElementById("gal-infected").addEventListener("click", e => setGallery("infected", e.target));
+function setGallery(f, btn){
+  galleryFilter = f;
+  document.querySelectorAll("#gal-both,#gal-healthy,#gal-infected").forEach(b => b.classList.remove("on"));
+  btn.classList.add("on");
+  renderPreviewGallery();
+}
+document.getElementById("gal-reshuffle").addEventListener("click", () => {
+  gallerySeed += 2; renderPreviewGallery();
+});
+
+document.getElementById("zoom-canvas").addEventListener("mousemove", ev => {
+  const r = ev.currentTarget.getBoundingClientRect();
+  const x = Math.floor((ev.clientX - r.left) / r.width * TILE);
+  const y = Math.floor((ev.clientY - r.top) / r.height * TILE);
+  patchX = Math.max(0, Math.min(TILE - 6, x - 3));
+  patchY = Math.max(0, Math.min(TILE - 6, y - 3));
+  renderZoom();
+});
+document.getElementById("zoom-next").addEventListener("click", () => {
+  zoomIdx = (zoomIdx + 37) % LEAF_N; renderZoom();
+});
+document.getElementById("fmt-255").addEventListener("click", () => {
+  pixFormat = 255;
+  document.getElementById("fmt-255").classList.add("on");
+  document.getElementById("fmt-01").classList.remove("on");
+  renderPatch();
+});
+document.getElementById("fmt-01").addEventListener("click", () => {
+  pixFormat = 1;
+  document.getElementById("fmt-01").classList.add("on");
+  document.getElementById("fmt-255").classList.remove("on");
+  renderPatch();
+});
+
+document.getElementById("split-frac").addEventListener("input", renderSplit);
+document.getElementById("pct-healthy").addEventListener("input", () => {
+  document.getElementById("pct-healthy-2").value = document.getElementById("pct-healthy").value;
+  renderSplit();
+});
+document.getElementById("pct-healthy-2").addEventListener("input", () => {
+  document.getElementById("pct-healthy").value = document.getElementById("pct-healthy-2").value;
+  renderSplit();
+});
+document.getElementById("balance-fix").addEventListener("click", () => {
+  document.getElementById("pct-healthy").value = 40;
+  document.getElementById("pct-healthy-2").value = 40;
+  renderSplit();
+});
+
+async function init(){
+  await loadSprite();
+  zoomIdx = healthyPool.length ? infectedPool[0] : 0;
+  renderPreviewGallery();
+  renderZoom();
+  renderSplit();
+  renderConfPreviews();
+  renderAugPreviews();
+  renderBuckets();
+  renderQuiz();
+  updateEpochEstimates();
+
+  if (!TF_OK){ noTf(); return; }
+  await tf.ready();
+  const backend = tf.getBackend();
+  if (backend !== "webgl"){
+    backendNote = ` (running on the ${backend} backend, without GPU acceleration, so this is slower than usual)`;
+    ["epochs", "epochs-conf", "epochs-aug"].forEach(id => {
+      document.getElementById(id).value = 8;
+    });
+    updateEpochEstimates();
+    document.querySelector(".wrap").prepend(Object.assign(document.createElement("div"), {
+      className: "callout warn",
+      innerHTML: "<strong>No GPU acceleration available in this browser.</strong> Training will be noticeably " +
+        "slower, so the epoch sliders have been turned down to 8. You can still raise them, but expect to wait."
+    }));
+  }
+}
+init();
+
+let rz;
+window.addEventListener("resize", () => {
+  clearTimeout(rz);
+  rz = setTimeout(() => {
+    renderSplit();
+    if (RUN_CLEAN){ drawTrainingCharts(RUN_CLEAN.hist); renderCleanEval(); }
+    if (RUN_CONF) drawTrainingCharts(RUN_CONF.hist, "conf-loss-chart", "conf-acc-chart");
+    if (RUN_AUG) drawTrainingCharts(RUN_AUG.hist, "aug-loss-chart", "aug-acc-chart");
+    renderCompare();
+  }, 220);
+});
+</script>
+</body>
+</html>
