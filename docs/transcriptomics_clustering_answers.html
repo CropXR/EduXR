@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Transcriptomics &amp; Clustering</title>
+<title>Transcriptomics &amp; Clustering: Answer Model</title>
 <style>
   :root {
     --bg: #0f1720;
@@ -53,6 +53,9 @@
              border-radius: 8px; margin: 16px 0; color: var(--muted); }
   .callout.q { border-left-color: var(--accent-2); }
   .callout.q strong { color: var(--accent-2); }
+  .callout.answer { border-left-color: var(--accent); background: rgba(76,195,138,.09); color: var(--ink); margin-top: 12px; }
+  .callout.answer strong { color: var(--accent); }
+  .callout.answer ul { margin: 6px 0 0; }
   .callout ul { margin: 8px 0 0; padding-left: 20px; }
   .callout li { margin: 4px 0; }
   .callout details { margin-top: 10px; }
@@ -122,16 +125,10 @@
 <body>
 
 <header class="hero">
-  <div class="badge">Climate-Resilient Crops · Data Tutorial</div>
-  <h1>Transcriptomics &amp; Clustering</h1>
-  <p style="text-align:left; max-width: 640px; margin: 0 auto;">By the end of this practical you will be able to:</p>
-  <ul style="text-align:left; color: var(--muted); max-width: 640px; margin: 8px auto 0; padding-left: 20px;">
-    <li>Describe how hierarchical clustering is applied to a transcriptomics dataset</li>
-    <li>Explain the goal of unsupervised machine learning when used on gene expression data</li>
-    <li>Read a clustered heatmap and reason about which samples are most alike</li>
-    <li>Appreciate that there is often no single "best" clustering, since the number of clusters is a judgement call</li>
-  </ul>
-  <div class="nav"><a href="index.html">&larr; All practicals</a></div>
+  <div class="badge">Climate-Resilient Crops · Answer Model</div>
+  <h1>Transcriptomics &amp; Clustering: Answer Model</h1>
+  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the Transcriptomics &amp; Clustering practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep re-clustering the data and exploring the network while you read, and the self-test quiz at the end is unchanged.</p>
+  <div class="nav"><a href="transcriptomics_clustering.html">&larr; Student version</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a></div>
 </header>
 
 <div class="wrap">
@@ -156,6 +153,13 @@
       <ul>
         <li>Look at the paper. What are the three treatments, and what is the goal of comparing them?</li>
         <li>Why do you think the plants were sampled at several time points instead of just one?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>The three treatments and why compare them.</b> <b>MOCK</b> is the control: the plant is infiltrated with liquid but receives no bacteria at all. <b>AVR</b> is infection with an avirulent strain, one the plant recognises and successfully fights off. <b>VIR</b> is infection with a virulent strain, one that evades the plant's defences and causes disease. Having all three lets you separate three different things that would otherwise be tangled together. Comparing either infection against MOCK tells you what the bacteria did, as opposed to what the handling and infiltration did. Comparing AVR against VIR tells you what a <em>successful</em> defence looks like, as opposed to an unsuccessful one. Without MOCK you could not tell a defence response from a wounding response, and without the AVR/VIR pair you could not tell resistance from mere infection.</li>
+      <li><b>Why several time points.</b> Because a defence response is a sequence of events, not a state. The plant has to detect the bacteria, pass the signal on, switch on transcription factors, and only then produce defence proteins, and those stages happen minutes to hours apart. A single snapshot would catch one frame of that and you would have no way of knowing which. Several time points let you see the order in which genes come on, which is the closest this kind of data gets to telling you what causes what, and they also protect you from picking the wrong moment: sample too early and nothing has happened yet, too late and the response is already over.</li>
       </ul>
     </div>
   </section>
@@ -185,6 +189,15 @@
         <summary>💡 Hint for the avirulent-vs-virulent question</summary>
         <p>Don't decide from the names alone. Two of the three treatments involve actually infecting the plant with <em>Pseudomonas</em> bacteria, while one does not, so which treatment is really the odd one out? Now look at the dendrogram at each time point: which two samples get merged together first (at the shortest distance)? Think about what a plant's cells are busy doing when they detect any bacterial attack, versus when nothing is there at all.</p>
       </details>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Rows, columns and colours.</b> Each <b>row</b> is one of the 500 genes and each <b>column</b> is one of the 9 samples, one treatment at one time point. The <b>colour</b> of a cell is that gene's z-scored expression in that sample: red means the gene is more active than its own average across the nine samples, blue means less active, and pale means about average. Because the scores are computed per gene, colours are only comparable <em>along</em> a row. A red cell does not mean the gene is highly expressed in absolute terms, only that it is high for that gene.</li>
+      <li><b>Is AVR closer to VIR or to MOCK? To VIR.</b> The dendrogram shows it twice over. At 1 hour, AVR_1 and VIR_1 merge with each other first, at a very short distance, and MOCK_1 only joins them afterwards. Among the later samples the same thing happens one level up: the two AVR samples form a pair, the two VIR samples form a pair, and those two pairs join <em>each other</em> before the MOCK pair joins them. Biologically this makes sense once you stop reading the names. Avirulent and virulent sound like opposites, but from the plant's point of view both mean bacteria are present: it detects them, mounts an attack, diverts resources away from growth. MOCK is the odd one out, because nothing is attacking it at all. The difference between winning and losing turns out to be smaller than the difference between being attacked and not being attacked.</li>
+      <li><b>Treatment or time point? Both, at different levels, and this is the interesting part.</b> The very first split in the tree separates the three 1-hour samples from all six later ones, so at the coarsest level <b>time</b> dominates. But look inside the later group and the structure is entirely by <b>treatment</b>: AVR pairs with AVR, VIR with VIR, MOCK with MOCK, across time points. So time is the bigger effect overall while treatment is what organises the samples once the 1-hour block is set aside. The reason the 1-hour samples are so distinctive is worth pausing on: all three of them cluster together, including MOCK, so whatever makes them special cannot be the bacteria. It is the handling, wounding and infiltration that every plant went through, plus the time of day. The practical consequence is that you should always compare an infected sample against MOCK <em>at the same time point</em>, never against an earlier one.</li>
+      <li><b>The clustering in your own words.</b> Something along these lines: the algorithm knew nothing about treatments or time points, it only saw 9 columns of numbers, and yet it recovered the design of the experiment. It put the earliest samples together because they share a strong handling response, and then grouped the rest by treatment, with the two infected treatments closer to each other than either is to the uninfected control. That is a genuinely useful result, and it doubles as a sanity check: if replicates or matching conditions had <em>not</em> grouped together, you would suspect a technical problem such as a mislabelled sample or a batch effect long before you started interpreting individual genes.</li>
+      </ul>
     </div>
   </section>
 
@@ -239,6 +252,14 @@
         <li>Which cluster(s) of genes would be most interesting to study further, and how would you decide?</li>
       </ul>
     </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>How many clusters, and is there a right answer? No, there is not, and the honest answer is a judgement.</b> Four is a defensible choice at the default settings, because it gives four groups whose average profiles have visibly different shapes: one large group that peaks at 1 hour in every treatment, one large group that rises late, a small group of about 18 genes that rises specifically in AVR at 6 and 12 hours, and a small group of about 21 genes driven almost entirely by one unusual sample. Push the slider higher and you mostly cut the two big groups into smaller pieces with the same shape, which adds detail without adding meaning. The real test is not statistical, it is whether the groups you get are interpretable and whether your conclusions survive a change of settings. If a story only appears at one particular value of k, it is not a story.</li>
+      <li><b>What changes when you switch the settings.</b> <b>Linkage</b> matters enormously here. <em>Average</em> and <em>complete</em> both give sensibly sized groups, with complete producing slightly more even ones, because it refuses to merge two clusters unless even their most distant members are close, which keeps clusters compact. <em>Single</em> linkage collapses: at k = 4 it hands you one cluster of 497 genes and three single-gene clusters. That is the classic failure called <b>chaining</b>. Single linkage merges two clusters as soon as their <em>closest</em> members are close, so one gene sitting between two groups is enough to fuse them, and the process snowballs until almost everything is in one clump, leaving only true outliers behind. <b>Distance</b>, by contrast, barely matters on this dataset, which is a surprise worth explaining. The values were z-scored per gene, so every gene is already on the same scale, and for vectors like that Euclidean distance is just a rescaling of correlation distance. The two give nearly identical trees here. On raw, unscaled expression they would differ a great deal, because Euclidean would separate genes by how strongly they are expressed while correlation would group genes by the shape of their response regardless of level.</li>
+      <li><b>Which cluster to follow up, and how to decide.</b> The small cluster of about 18 genes that rises in AVR at 6 and 12 hours is the best candidate. The criterion is not that it changes a lot, but that it changes <em>where the biology is interesting</em>: it is high in the treatment where the plant successfully defends itself, much weaker in VIR, and flat in MOCK, so the handling cannot explain it. Compare that with the large cluster that peaks at 1 hour, which rises just as much in MOCK and therefore cannot be about the bacteria at all, and with the small cluster driven by a single odd sample, which looks striking but is most likely a technical artefact. So the decision rule is: prefer a cluster whose pattern lines up with a comparison you deliberately built into the experiment, be suspicious of one that is driven by a single sample, and check that the genes in it are more than a handful before you build a story on them. The next practical takes exactly this cluster and asks what the genes in it actually do.</li>
+      </ul>
+    </div>
     <p>If you have extra time, pick a few genes from an interesting cluster and look them up in a database such as <a href="https://www.uniprot.org/" target="_blank" rel="noopener">UniProt</a>. Can you link them to a biological process involved in stress response, and does that match what the Howard <em>et&nbsp;al.</em> paper reports?</p>
   </section>
 
@@ -273,6 +294,15 @@
         <li>What could it mean, biologically, that two genes are connected by an edge?</li>
         <li>Is there a relationship between the hierarchical clusters from step 3 and the tightly connected knots you see here?</li>
         <li>The colouring highlights "central" genes. If you worked with a plant biologist, which genes would you suggest studying next, and what experiment would you propose?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>What the threshold does.</b> It sets how strong a correlation has to be before two genes are joined, so it controls how much of the web survives. At 0.85 almost every gene is connected to something, roughly 15,000 edges among 489 genes, and the result is a hairball in which nothing stands out. Raise it to 0.95 and you are down to about 2,900 edges among 378 genes, with distinct knots becoming visible. At 0.99 only about 156 edges and 118 genes remain, leaving a few small, very tightly linked groups. Note that the threshold is a choice you make, not something the data tells you: too low and everything looks connected to everything, too high and you discard real relationships. Move it up and down and check whether the group you are interested in holds together across a range of values, because a knot that only exists at one threshold is not a finding.</li>
+      <li><b>What an edge means biologically.</b> It means the two genes rise and fall together across the nine samples, which is evidence that they are <b>co-regulated</b>, that is switched on and off by the same signal, perhaps the same transcription factor, or as part of the same pathway or protein complex. That is a genuinely useful hint, and it is the basis of the guilt-by-association reasoning used to guess what an uncharacterised gene does. But be careful about what it does <em>not</em> mean. It is not evidence that the two proteins touch each other, nor that one controls the other, nor that either is doing anything causal. It also does not take much to produce: with only 9 samples, and a shared response as strong as the 1-hour handling effect, plenty of gene pairs will correlate above 0.95 for reasons that have nothing to do with a shared function. Correlation networks generate hypotheses; they do not test them.</li>
+      <li><b>Relation to the hierarchical clusters. Yes, they largely agree, and they should.</b> Both are built from the same correlations between the same genes, so a set of genes that move together will show up as a branch in the tree and as a knot in the network. What differs is the shape of the answer. Hierarchical clustering forces every gene into exactly one group at whatever height you cut, whether or not it really belongs anywhere. The network drops genes with no strong partner altogether, so it is happy to leave a gene out, and it lets a gene sit between two knots and belong to both. So the network is better at showing you which genes are peripheral and which sit at a junction, while clustering is better when you want a tidy partition of every gene. Seeing the same grouping in both is reassuring, since it means the structure is in the data rather than in one method's assumptions.</li>
+      <li><b>Which genes to study next, and what experiment.</b> Central genes are a reasonable place to start, but say why rather than just naming the top of the list. A gene with high <em>degree</em> is correlated with many others, so it may sit at the heart of a co-regulated module; a gene with high <em>betweenness</em> sits on the paths between different knots, which makes it a candidate for connecting two processes. Both are hypotheses about position in a correlation graph, not measured facts about regulation, so the proposal has to be tested. A concrete suggestion: take two or three high-centrality genes from the knot that corresponds to the AVR-specific cluster, check what is already known about them in a database such as UniProt, obtain or generate knockout and overexpression lines, repeat the same infection experiment with AVR, VIR and MOCK, and measure both the disease outcome and the expression of the genes they were correlated with. If knocking the gene out flattens the response of its neighbours, you have evidence that it really is upstream of them rather than merely correlated with them. And since the aim is resilient crops rather than <em>Arabidopsis</em>, the last step is to find the equivalent gene in a crop species, which is what the translational biology practical does.</li>
       </ul>
     </div>
   </section>

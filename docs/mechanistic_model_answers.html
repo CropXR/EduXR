@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Mechanistic Modelling — Answer Model</title>
+<title>Mechanistic Modelling: Answer Model</title>
 <style>
   :root {
     --bg: #0f1720;
@@ -33,7 +33,7 @@
   header.hero { padding: 56px 20px 40px; text-align: center; max-width: 900px; margin: 0 auto; }
   header.hero .badge {
     display: inline-block; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--accent-2); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; margin-bottom: 18px;
+    color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; margin-bottom: 18px;
   }
   header.hero h1 { font-size: clamp(28px, 5vw, 46px); margin: 0 0 12px; line-height: 1.15; }
   header.hero p { color: var(--muted); font-size: 18px; max-width: 680px; margin: 0 auto; }
@@ -53,6 +53,9 @@
              border-radius: 8px; margin: 16px 0; color: var(--muted); }
   .callout.q { border-left-color: var(--accent-2); }
   .callout.q strong { color: var(--accent-2); }
+  .callout.answer { border-left-color: var(--accent); background: rgba(76,195,138,.09); color: var(--ink); margin-top: 12px; }
+  .callout.answer strong { color: var(--accent); }
+  .callout.answer ul { margin: 6px 0 0; }
   .callout ul { margin: 8px 0 0; padding-left: 20px; }
   .callout li { margin: 4px 0; }
   .callout details { margin-top: 10px; }
@@ -60,9 +63,6 @@
   .callout details[open] summary { margin-bottom: 6px; }
   .callout details > :not(summary) { font-size: 13px; }
   .callout.info { border-left-color: var(--accent); color: var(--ink); }
-  .callout.answer { border-left-color: var(--accent); background: rgba(76,195,138,.09); color: var(--ink); margin-top: 12px; }
-  .callout.answer strong { color: var(--accent); }
-  .callout.answer ul { margin: 6px 0 0; }
 
   .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin: 18px 0; }
   .controls label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
@@ -104,6 +104,7 @@
   footer { text-align: center; color: var(--muted); font-size: 13px; padding: 30px 20px 60px; }
   @media (max-width: 640px) { .step { padding: 20px 16px; } }
 
+  /* interactive network (vis-network) on a light backdrop so every node is visible */
   #network { height: 420px; background: #eef3f8; border-radius: 10px; border: 1px solid var(--line); }
   #network .vis-tooltip { background: #10202f; color: #e9eef5; border: 1px solid #2c3e54;
         border-radius: 6px; padding: 5px 8px; font-family: system-ui; font-size: 12px; }
@@ -113,9 +114,9 @@
 <body>
 
 <header class="hero">
-  <div class="badge">EduXR · Answer Model</div>
-  <h1>Mechanistic Modelling — Answer Model</h1>
-  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the mechanistic-modelling practical. Every ❓ question from the practical is followed by a worked model answer (green box). The self-test quiz at the end is unchanged.</p>
+  <div class="badge">Climate-Resilient Crops · Answer Model</div>
+  <h1>Mechanistic Modelling: Answer Model</h1>
+  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the Mechanistic Modelling practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep simulating droughts and knockouts while you read, and the self-test quiz at the end is unchanged.</p>
   <div class="nav"><a href="mechanistic_model.html">&larr; Student version</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a></div>
 </header>
 
@@ -123,16 +124,16 @@
 
   <!-- STEP 0 -->
   <section class="step">
-    <h2><span class="num">0</span> What is a mechanistic model &mdash; and why bother?</h2>
-    <p class="lead">In the earlier practicals you used <strong>data-driven</strong> methods: clustering and genomic selection look at a pile of measurements and let patterns emerge, without any built-in idea of <em>why</em> genes behave as they do. A <strong>mechanistic model</strong> works the other way around. You start from biological knowledge that already exists &mdash; "gene&nbsp;A switches gene&nbsp;B on", "hormone&nbsp;X represses gene&nbsp;C" &mdash; and you write those cause-and-effect rules down as equations. The computer then <strong>simulates</strong> what happens over time when you turn a knob.</p>
+    <h2><span class="num">0</span> What is a mechanistic model, and why bother?</h2>
+    <p class="lead">In the earlier practicals you used <strong>data-driven</strong> methods: clustering and genomic selection look at a pile of measurements and let patterns emerge, without any built-in idea of <em>why</em> genes behave as they do. A <strong>mechanistic model</strong> works the other way around. You start from biological knowledge that already exists, such as "gene&nbsp;A switches gene&nbsp;B on" or "hormone&nbsp;X represses gene&nbsp;C", and you write those cause-and-effect rules down as equations. The computer then <strong>simulates</strong> what happens over time when you turn a knob.</p>
     <p>Think of it as a flight simulator for a cell. Nobody is guessing from data whether the plane will stall; the simulator encodes the physics and lets you <em>try things</em>. That is exactly why this approach is useful:</p>
     <ul>
-      <li><strong>Run virtual experiments in seconds.</strong> Apply a drought, knock out a gene, lengthen a stress &mdash; and see the whole network respond, without spending months in a greenhouse.</li>
+      <li><strong>Run virtual experiments in seconds.</strong> Apply a drought, knock out a gene, lengthen a stress, and see the whole network respond, without spending months in a greenhouse.</li>
       <li><strong>Test your understanding.</strong> If the rules you believe in fail to reproduce what real plants do, then your picture of the network is incomplete. The model becomes a hypothesis you can falsify.</li>
       <li><strong>Generate predictions.</strong> A model can point to <em>which</em> gene to knock out, or <em>which</em> experiment to run next, before you touch a single plant.</li>
     </ul>
     <div class="callout info">
-      <strong>Keep in mind</strong> that a model is only as good as the rules and numbers you put in. It is a deliberate simplification of a far messier reality &mdash; useful for reasoning and prediction, but never a substitute for real experiments.
+      <strong>Keep in mind</strong> that a model is only as good as the rules and numbers you put in. It is a deliberate simplification of a far messier reality: useful for reasoning and prediction, but never a substitute for real experiments.
     </div>
   </section>
 
@@ -163,9 +164,9 @@
     <div class="callout answer">
       <strong>✅ Answer</strong>
       <ul>
-        <li><b>Drought resistance</b> runs through the ABA branch: drought raises the hormone <b>ABA</b>, which drives <b>ABF2 → ANAC019</b> and <b>GENEC</b>. <b>White-fly (biotic) resistance</b> is the salicylic-acid pathway <b>ICS1 → SA → BGL2</b>; <b>BGL2</b> is the defence marker we read out. The clever bit the paper highlights is the <em>link</em> between them: the drought (ABA) branch represses the defence (ICS1) branch.</li>
-        <li><b>Arrows:</b> a green solid arrow means the source gene <b>activates</b> (switches on) its target; a red dashed arrow means it <b>represses</b> (switches off) its target.</li>
-        <li><b>No drought:</b> with drought = 0, ABA stays low, so ABF2, ANAC019 and GENEC stay low. Nothing is repressing ICS1, so ICS1 is expressed → SA is produced → BGL2 is high. The resting plant is <b>fully defended</b>.</li>
+      <li><b>Drought resistance</b> runs through the ABA branch: drought raises the hormone <b>ABA</b>, which drives <b>ABF2 → ANAC019</b> and <b>GENEC</b>. <b>White-fly (biotic) resistance</b> is the salicylic-acid pathway <b>ICS1 → SA → BGL2</b>; <b>BGL2</b> is the defence marker we read out. The clever bit the paper highlights is the <em>link</em> between them: the drought (ABA) branch represses the defence (ICS1) branch.</li>
+      <li><b>Arrows:</b> a green solid arrow means the source gene <b>activates</b> (switches on) its target; a red dashed arrow means it <b>represses</b> (switches off) its target.</li>
+      <li><b>No drought:</b> with drought = 0, ABA stays low, so ABF2, ANAC019 and GENEC stay low. Nothing is repressing ICS1, so ICS1 is expressed → SA is produced → BGL2 is high. The resting plant is <b>fully defended</b>.</li>
       </ul>
     </div>
   </section>
@@ -192,8 +193,8 @@
     <div class="callout answer">
       <strong>✅ Answer</strong>
       <ul>
-        <li><b>Yes, it is resistant.</b> Because there is no drought, ABA (and therefore ANAC019 and GENEC) stay near zero, so nothing represses ICS1. ICS1 climbs to a high steady level, driving SA and then BGL2 up. High BGL2 = active salicylic-acid defence, so the plant can fend off white flies.</li>
-        <li><b>Prediction for a brief pulse:</b> the ABA branch will spike briefly, nudging the repressors up for a moment, so defence may dip a little — but because the pulse is short, we'd expect it to recover quickly. (Confirm this in the next step.)</li>
+      <li><b>Yes, it is resistant.</b> Because there is no drought, ABA (and therefore ANAC019 and GENEC) stay near zero, so nothing represses ICS1. ICS1 climbs to a high steady level, driving SA and then BGL2 up. High BGL2 = active salicylic-acid defence, so the plant can fend off white flies.</li>
+      <li><b>Prediction for a brief pulse:</b> the ABA branch will spike briefly, nudging the repressors up for a moment, so defence may dip a little, but because the pulse is short we would expect it to recover quickly. (Confirm this in the next step.)</li>
       </ul>
     </div>
   </section>
@@ -201,7 +202,7 @@
   <!-- STEP 3 -->
   <section class="step">
     <h2><span class="num">3</span> A brief drought pulse</h2>
-    <p class="lead">Now we switch drought <em>on</em> for a single short moment (from time&nbsp;10 to&nbsp;11) and then off again &mdash; the grey band marks when it is on. Run it and compare with the resting plant above.</p>
+    <p class="lead">Now we switch drought <em>on</em> for a single short moment (from time&nbsp;10 to&nbsp;11) and then off again. The grey band marks when it is on. Run it and compare with the resting plant above.</p>
     <div class="controls">
       <button id="run-brief">▶ Simulate a brief pulse (10 → 11)</button>
     </div>
@@ -221,9 +222,9 @@
     <div class="callout answer">
       <strong>✅ Answer</strong>
       <ul>
-        <li><b>What happens:</b> the pulse briefly raises ABA, which activates ABF2 → ANAC019 and GENEC — you see those upstream genes spike. They momentarily repress ICS1, so ICS1/SA/BGL2 dip a little. But the pulse is over almost immediately, ABA decays, the repression lifts, and the defence pathway climbs back to its resting level. Net effect: a small, temporary dip and full recovery.</li>
-        <li><b>Why it makes sense:</b> brief dry spells are normal and not life-threatening. It would be wasteful (and risky) to throw away biotic defence every time it gets dry for an hour. Requiring a <em>sustained</em> signal before switching off defence lets the plant ignore short, noisy fluctuations and only reallocate resources when drought is genuinely serious — a filter against over-reacting.</li>
-        <li><b>Prediction:</b> a longer drought should suppress ICS1/SA/BGL2 more strongly and for longer, so white-fly resistance should drop noticeably. (Test it next.)</li>
+      <li><b>What happens:</b> the pulse briefly raises ABA, which activates ABF2 → ANAC019 and GENEC, so you see those upstream genes spike. They momentarily repress ICS1, so ICS1/SA/BGL2 dip a little. But the pulse is over almost immediately, ABA decays, the repression lifts, and the defence pathway climbs back to its resting level. Net effect: a small, temporary dip and full recovery.</li>
+      <li><b>Why it makes sense:</b> brief dry spells are normal and not life-threatening. It would be wasteful (and risky) to throw away biotic defence every time it gets dry for an hour. Requiring a <em>sustained</em> signal before switching off defence lets the plant ignore short, noisy fluctuations and only reallocate resources when drought is genuinely serious, which is a filter against over-reacting.</li>
+      <li><b>Prediction:</b> a longer drought should suppress ICS1/SA/BGL2 more strongly and for longer, so white-fly resistance should drop noticeably. (Test it next.)</li>
       </ul>
     </div>
   </section>
@@ -258,9 +259,9 @@
     <div class="callout answer">
       <strong>✅ Answer</strong>
       <ul>
-        <li><b>Why it differs:</b> a sustained drought holds ABA — and therefore ANAC019 and GENEC — high for a long time. Their combined repression keeps ICS1 switched off long enough for ICS1, SA and BGL2 to actually decay away. So defence collapses for the duration of the drought, and only recovers once the drought ends. The key variable is not <em>whether</em> the repressors turn on, but for <em>how long</em>.</li>
-        <li><b>Does it reflect biology?</b> Qualitatively yes: it captures a real, documented trade-off (drought signalling suppressing salicylic-acid defence) and the sensible logic that only prolonged stress flips the switch. But it is a heavy simplification — only a handful of genes, deterministic with no noise, fixed Hill parameters and arbitrary interaction strengths, no feedback loops, no tissue/spatial detail, and no fitness cost attached. Treat it as a caricature that is useful for reasoning, not as ground truth.</li>
-        <li><b>Which genes to knock out:</b> to protect defence, target the repressors of ICS1 — <b>ANAC019</b> and/or <b>GENEC</b> — or cut the signal at its source by knocking out <b>ABA</b>. (Test in the next step.)</li>
+      <li><b>Why it differs:</b> a sustained drought holds ABA, and therefore ANAC019 and GENEC, high for a long time. Their combined repression keeps ICS1 switched off long enough for ICS1, SA and BGL2 to actually decay away. So defence collapses for the duration of the drought, and only recovers once the drought ends. The key variable is not <em>whether</em> the repressors turn on, but for <em>how long</em>.</li>
+      <li><b>Does it reflect biology?</b> Qualitatively yes: it captures a real, documented trade-off (drought signalling suppressing salicylic-acid defence) and the sensible logic that only prolonged stress flips the switch. But it is a heavy simplification: only a handful of genes, deterministic with no noise, fixed Hill parameters and arbitrary interaction strengths, no feedback loops, no tissue or spatial detail, and no fitness cost attached. Treat it as a caricature that is useful for reasoning, not as ground truth.</li>
+      <li><b>Which genes to knock out:</b> to protect defence, target the repressors of ICS1, namely <b>ANAC019</b> and/or <b>GENEC</b>, or cut the signal at its source by knocking out <b>ABA</b>. (Test in the next step.)</li>
       </ul>
     </div>
   </section>
@@ -281,7 +282,7 @@
     <div class="callout q">
       <strong>❓ Questions</strong>
       <ul>
-        <li>Which combination(s) of knocked-out genes give the plant the "best" phenotype according to this model &mdash; keeping its defence even under a long drought?</li>
+        <li>Which combination(s) of knocked-out genes give the plant the "best" phenotype according to this model, keeping its defence even under a long drought?</li>
         <li>Would doing this be realistic biologically? What could go wrong that this model doesn't capture?</li>
         <li>What experiment would you propose next to test the model's prediction, and how would you explain your finding to a plant biologist?</li>
       </ul>
@@ -289,9 +290,9 @@
     <div class="callout answer">
       <strong>✅ Answer</strong>
       <ul>
-        <li><b>Best knockouts:</b> silence the two repressors of ICS1 — <b>ANAC019 and GENEC together</b>. Then even a long drought cannot switch ICS1 off, so SA and BGL2 stay high and the plant keeps its white-fly defence throughout. Knocking out <b>ABA</b> also works, by removing the drought signal before it ever reaches the repressors. Note the trap: knocking out ICS1, SA or BGL2 themselves <em>destroys</em> defence — the opposite of what you want.</li>
-        <li><b>Realistic?</b> Not straightforwardly. Defence is metabolically costly, so a plant that can never dial it down may waste resources it needs to survive drought, hurting growth or yield — a cost this model doesn't include. Transcription factors like ANAC019 are also pleiotropic (they regulate many other genes), so knocking them out likely has side effects far beyond this little network. The model also ignores off-target effects, environment and gene–gene redundancy.</li>
-        <li><b>Next experiment &amp; communication:</b> create the knockout line (e.g. CRISPR or an existing mutant), then measure both traits under a real drought — white-fly resistance and SA/BGL2 levels <em>and</em> drought survival, growth and yield, in controlled and ideally field conditions. Present the result to a biologist as a <em>model-generated hypothesis</em> with explicit caveats: "the model predicts X; here is the trade-off it ignores; here is the experiment that would confirm or refute it."</li>
+      <li><b>Best knockouts:</b> silence the two repressors of ICS1, that is <b>ANAC019 and GENEC together</b>. Then even a long drought cannot switch ICS1 off, so SA and BGL2 stay high and the plant keeps its white-fly defence throughout. Knocking out <b>ABA</b> also works, by removing the drought signal before it ever reaches the repressors. Note the trap: knocking out ICS1, SA or BGL2 themselves <em>destroys</em> defence, the opposite of what you want.</li>
+      <li><b>Realistic?</b> Not straightforwardly. Defence is metabolically costly, so a plant that can never dial it down may waste resources it needs to survive drought, hurting growth or yield, a cost this model does not include. Transcription factors like ANAC019 are also pleiotropic (they regulate many other genes), so knocking them out likely has side effects far beyond this little network. The model also ignores off-target effects, environment and gene-gene redundancy.</li>
+      <li><b>Next experiment and communication:</b> create the knockout line (for example by CRISPR, or use an existing mutant), then measure both traits under a real drought: white-fly resistance and SA/BGL2 levels <em>and</em> drought survival, growth and yield, in controlled and ideally field conditions. Present the result to a biologist as a <em>model-generated hypothesis</em> with explicit caveats: "the model predicts X; here is the trade-off it ignores; here is the experiment that would confirm or refute it."</li>
       </ul>
     </div>
     <p>If you have time left, open <a href="https://slcu.uniofcam.dev/teamrv/3devo-evo" target="_blank" rel="noopener">this link</a> and click <em>Genome Editor</em> to build your own gene regulatory network and try to grow the prettiest possible plant. While you do, notice how such "simple" networks can produce strikingly complex, emergent behaviour.</p>
@@ -304,7 +305,7 @@
   </section>
 
   <footer>
-    This HTML and JavaScript was created with the help of Claude Code, based on the original Jupyter notebooks.
+    This HTML and JavaScript was created with the help of Claude Code, based on the original Jupyter notebooks by Ben Noordijk.
   </footer>
 </div>
 
@@ -312,8 +313,12 @@
 /* ============================================================
    GENE REGULATORY NETWORK — mechanistic (ODE) model
    Ported from dsplantbreeding/Models.py::GRNModel.
-   Strength modifiers fixed to 1.0 for reproducibility (Python uses
-   an unseeded uniform(0.5,1.5)). Integrated with fixed-step RK4.
+   NOTE: the Python model draws random per-edge "strength modifiers"
+   from uniform(0.5, 1.5) with NO fixed seed, so it differs every run.
+   For a reproducible page we fix them all to 1.0. The qualitative
+   behaviour students reason about is unchanged.
+   The Python code integrates with scipy.odeint; here we use a plain
+   fixed-step RK4 over t = linspace(0, 50, 500), which matches it visually.
    ============================================================ */
 const GENES = ["ABA","ABF2","ANAC019","GENEC","ICS1","SA","BGL2"];
 const IDX = Object.fromEntries(GENES.map((g,i)=>[g,i]));
@@ -326,34 +331,44 @@ const NETWORK = [
   ["ICS1","SA","activates"],
   ["SA","BGL2","activates"],
 ];
-const SM = [1,1,1,1,1,1,1];
+const SM = [1,1,1,1,1,1,1];                 // strength modifiers, fixed (see note)
 const P = { k_act:2.0, K:1.0, n:2, gamma:1.0 };
 
 const hillAct = x => Math.pow(x,P.n) / (Math.pow(P.K,P.n) + Math.pow(x,P.n));
 const hillRep = x => Math.pow(P.K,P.n) / (Math.pow(P.K,P.n) + Math.pow(x,P.n));
 
+// derivative of the ODE system at state y, time t
 function deriv(y, t, stress, ko){
   const d = new Array(GENES.length).fill(0);
   const drought = stress ? stress(t) : 0;
+
+  // Drought → ABA
   if (ko.has("ABA")) d[IDX.ABA] = -P.gamma * y[IDX.ABA];
   else               d[IDX.ABA] = P.k_act * drought - P.gamma * y[IDX.ABA];
+
+  // ICS1 gets AND-logic repression from ANAC019 AND GENEC
   if (!ko.has("ICS1")){
     const andRep = hillRep(y[IDX.ANAC019]) * hillRep(y[IDX.GENEC]);
     d[IDX.ICS1] += SM[4] * P.k_act * andRep;
   } else {
     d[IDX.ICS1] = -P.gamma * y[IDX.ICS1];
   }
+
+  // every other edge
   for (let i=0;i<NETWORK.length;i++){
     const [src,tgt,interaction] = NETWORK[i];
-    if (tgt === "ICS1") continue;
+    if (tgt === "ICS1") continue;            // handled above
     if (ko.has(tgt)){ d[IDX[tgt]] = -P.gamma * y[IDX[tgt]]; continue; }
     const eff = interaction === "activates" ? hillAct(y[IDX[src]]) : hillRep(y[IDX[src]]);
     d[IDX[tgt]] += SM[i] * P.k_act * eff;
   }
+
+  // degradation on every gene
   for (let i=0;i<GENES.length;i++) d[i] -= P.gamma * y[i];
   return d;
 }
 
+// fixed-step RK4 integration → {t:[...], series:[[...per gene...]]}
 function simulate({start=null, end=null, knockouts=[]} = {}){
   const N = 500, T = 50;
   const ko = new Set(knockouts);
@@ -375,27 +390,29 @@ function simulate({start=null, end=null, knockouts=[]} = {}){
   return { t, series };
 }
 
+/* ============================================================
+   Line-chart drawing on a canvas
+   ============================================================ */
 const GENE_COLORS = {
   ABA:"#5b9bd5", ABF2:"#4aa3df", ANAC019:"#9b8cff", GENEC:"#c77dff",
   ICS1:"#f2c14e", SA:"#4cc38a", BGL2:"#e2725b"
 };
 const T_MAX = 50;
+let chartAnimations = {}; // store animation state per canvas
 
 function drawChart(canvasId, sim, opts={}){
-  const { band=null, knockouts=[] } = opts;
+  const { band=null, knockouts=[], animate=true } = opts;
   const cv = document.getElementById(canvasId);
   const cssW = cv.clientWidth || cv.parentElement.clientWidth - 28;
   const dpr = window.devicePixelRatio || 1;
   const H = 360;
   cv.width = cssW * dpr; cv.height = H * dpr;
   cv.style.height = H + "px";
-  const ctx = cv.getContext("2d");
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,cssW,H);
 
   const m = { l:52, r:16, t:16, b:38 };
   const pw = cssW - m.l - m.r, ph = H - m.t - m.b;
 
+  // y-range from data (with a little headroom), clamped to >= 0
   let ymax = 0;
   sim.series.forEach(s => s.forEach(v => { if (v>ymax) ymax=v; }));
   ymax = Math.max(2.2, ymax*1.08);
@@ -403,46 +420,95 @@ function drawChart(canvasId, sim, opts={}){
   const X = t => m.l + (t/T_MAX)*pw;
   const Y = v => m.t + ph - ((v-ymin)/(ymax-ymin))*ph;
 
-  if (band){
-    ctx.fillStyle = "rgba(159,176,195,.16)";
-    ctx.fillRect(X(band[0]), m.t, X(band[1])-X(band[0]), ph);
-    ctx.fillStyle = "#9fb0c3"; ctx.font = "11px system-ui"; ctx.textAlign="center";
-    if (X(band[1])-X(band[0]) > 34) ctx.fillText("drought", (X(band[0])+X(band[1]))/2, m.t+13);
-  }
-
-  ctx.strokeStyle = "#2c3e54"; ctx.fillStyle = "#9fb0c3"; ctx.lineWidth = 1;
-  ctx.font = "11px system-ui";
-  const yticks = 5;
-  for (let i=0;i<=yticks;i++){
-    const v = ymin + (ymax-ymin)*i/yticks;
-    const yy = Y(v);
-    ctx.globalAlpha = .5; ctx.beginPath(); ctx.moveTo(m.l,yy); ctx.lineTo(m.l+pw,yy); ctx.stroke(); ctx.globalAlpha = 1;
-    ctx.textAlign="right"; ctx.textBaseline="middle";
-    ctx.fillText(v.toFixed(1), m.l-8, yy);
-  }
-  ctx.textAlign="center"; ctx.textBaseline="top";
-  for (let tv=0; tv<=T_MAX; tv+=10){ ctx.fillText(String(tv), X(tv), m.t+ph+8); }
-  ctx.save(); ctx.translate(14, m.t+ph/2); ctx.rotate(-Math.PI/2);
-  ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillStyle="#9fb0c3";
-  ctx.fillText("Expression", 0, 0); ctx.restore();
-  ctx.textAlign="center"; ctx.textBaseline="top";
-  ctx.fillText("Time", m.l+pw/2, H-15);
-
-  const koSet = new Set(knockouts);
-  GENES.forEach((g,gi)=>{
-    const s = sim.series[gi];
-    ctx.beginPath();
-    for (let k=0;k<s.length;k++){
-      const xx = X(sim.t[k]), yy = Y(s[k]);
-      if (k===0) ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
+  // Helper to draw axes and background (shared)
+  const drawAxesAndBackground = (ctx) => {
+    ctx.clearRect(0,0,cssW,H);
+    
+    // drought band
+    if (band){
+      ctx.fillStyle = "rgba(159,176,195,.16)";
+      ctx.fillRect(X(band[0]), m.t, X(band[1])-X(band[0]), ph);
+      ctx.fillStyle = "#9fb0c3"; ctx.font = "11px system-ui"; ctx.textAlign="center";
+      if (X(band[1])-X(band[0]) > 34) ctx.fillText("drought", (X(band[0])+X(band[1]))/2, m.t+13);
     }
-    const knocked = koSet.has(g);
-    ctx.strokeStyle = knocked ? "rgba(159,176,195,.35)" : GENE_COLORS[g];
-    ctx.lineWidth = (g==="BGL2") ? 3.2 : 1.8;
-    ctx.setLineDash(knocked ? [4,4] : []);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  });
+
+    // grid + axes
+    ctx.strokeStyle = "#2c3e54"; ctx.fillStyle = "#9fb0c3"; ctx.lineWidth = 1;
+    ctx.font = "11px system-ui";
+    const yticks = 5;
+    for (let i=0;i<=yticks;i++){
+      const v = ymin + (ymax-ymin)*i/yticks;
+      const yy = Y(v);
+      ctx.globalAlpha = .5; ctx.beginPath(); ctx.moveTo(m.l,yy); ctx.lineTo(m.l+pw,yy); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.textAlign="right"; ctx.textBaseline="middle";
+      ctx.fillText(v.toFixed(1), m.l-8, yy);
+    }
+    ctx.textAlign="center"; ctx.textBaseline="top";
+    for (let tv=0; tv<=T_MAX; tv+=10){ ctx.fillText(String(tv), X(tv), m.t+ph+8); }
+    ctx.save(); ctx.translate(14, m.t+ph/2); ctx.rotate(-Math.PI/2);
+    ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillStyle="#9fb0c3";
+    ctx.fillText("Expression", 0, 0); ctx.restore();
+    ctx.textAlign="center"; ctx.textBaseline="top";
+    ctx.fillText("Time", m.l+pw/2, H-15);
+  };
+
+  // Helper to draw lines up to a certain point count
+  const drawLines = (ctx, pointCount) => {
+    const koSet = new Set(knockouts);
+    GENES.forEach((g,gi)=>{
+      const s = sim.series[gi];
+      const count = Math.min(pointCount, s.length);
+      if (count < 1) return;
+      
+      ctx.beginPath();
+      for (let k=0;k<count;k++){
+        const xx = X(sim.t[k]), yy = Y(s[k]);
+        if (k===0) ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
+      }
+      const knocked = koSet.has(g);
+      ctx.strokeStyle = knocked ? "rgba(159,176,195,.35)" : GENE_COLORS[g];
+      ctx.lineWidth = (g==="BGL2") ? 3.2 : 1.8;
+      ctx.setLineDash(knocked ? [4,4] : []);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+  };
+
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  // Cancel any existing animation for this canvas
+  if (chartAnimations[canvasId]) cancelAnimationFrame(chartAnimations[canvasId].id);
+
+  if (!animate){
+    // No animation: draw everything immediately
+    drawAxesAndBackground(ctx);
+    drawLines(ctx, sim.series[0].length);
+    return;
+  }
+
+  // Animate the lines appearing
+  const startTime = performance.now();
+  const duration = 1200; // milliseconds for full animation
+  const totalPoints = sim.series[0].length;
+
+  const animateFrame = (currentTime) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1.0);
+    const pointCount = Math.ceil(progress * totalPoints);
+
+    drawAxesAndBackground(ctx);
+    drawLines(ctx, pointCount);
+
+    if (progress < 1.0){
+      chartAnimations[canvasId].id = requestAnimationFrame(animateFrame);
+    } else {
+      delete chartAnimations[canvasId];
+    }
+  };
+
+  chartAnimations[canvasId] = { id: null };
+  chartAnimations[canvasId].id = requestAnimationFrame(animateFrame);
 }
 
 function drawKey(keyId, knockouts=[]){
@@ -457,6 +523,9 @@ function drawKey(keyId, knockouts=[]){
   }).join("");
 }
 
+/* ============================================================
+   The interactive network diagram (vis-network)
+   ============================================================ */
 function buildNetwork(){
   const holder = document.getElementById("network");
   if (typeof vis === "undefined"){
@@ -496,6 +565,9 @@ function buildNetwork(){
   net.once("stabilizationIterationsDone", ()=> net.fit({animation:false}));
 }
 
+/* ============================================================
+   QUIZ (self-test — separate from the open ❓ questions above)
+   ============================================================ */
 const QUIZ = [
   {
     q: "What makes this a mechanistic model rather than a data-driven one?",
@@ -515,7 +587,7 @@ const QUIZ = [
       "ICS1 has nothing to do with ABA in this model.",
     ],
     correct: 1,
-    why: "ABA activates ABF2→ANAC019 and also GENEC. Both ANAC019 and GENEC repress ICS1, so more ABA means less ICS1 — and therefore less SA and less BGL2 defence."
+    why: "ABA activates ABF2→ANAC019 and also GENEC. Both ANAC019 and GENEC repress ICS1, so more ABA means less ICS1, and therefore less SA and less BGL2 defence."
   },
   {
     q: "A brief drought pulse barely dents BGL2, but a long one strongly suppresses it. Why?",
@@ -535,7 +607,7 @@ const QUIZ = [
       "It freezes the whole simulation in place.",
     ],
     correct: 0,
-    why: "A knockout forces that gene's level to decay away, so it can no longer pass its activating or repressing signal to its targets — letting you ask what the network does without it."
+    why: "A knockout forces that gene's level to decay away, so it can no longer pass its activating or repressing signal to its targets, letting you ask what the network does without it."
   },
   {
     q: "The model predicts a knockout that keeps defence high under drought. What is the right next step?",
@@ -545,7 +617,7 @@ const QUIZ = [
       "Delete the gene from every crop immediately.",
     ],
     correct: 1,
-    why: "A model prediction is a hypothesis, not proof. It is valuable because it tells you which experiment is worth doing — the real plant may behave differently because of biology the model leaves out."
+    why: "A model prediction is a hypothesis, not proof. It is valuable because it tells you which experiment is worth doing, since the real plant may behave differently because of biology the model leaves out."
   },
 ];
 function renderQuiz(){
@@ -569,20 +641,34 @@ function renderQuiz(){
   });
 }
 
-function runNone(){ const sim = simulate({}); drawChart("chart-none", sim); drawKey("key-none"); }
+/* ============================================================
+   Wiring + init
+   ============================================================ */
+// Step 2 — no stress
+function runNone(opts = {}){
+  const sim = simulate({});
+  drawChart("chart-none", sim, { animate: opts.animate !== false });
+  drawKey("key-none");
+}
 document.getElementById("run-none").addEventListener("click", runNone);
 
-function runBrief(){ const sim = simulate({start:10, end:11}); drawChart("chart-brief", sim, {band:[10,11]}); drawKey("key-brief"); }
+// Step 3 — brief pulse
+function runBrief(opts = {}){
+  const sim = simulate({start:10, end:11});
+  drawChart("chart-brief", sim, {band:[10,11], animate: opts.animate !== false});
+  drawKey("key-brief");
+}
 document.getElementById("run-brief").addEventListener("click", runBrief);
 
-function runLong(){
+// Step 4 — adjustable pulse
+function runLong(opts = {}){
   let a = +document.getElementById("s4-start").value;
   let b = +document.getElementById("s4-end").value;
   if (b <= a){ b = a+1; document.getElementById("s4-end").value = b; }
   document.getElementById("s4-start-val").textContent = a;
   document.getElementById("s4-end-val").textContent = b;
   const sim = simulate({start:a, end:b});
-  drawChart("chart-long", sim, {band:[a,b]});
+  drawChart("chart-long", sim, {band:[a,b], animate: opts.animate !== false});
   drawKey("key-long");
   document.getElementById("cap-long").innerHTML =
     `Drought is on from <b>${a}</b> to <b>${b}</b> (${b-a} time units). Watch how long BGL2 stays down.`;
@@ -590,6 +676,7 @@ function runLong(){
 document.getElementById("s4-start").addEventListener("input", runLong);
 document.getElementById("s4-end").addEventListener("input", runLong);
 
+// Step 5 — knockouts
 function buildKoBox(){
   const box = document.getElementById("ko-box");
   box.innerHTML = GENES.map(g=>{
@@ -598,10 +685,10 @@ function buildKoBox(){
   }).join("");
   box.querySelectorAll("input").forEach(cb=> cb.addEventListener("change", runKo));
 }
-function runKo(){
+function runKo(opts = {}){
   const ko = [...document.querySelectorAll("#ko-box input:checked")].map(cb=>cb.value);
   const sim = simulate({start:10, end:30, knockouts:ko});
-  drawChart("chart-ko", sim, {band:[10,30], knockouts:ko});
+  drawChart("chart-ko", sim, {band:[10,30], knockouts:ko, animate: opts.animate !== false});
   drawKey("key-ko", ko);
   const cap = document.getElementById("cap-ko");
   cap.innerHTML = ko.length
@@ -613,14 +700,25 @@ document.getElementById("ko-reset").addEventListener("click", ()=>{
 });
 
 function initAll(){
-  buildNetwork(); runNone(); runBrief(); runLong(); buildKoBox(); runKo(); renderQuiz();
+  buildNetwork();
+  runNone();
+  runBrief();
+  runLong();
+  buildKoBox();
+  runKo();
+  renderQuiz();
 }
 initAll();
 
 let rz;
 window.addEventListener("resize", ()=>{
   clearTimeout(rz);
-  rz = setTimeout(()=>{ runNone(); runBrief(); runLong(); runKo(); }, 220);
+  rz = setTimeout(()=>{ 
+    runNone({animate: false});
+    runBrief({animate: false});
+    runLong({animate: false});
+    runKo({animate: false});
+  }, 220);
 });
 </script>
 </body>

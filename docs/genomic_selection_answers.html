@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Genomic Selection</title>
+<title>Genomic Selection: Answer Model</title>
 <style>
   :root {
     --bg: #0f1720;
@@ -91,6 +91,9 @@
   }
   .callout.q { border-left-color: var(--accent-2); }
   .callout.q strong { color: var(--accent-2); }
+  .callout.answer { border-left-color: var(--accent); background: rgba(76,195,138,.09); color: var(--ink); margin-top: 12px; }
+  .callout.answer strong { color: var(--accent); }
+  .callout.answer ul { margin: 6px 0 0; }
   .callout ul { margin: 8px 0 0; padding-left: 20px; }
   .callout li { margin: 4px 0; }
   .callout details { margin-top: 8px; }
@@ -169,16 +172,10 @@
 <body>
 
 <header class="hero">
-  <div class="badge">Climate-Resilient Crops · Data Tutorial</div>
-  <h1>Genomic Selection</h1>
-  <p style="text-align:left; max-width: 620px; margin: 0 auto;">By the end of this practical you will be able to:</p>
-  <ul style="text-align:left; color: var(--muted); max-width: 620px; margin: 8px auto 0; padding-left: 20px;">
-    <li>Explain why marker assisted selection does not work well for traits controlled by many genes</li>
-    <li>Describe what a genomic selection model does and what a GEBV is</li>
-    <li>Follow a genomic selection breeding cycle step by step, and explain what happens in each step</li>
-    <li>List some limitations of genomic selection</li>
-  </ul>
-  <div class="nav"><a href="index.html">&larr; All practicals</a></div>
+  <div class="badge">Climate-Resilient Crops · Answer Model</div>
+  <h1>Genomic Selection: Answer Model</h1>
+  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the Genomic Selection practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep retraining the model and running breeding cycles while you read, and the self-test quiz at the end is unchanged.</p>
+  <div class="nav"><a href="genomic_selection.html">&larr; Student version</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a></div>
 </header>
 
 <div class="wrap">
@@ -209,6 +206,12 @@
         <li>If you wanted to predict the yield of a brand new plant from its DNA alone, what would you need to have worked out first from a population like this?</li>
       </ul>
     </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>What you would need first.</b> You would need to know <em>how much each marker contributes to yield, and in which direction</em>. A new plant's DNA is just a row of 0s and 1s; on its own that tells you nothing. It only becomes a prediction once you can attach a number to each marker and add up the contributions. And the only way to learn those numbers is from a population like this one, where you know the markers <em>and</em> the measured yield for the same plants, so you can work out which marker values tend to travel with high yield. Note what this implies: you can never predict a phenotype from DNA alone. Somebody has to have grown and measured a training population first.</li>
+      </ul>
+    </div>
   </section>
 
   <!-- STEP 2 -->
@@ -230,6 +233,13 @@
       <ul>
         <li>Grow the population to a large size. How does this plot compare with the salt-resistance Manhattan plot from the previous practical?</li>
         <li>Why would marker assisted selection not be (easily) applicable here? What underlying biology causes this difference?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Comparing the two plots.</b> The salt-resistance plot had one tall spike at Marker 12 that rose further and further above every other bar as the population grew. This one never produces that spike. Instead a group of markers at the left each reach a modest height, a few others dip in the opposite direction, and the rest stay flat. Growing the population makes the pattern cleaner but does not turn any bar into a winner, so this is not a problem you can solve by collecting more plants.</li>
+      <li><b>Why marker assisted selection fails here, and the biology behind it.</b> Marker assisted selection needs a single marker that carries most of the effect, so that checking one position in the DNA tells you most of what you need to know. Here no marker does. Selecting on the tallest bar would capture only a small slice of the trait, and stacking the useful markers one at a time would take far too many crossing rounds. The underlying biology is that yield is not one thing. It is the end result of photosynthesis, root growth, water and nutrient uptake, flowering time, stress tolerance and much else, each controlled by its own genes. Traits built out of many small contributions are called <b>polygenic</b>, and most agriculturally important traits are polygenic. Salt resistance in the previous practical was the unusual case, not the typical one.</li>
       </ul>
     </div>
   </section>
@@ -265,6 +275,14 @@
         <li>How is this plot different from a Manhattan plot? Think carefully about what the height of a bar means in each of the two plots.</li>
       </ul>
     </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>What one bar tells you.</b> The <b>direction</b> says which way that marker pushes: a bar above zero means plants carrying a 1 there tend to yield <em>more</em>, a bar below zero means they tend to yield <em>less</em>. The <b>height</b> says how big that push is, in the units of the trait. So a bar of +2 is the model saying "carrying a 1 at this marker is worth about 2 extra units of yield, holding the other markers fixed". A bar near zero means the model found no consistent effect for that marker.</li>
+      <li><b>Which markers matter.</b> Once the model has enough training plants, the picture is clear: a block of about ten markers at the very left of the plot (markers 0 to 9) all stand well above zero, and a small block around markers 20 to 22 sits below zero. Those are the markers that raise and lower yield respectively. Everything else hovers around zero. Train on only 5 or 10 plants and this structure is buried in noise; drag the slider up and watch the real pattern emerge from the clutter. That is worth doing, because it shows you what "the model needs enough data" actually looks like.</li>
+      <li><b>How this differs from a Manhattan plot.</b> This is the key conceptual point of the practical, and it is easy to slide past. The two plots look similar but the bar heights mean different things. In a Manhattan plot the height is <b>evidence</b>: how confident we are that a marker is associated with the trait at all. It is always positive, it says nothing about the direction of the effect, and it grows without limit as you add more plants, because more data means more certainty. Here the height is an <b>effect size</b>: how much yield that marker is worth, with a sign. It does not grow as you add plants, it converges on the true value. Another way to put it: a Manhattan plot answers "is this marker involved?", one marker at a time; the weights plot answers "how much is this marker worth?", for all markers at once and taking the others into account.</li>
+      </ul>
+    </div>
   </section>
 
   <!-- STEP 5 -->
@@ -284,6 +302,13 @@
       <ul>
         <li>The points cluster around the diagonal but do not sit exactly on it. Why can the model not perfectly predict the phenotype?</li>
         <li>Does the model still predict reasonably well on the 10 plants it was never trained on? Why does testing on unseen plants matter?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Why the predictions are not perfect.</b> Several reasons stack up, and none of them can be trained away. The biggest is that the phenotype is not purely genetic: two plants with identical DNA still yield differently because of soil, water, light and chance, and no model reading only DNA can predict that part. On top of that the model has seen a limited number of training plants, so its 50 weights are estimates rather than truths; the markers we measured may not be the causal variants themselves, only positions that happen to sit near them; and the model assumes contributions simply add up, whereas real genes interact. The scatter around the diagonal is the honest visual summary of all of that, and a model that sat exactly on the line would be a warning sign, not a triumph.</li>
+      <li><b>The unseen plants, and why they matter.</b> The yellow points should sit around the diagonal much like the blue ones, so yes, the model still works on plants it never saw. That is the result you actually care about. The blue training points are not evidence of anything, because the model was fitted to them: a model can score well there simply by memorising, which teaches you nothing about the next plant. Only the held-out points estimate what happens when you use the model for real, on seedlings whose yield nobody has measured, which is the entire purpose of the exercise. Set the training size very low and watch the two groups come apart: the model still tracks the blue points reasonably while the yellow ones scatter badly. That gap is overfitting, and testing on unseen plants is how you catch it.</li>
       </ul>
     </div>
   </section>
@@ -317,6 +342,15 @@
         <li>Today's elite variety is already very good. What does it mean that genomic selection can push the yield past that dashed line?</li>
         <li>Do you think genomic selection would also work for a trait controlled by a single marker, like salt resistance? Why or why not?</li>
         <li>What are some limitations of genomic selection? (What could go wrong if you used this exact model on a very different population of plants?)</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Reading success off the graph.</b> Compare the two lines, not the green one on its own. Both programmes start from the same population, so any gap between them is caused by the selection and nothing else. The green line should climb steadily cycle after cycle while the blue control wanders roughly sideways, drifting up or down by chance. If the green line is not pulling away from the blue one, the selection is not doing anything, whatever the absolute yield happens to be. This is why the control matters: without it you could mistake ordinary variation between generations for progress.</li>
+      <li><b>Passing the elite line.</b> The dashed line is the best variety farmers currently grow, so crossing it means the breeding programme has produced something better than today's best. It is possible because the elite variety is good but not perfect: it carries most of the favourable alleles but is missing one, and no single existing plant happens to combine every favourable allele at once. The variation to do better is already present in the population, scattered across different individuals. Selection does not create anything new; it <b>assembles</b> favourable alleles that were already there into one plant. That is also why progress eventually slows: once the favourable alleles are all fixed, there is nothing left to assemble.</li>
+      <li><b>Would it work for a single-marker trait?</b> Yes, it would work, but it would be the wrong tool. The model would simply learn one large weight on Marker 12 and near-zero weights everywhere else, and selecting on the predicted value would amount to selecting on Marker 12. You would get the right answer by an expensive route: genotyping every marker and fitting a model in order to reproduce what a single marker test tells you directly and far more cheaply. There is also a real cost to the detour, since with a small training population the model may spread the effect across nearby markers or attach weight to markers that are only there by chance. The rule of thumb: use marker assisted selection when one marker explains most of the trait, and genomic selection when no single marker does.</li>
+      <li><b>Limitations.</b> The most important one is that the model is only valid for the population it was trained on. Its weights are not statements about biology, they are statements about which markers happened to travel with the causal genes <em>in that population</em>. Apply it to unrelated material and those associations may be weaker, absent or reversed, and the predictions degrade badly. The same applies across environments: a model trained on yield in one climate can rank plants wrongly in another, because the genes that matter are not the same ones. Then there are the slower problems. The associations decay over generations as recombination separates markers from the genes they were standing in for, so the model has to be retrained on new measured plants every so often. Selecting hard on predictions shrinks genetic variation each cycle, so gains get smaller and the population becomes inbred, and a model that only knows about yield will happily drive yield up while quietly discarding disease resistance or drought tolerance that nobody told it to protect.</li>
       </ul>
     </div>
   </section>

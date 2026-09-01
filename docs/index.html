@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>EduXR · Plant Breeding Data Science: Interactive Practicals</title>
+<title>Introduction to Climate-Resilient Crops, Data Tutorials</title>
 <style>
   :root {
     --bg: #0f1720;
@@ -44,18 +44,23 @@
   @media (max-width: 680px) { .cards { grid-template-columns: 1fr; } }
 
   .card {
-    display: flex; flex-direction: column; text-decoration: none; color: inherit;
+    display: flex; flex-direction: column; color: inherit;
     background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 24px 24px 22px; transition: transform .12s ease, border-color .12s ease;
   }
   .card:hover { transform: translateY(-3px); border-color: var(--accent); }
   .card .wk { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
   .card h2 { font-size: 22px; margin: 8px 0 8px; line-height: 1.2; }
+  .card h2 a { color: inherit; text-decoration: none; }
+  .card h2 a:hover { color: var(--accent); }
   .card p { color: var(--muted); font-size: 15px; margin: 0 0 16px; flex: 1; }
-  .card .go { color: var(--accent); font-weight: 600; font-size: 15px; }
-  .card.answers { border-style: dashed; }
-  .card.answers .wk { color: var(--accent-2); }
-  .card.answers .go { color: var(--accent-2); }
+
+  /* the two links at the foot of every card: the practical, and its answer model */
+  .links { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px;
+           border-top: 1px solid var(--line); padding-top: 12px; }
+  .links a { font-weight: 600; font-size: 15px; text-decoration: none; }
+  .links a:hover { text-decoration: underline; }
+  .links .answer { color: var(--accent-2); }
 
   .section-label { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
                    margin: 36px 2px 4px; font-weight: 600; }
@@ -70,104 +75,110 @@
 <body>
 
 <header class="hero">
-  <div class="badge">EduXR · CropXR Minor</div>
-  <h1>Plant Breeding Data Science</h1>
-  <p>Interactive practicals for the plant-resilience data-science minor. Each one runs entirely in your browser, with no installation and no coding required. Pick a practical to begin.</p>
+  <div class="badge">Climate-Resilient Crops · Data Tutorial</div>
+  <h1>Introduction to Climate-Resilient Crops, Data Tutorials</h1>
+  <p>Interactive practicals on the data side of plant resilience. Each one runs entirely in your browser, with no installation and no coding required. Work through a practical first, then use its answer model to check your reasoning.</p>
 </header>
 
 <div class="wrap">
 
+  <p class="section-label">Week 1 · Breeding with markers</p>
   <div class="cards">
 
-    <a class="card" href="marker_assisted_selection.html">
-      <span class="wk">Week 1 · Practical 1</span>
-      <h2>Marker Assisted Selection</h2>
+    <div class="card">
+      <span class="wk">Practical 1</span>
+      <h2><a href="marker_assisted_selection.html">Marker Assisted Selection</a></h2>
       <p>Use a GWAS to find the DNA marker behind a trait, then plan crosses and backcrosses to move it into an elite line. Read Manhattan plots and steer a breeding programme.</p>
-      <span class="go">Open practical →</span>
-    </a>
+      <div class="links">
+        <a href="marker_assisted_selection.html">Open practical &rarr;</a>
+        <a class="answer" href="marker_assisted_selection_answers.html">Answer model &rarr;</a>
+      </div>
+    </div>
 
-    <a class="card" href="genomic_selection.html">
-      <span class="wk">Week 1 · Practical 2</span>
-      <h2>Genomic Selection</h2>
-      <p>When many genes each nudge a trait, single markers aren't enough. Train a model over all markers at once to predict a plant's breeding value, and see where it succeeds and fails.</p>
-      <span class="go">Open practical →</span>
-    </a>
-
-    <a class="card" href="transcriptomics_clustering.html">
-      <span class="wk">Week 2 · Practical 1</span>
-      <h2>Transcriptomics &amp; Clustering</h2>
-      <p>Explore real RNA-seq data from infected <em>Arabidopsis</em>. Read a clustered heatmap, tune hierarchical clustering, and build a gene correlation network to find structure in expression data.</p>
-      <span class="go">Open practical →</span>
-    </a>
-
-    <a class="card" href="mechanistic_model.html">
-      <span class="wk">Week 2 · Practical 2</span>
-      <h2>Mechanistic Modelling</h2>
-      <p>Simulate a gene regulatory network as equations. Pulse a drought, lengthen it, and knock out genes to see how the drought response trades off against a plant's defence.</p>
-      <span class="go">Open practical →</span>
-    </a>
-
-    <a class="card" href="deep_learning.html">
-      <span class="wk">Week 3 · Practical 1</span>
-      <h2>Deep Learning on Leaf Images</h2>
-      <p>Train a real neural network, in your browser, on photographs of tomato leaves. Meet a 90%-accurate model that is worthless, then watch a good one learn entirely the wrong thing.</p>
-      <span class="go">Open practical →</span>
-    </a>
-
-    <a class="card" href="go_enrichment.html">
-      <span class="wk">Week 4 · Practical 1</span>
-      <h2>GO Enrichment Analysis</h2>
-      <p>A cluster of genes is just a list of names until you know what they do. Look genes up in the Gene Ontology, then let a statistical test name the biological process a whole cluster shares.</p>
-      <span class="go">Open practical →</span>
-    </a>
-
-    <a class="card" href="translational_biology.html">
-      <span class="wk">Week 4 &middot; Practical 2</span>
-      <h2>Translational Biology</h2>
-      <p>A gene you found in <em>Arabidopsis</em> is no use to a farmer. Find the matching gene in wheat, rice or potato, work out why some genes have fifty matches and others none, and align the two proteins yourself.</p>
-      <span class="go">Open practical &rarr;</span>
-    </a>
+    <div class="card">
+      <span class="wk">Practical 2</span>
+      <h2><a href="genomic_selection.html">Genomic Selection</a></h2>
+      <p>When many genes each nudge a trait, single markers are not enough. Train a model over all markers at once to predict a plant's breeding value, and see where it succeeds and fails.</p>
+      <div class="links">
+        <a href="genomic_selection.html">Open practical &rarr;</a>
+        <a class="answer" href="genomic_selection_answers.html">Answer model &rarr;</a>
+      </div>
+    </div>
 
   </div>
 
-  <p class="section-label">Answer models</p>
+  <p class="section-label">Week 2 · Finding structure in expression data</p>
   <div class="cards">
-    <a class="card answers" href="mechanistic_model_answers.html">
-      <span class="wk">Week 2 · Practical 2</span>
-      <h2>Mechanistic Modelling: Answers</h2>
-      <p>The worked answer model for the mechanistic-modelling practical: every in-between question answered, with the self-test quiz kept at the end.</p>
-      <span class="go">Open answer model →</span>
-    </a>
 
-    <a class="card answers" href="deep_learning_answers.html">
-      <span class="wk">Week 3 · Practical 1</span>
-      <h2>Deep Learning: Answers</h2>
-      <p>The worked answer model for the deep-learning practical: every in-between question answered, with the interactive steps and self-test quiz kept intact.</p>
-      <span class="go">Open answer model →</span>
-    </a>
+    <div class="card">
+      <span class="wk">Practical 1</span>
+      <h2><a href="transcriptomics_clustering.html">Transcriptomics &amp; Clustering</a></h2>
+      <p>Explore real RNA-seq data from infected <em>Arabidopsis</em>. Read a clustered heatmap, tune hierarchical clustering, and build a gene correlation network to find structure in expression data.</p>
+      <div class="links">
+        <a href="transcriptomics_clustering.html">Open practical &rarr;</a>
+        <a class="answer" href="transcriptomics_clustering_answers.html">Answer model &rarr;</a>
+      </div>
+    </div>
 
-    <a class="card answers" href="go_enrichment_answers.html">
-      <span class="wk">Week 4 · Practical 1</span>
-      <h2>GO Enrichment: Answers</h2>
-      <p>The worked answer model for the GO-enrichment practical: every in-between question answered, with the interactive steps and self-test quiz kept intact.</p>
-      <span class="go">Open answer model →</span>
-    </a>
-    <a class="card answers" href="translational_biology_answers.html">
-      <span class="wk">Week 4 &middot; Practical 2</span>
-      <h2>Translational Biology: Answers</h2>
-      <p>The worked answer model for the translational-biology practical: every in-between question answered, with the interactive steps and self-test quiz kept intact.</p>
-      <span class="go">Open answer model &rarr;</span>
-    </a>
+    <div class="card">
+      <span class="wk">Practical 2</span>
+      <h2><a href="mechanistic_model.html">Mechanistic Modelling</a></h2>
+      <p>Simulate a gene regulatory network as equations. Pulse a drought, lengthen it, and knock out genes to see how the drought response trades off against a plant's defence.</p>
+      <div class="links">
+        <a href="mechanistic_model.html">Open practical &rarr;</a>
+        <a class="answer" href="mechanistic_model_answers.html">Answer model &rarr;</a>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="section-label">Week 3 · Learning from images</p>
+  <div class="cards">
+
+    <div class="card">
+      <span class="wk">Practical 1</span>
+      <h2><a href="deep_learning.html">Deep Learning on Leaf Images</a></h2>
+      <p>Train a real neural network, in your browser, on photographs of tomato leaves. Meet a 90%-accurate model that is worthless, then watch a good one learn entirely the wrong thing.</p>
+      <div class="links">
+        <a href="deep_learning.html">Open practical &rarr;</a>
+        <a class="answer" href="deep_learning_answers.html">Answer model &rarr;</a>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="section-label">Week 4 · From gene lists to crops</p>
+  <div class="cards">
+
+    <div class="card">
+      <span class="wk">Practical 1</span>
+      <h2><a href="go_enrichment.html">GO Enrichment Analysis</a></h2>
+      <p>A cluster of genes is just a list of names until you know what they do. Look genes up in the Gene Ontology, then let a statistical test name the biological process a whole cluster shares.</p>
+      <div class="links">
+        <a href="go_enrichment.html">Open practical &rarr;</a>
+        <a class="answer" href="go_enrichment_answers.html">Answer model &rarr;</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="wk">Practical 2</span>
+      <h2><a href="translational_biology.html">Translational Biology</a></h2>
+      <p>A gene you found in <em>Arabidopsis</em> is no use to a farmer. Find the matching gene in wheat, rice or potato, work out why some genes have fifty matches and others none, and align the two proteins yourself.</p>
+      <div class="links">
+        <a href="translational_biology.html">Open practical &rarr;</a>
+        <a class="answer" href="translational_biology_answers.html">Answer model &rarr;</a>
+      </div>
+    </div>
 
   </div>
 
   <div class="about">
     <h3>About these practicals</h3>
-    <p>These pages are the interactive, browser-based version of the CropXR / EduXR plant-breeding data-science practicals. They mirror the original Jupyter notebooks but need no setup: everything, including the simulations, runs in JavaScript on your machine. Built with the help of Claude Code, based on the original notebooks.</p>
+    <p>These pages are the interactive, browser-based version of the practicals for the Introduction to Climate-Resilient Crops minor. They mirror the original Jupyter notebooks by Ben Noordijk but need no setup: everything, including the simulations, runs in JavaScript on your own machine. Built with the help of Claude Code.</p>
   </div>
 
   <footer>
-    EduXR · Plant Breeding Data Science minor.
+    Interactive versions of the original Jupyter notebooks by Ben Noordijk. Built with the help of Claude Code.
   </footer>
 </div>
 

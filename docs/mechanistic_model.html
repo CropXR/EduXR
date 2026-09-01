@@ -60,8 +60,6 @@
   .callout details[open] summary { margin-bottom: 6px; }
   .callout details > :not(summary) { font-size: 13px; }
   .callout.info { border-left-color: var(--accent); color: var(--ink); }
-  .callout.answer { border-left-color: var(--accent); color: var(--ink); margin-top: 12px; }
-  .callout.answer strong { color: var(--accent); }
 
   .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin: 18px 0; }
   .controls label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
@@ -113,7 +111,7 @@
 <body>
 
 <header class="hero">
-  <div class="badge">EduXR · Plant Breeding</div>
+  <div class="badge">Climate-Resilient Crops · Data Tutorial</div>
   <h1>Mechanistic Modelling of a Gene Regulatory Network</h1>
   <p style="text-align:left; max-width: 660px; margin: 0 auto;">By the end of this practical you will be able to:</p>
   <ul style="text-align:left; color: var(--muted); max-width: 660px; margin: 8px auto 0; padding-left: 20px;">
@@ -121,23 +119,23 @@
     <li>Discuss the goals of mechanistic modelling when applied to transcriptomics data</li>
     <li>Explain how mechanistic modelling can make predictions about gene regulatory networks</li>
   </ul>
-  <div class="nav"><a href="index.html">&larr; All practicals</a> &nbsp;·&nbsp; <a href="transcriptomics_clustering.html">Transcriptomics &amp; Clustering</a></div>
+  <div class="nav"><a href="index.html">&larr; All practicals</a></div>
 </header>
 
 <div class="wrap">
 
   <!-- STEP 0 -->
   <section class="step">
-    <h2><span class="num">0</span> What is a mechanistic model &mdash; and why bother?</h2>
-    <p class="lead">In the earlier practicals you used <strong>data-driven</strong> methods: clustering and genomic selection look at a pile of measurements and let patterns emerge, without any built-in idea of <em>why</em> genes behave as they do. A <strong>mechanistic model</strong> works the other way around. You start from biological knowledge that already exists &mdash; "gene&nbsp;A switches gene&nbsp;B on", "hormone&nbsp;X represses gene&nbsp;C" &mdash; and you write those cause-and-effect rules down as equations. The computer then <strong>simulates</strong> what happens over time when you turn a knob.</p>
+    <h2><span class="num">0</span> What is a mechanistic model, and why bother?</h2>
+    <p class="lead">In the earlier practicals you used <strong>data-driven</strong> methods: clustering and genomic selection look at a pile of measurements and let patterns emerge, without any built-in idea of <em>why</em> genes behave as they do. A <strong>mechanistic model</strong> works the other way around. You start from biological knowledge that already exists, such as "gene&nbsp;A switches gene&nbsp;B on" or "hormone&nbsp;X represses gene&nbsp;C", and you write those cause-and-effect rules down as equations. The computer then <strong>simulates</strong> what happens over time when you turn a knob.</p>
     <p>Think of it as a flight simulator for a cell. Nobody is guessing from data whether the plane will stall; the simulator encodes the physics and lets you <em>try things</em>. That is exactly why this approach is useful:</p>
     <ul>
-      <li><strong>Run virtual experiments in seconds.</strong> Apply a drought, knock out a gene, lengthen a stress &mdash; and see the whole network respond, without spending months in a greenhouse.</li>
+      <li><strong>Run virtual experiments in seconds.</strong> Apply a drought, knock out a gene, lengthen a stress, and see the whole network respond, without spending months in a greenhouse.</li>
       <li><strong>Test your understanding.</strong> If the rules you believe in fail to reproduce what real plants do, then your picture of the network is incomplete. The model becomes a hypothesis you can falsify.</li>
       <li><strong>Generate predictions.</strong> A model can point to <em>which</em> gene to knock out, or <em>which</em> experiment to run next, before you touch a single plant.</li>
     </ul>
     <div class="callout info">
-      <strong>Keep in mind</strong> that a model is only as good as the rules and numbers you put in. It is a deliberate simplification of a far messier reality &mdash; useful for reasoning and prediction, but never a substitute for real experiments.
+      <strong>Keep in mind</strong> that a model is only as good as the rules and numbers you put in. It is a deliberate simplification of a far messier reality: useful for reasoning and prediction, but never a substitute for real experiments.
     </div>
   </section>
 
@@ -191,7 +189,7 @@
   <!-- STEP 3 -->
   <section class="step">
     <h2><span class="num">3</span> A brief drought pulse</h2>
-    <p class="lead">Now we switch drought <em>on</em> for a single short moment (from time&nbsp;10 to&nbsp;11) and then off again &mdash; the grey band marks when it is on. Run it and compare with the resting plant above.</p>
+    <p class="lead">Now we switch drought <em>on</em> for a single short moment (from time&nbsp;10 to&nbsp;11) and then off again. The grey band marks when it is on. Run it and compare with the resting plant above.</p>
     <div class="controls">
       <button id="run-brief">▶ Simulate a brief pulse (10 → 11)</button>
     </div>
@@ -255,7 +253,7 @@
     <div class="callout q">
       <strong>❓ Questions</strong>
       <ul>
-        <li>Which combination(s) of knocked-out genes give the plant the "best" phenotype according to this model &mdash; keeping its defence even under a long drought?</li>
+        <li>Which combination(s) of knocked-out genes give the plant the "best" phenotype according to this model, keeping its defence even under a long drought?</li>
         <li>Would doing this be realistic biologically? What could go wrong that this model doesn't capture?</li>
         <li>What experiment would you propose next to test the model's prediction, and how would you explain your finding to a plant biologist?</li>
       </ul>
@@ -270,7 +268,7 @@
   </section>
 
   <footer>
-    This HTML and JavaScript was created with the help of Claude Code, based on the original Jupyter notebooks.
+    This HTML and JavaScript was created with the help of Claude Code, based on the original Jupyter notebooks by Ben Noordijk.
   </footer>
 </div>
 
@@ -552,7 +550,7 @@ const QUIZ = [
       "ICS1 has nothing to do with ABA in this model.",
     ],
     correct: 1,
-    why: "ABA activates ABF2→ANAC019 and also GENEC. Both ANAC019 and GENEC repress ICS1, so more ABA means less ICS1 — and therefore less SA and less BGL2 defence."
+    why: "ABA activates ABF2→ANAC019 and also GENEC. Both ANAC019 and GENEC repress ICS1, so more ABA means less ICS1, and therefore less SA and less BGL2 defence."
   },
   {
     q: "A brief drought pulse barely dents BGL2, but a long one strongly suppresses it. Why?",
@@ -572,7 +570,7 @@ const QUIZ = [
       "It freezes the whole simulation in place.",
     ],
     correct: 0,
-    why: "A knockout forces that gene's level to decay away, so it can no longer pass its activating or repressing signal to its targets — letting you ask what the network does without it."
+    why: "A knockout forces that gene's level to decay away, so it can no longer pass its activating or repressing signal to its targets, letting you ask what the network does without it."
   },
   {
     q: "The model predicts a knockout that keeps defence high under drought. What is the right next step?",
@@ -582,7 +580,7 @@ const QUIZ = [
       "Delete the gene from every crop immediately.",
     ],
     correct: 1,
-    why: "A model prediction is a hypothesis, not proof. It is valuable because it tells you which experiment is worth doing — the real plant may behave differently because of biology the model leaves out."
+    why: "A model prediction is a hypothesis, not proof. It is valuable because it tells you which experiment is worth doing, since the real plant may behave differently because of biology the model leaves out."
   },
 ];
 function renderQuiz(){

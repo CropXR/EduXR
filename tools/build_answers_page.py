@@ -194,109 +194,246 @@ TRANSLATIONAL_BIOLOGY_ANSWERS = [
 ]
 
 
-DL_HERO_OLD = """  <p style="text-align:left; max-width: 660px; margin: 0 auto;">By the end of this practical you will be able to:</p>
-  <ul style="text-align:left; color: var(--muted); max-width: 660px; margin: 8px auto 0; padding-left: 20px;">
-    <li>Discuss how and why to use train/test splits for training machine learning models</li>
-    <li>Explain how overfitting of neural networks can arise, and give an example of how to combat it</li>
-    <li>Reflect on neural networks' dependence on (unbiased) training data</li>
-    <li>List various methods of assessing model performance and discuss their up- and downsides</li>
-  </ul>
-  <div class="nav"><a href="index.html">&larr; All practicals</a> &nbsp;·&nbsp; <a href="mechanistic_model.html">Mechanistic Modelling</a> &nbsp;·&nbsp; <a href="go_enrichment.html">GO Enrichment &rarr;</a></div>"""
+# One entry per <div class="callout q"> block in docs/mechanistic_model.html, in
+# page order. Lifted from the hand-built answer page this script replaced.
+MECHANISTIC_MODEL_ANSWERS = [
 
-DL_HERO_NEW = """  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the deep-learning practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep training models while you read, and the self-test quiz at the end is unchanged.</p>
-  <div class="nav"><a href="deep_learning.html">&larr; Student version</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a></div>"""
+# --- Step 1: reading the network --------------------------------------------
+"""<ul>
+<li><b>Drought resistance</b> runs through the ABA branch: drought raises the hormone <b>ABA</b>, which drives <b>ABF2 → ANAC019</b> and <b>GENEC</b>. <b>White-fly (biotic) resistance</b> is the salicylic-acid pathway <b>ICS1 → SA → BGL2</b>; <b>BGL2</b> is the defence marker we read out. The clever bit the paper highlights is the <em>link</em> between them: the drought (ABA) branch represses the defence (ICS1) branch.</li>
+<li><b>Arrows:</b> a green solid arrow means the source gene <b>activates</b> (switches on) its target; a red dashed arrow means it <b>represses</b> (switches off) its target.</li>
+<li><b>No drought:</b> with drought = 0, ABA stays low, so ABF2, ANAC019 and GENEC stay low. Nothing is repressing ICS1, so ICS1 is expressed → SA is produced → BGL2 is high. The resting plant is <b>fully defended</b>.</li>
+</ul>""",
 
-GO_HERO_OLD = """  <p style="text-align:left; max-width: 660px; margin: 0 auto;">By the end of this practical you will be able to:</p>
-  <ul style="text-align:left; color: var(--muted); max-width: 660px; margin: 8px auto 0; padding-left: 20px;">
-    <li>Describe how GO enrichment is applied in combination with clustering</li>
-    <li>List how GO enrichment can be used to propose new experiments</li>
-  </ul>
-  <div class="nav"><a href="deep_learning.html">&larr; Deep Learning</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a> &nbsp;·&nbsp; <a href="translational_biology.html">Translational Biology &rarr;</a></div>"""
+# --- Step 2: the resting plant ------------------------------------------------
+"""<ul>
+<li><b>Yes, it is resistant.</b> Because there is no drought, ABA (and therefore ANAC019 and GENEC) stay near zero, so nothing represses ICS1. ICS1 climbs to a high steady level, driving SA and then BGL2 up. High BGL2 = active salicylic-acid defence, so the plant can fend off white flies.</li>
+<li><b>Prediction for a brief pulse:</b> the ABA branch will spike briefly, nudging the repressors up for a moment, so defence may dip a little, but because the pulse is short we would expect it to recover quickly. (Confirm this in the next step.)</li>
+</ul>""",
 
-GO_HERO_NEW = """  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the GO-enrichment practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep clustering and re-running the analysis while you read, and the self-test quiz at the end is unchanged.</p>
-  <div class="nav"><a href="go_enrichment.html">&larr; Student version</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a></div>"""
+# --- Step 3: the brief pulse --------------------------------------------------
+"""<ul>
+<li><b>What happens:</b> the pulse briefly raises ABA, which activates ABF2 → ANAC019 and GENEC, so you see those upstream genes spike. They momentarily repress ICS1, so ICS1/SA/BGL2 dip a little. But the pulse is over almost immediately, ABA decays, the repression lifts, and the defence pathway climbs back to its resting level. Net effect: a small, temporary dip and full recovery.</li>
+<li><b>Why it makes sense:</b> brief dry spells are normal and not life-threatening. It would be wasteful (and risky) to throw away biotic defence every time it gets dry for an hour. Requiring a <em>sustained</em> signal before switching off defence lets the plant ignore short, noisy fluctuations and only reallocate resources when drought is genuinely serious, which is a filter against over-reacting.</li>
+<li><b>Prediction:</b> a longer drought should suppress ICS1/SA/BGL2 more strongly and for longer, so white-fly resistance should drop noticeably. (Test it next.)</li>
+</ul>""",
 
-TB_HERO_OLD = """  <p style="text-align:left; max-width: 660px; margin: 0 auto;">By the end of this practical you will be able to:</p>
-  <ul style="text-align:left; color: var(--muted); max-width: 660px; margin: 8px auto 0; padding-left: 20px;">
-    <li>Describe what an orthologue is, and how it differs from a paralogue</li>
-    <li>Describe how orthologues are found, and read the result</li>
-    <li>Explain how orthologues are used to carry a finding from <em>A. thaliana</em> across to a crop</li>
-  </ul>
-  <div class="nav"><a href="go_enrichment.html">&larr; GO Enrichment</a> &nbsp;&middot;&nbsp; <a href="index.html">All practicals</a></div>"""
+# --- Step 4: the sustained drought --------------------------------------------
+"""<ul>
+<li><b>Why it differs:</b> a sustained drought holds ABA, and therefore ANAC019 and GENEC, high for a long time. Their combined repression keeps ICS1 switched off long enough for ICS1, SA and BGL2 to actually decay away. So defence collapses for the duration of the drought, and only recovers once the drought ends. The key variable is not <em>whether</em> the repressors turn on, but for <em>how long</em>.</li>
+<li><b>Does it reflect biology?</b> Qualitatively yes: it captures a real, documented trade-off (drought signalling suppressing salicylic-acid defence) and the sensible logic that only prolonged stress flips the switch. But it is a heavy simplification: only a handful of genes, deterministic with no noise, fixed Hill parameters and arbitrary interaction strengths, no feedback loops, no tissue or spatial detail, and no fitness cost attached. Treat it as a caricature that is useful for reasoning, not as ground truth.</li>
+<li><b>Which genes to knock out:</b> to protect defence, target the repressors of ICS1, namely <b>ANAC019</b> and/or <b>GENEC</b>, or cut the signal at its source by knocking out <b>ABA</b>. (Test in the next step.)</li>
+</ul>""",
 
-TB_HERO_NEW = """  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the translational-biology practical. Every \u2753 question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep looking genes up and aligning proteins while you read, and the self-test quiz at the end is unchanged.</p>
-  <div class="nav"><a href="translational_biology.html">&larr; Student version</a> &nbsp;&middot;&nbsp; <a href="index.html">All practicals</a></div>"""
+# --- Step 5: knockouts ---------------------------------------------------------
+"""<ul>
+<li><b>Best knockouts:</b> silence the two repressors of ICS1, that is <b>ANAC019 and GENEC together</b>. Then even a long drought cannot switch ICS1 off, so SA and BGL2 stay high and the plant keeps its white-fly defence throughout. Knocking out <b>ABA</b> also works, by removing the drought signal before it ever reaches the repressors. Note the trap: knocking out ICS1, SA or BGL2 themselves <em>destroys</em> defence, the opposite of what you want.</li>
+<li><b>Realistic?</b> Not straightforwardly. Defence is metabolically costly, so a plant that can never dial it down may waste resources it needs to survive drought, hurting growth or yield, a cost this model does not include. Transcription factors like ANAC019 are also pleiotropic (they regulate many other genes), so knocking them out likely has side effects far beyond this little network. The model also ignores off-target effects, environment and gene-gene redundancy.</li>
+<li><b>Next experiment and communication:</b> create the knockout line (for example by CRISPR, or use an existing mutant), then measure both traits under a real drought: white-fly resistance and SA/BGL2 levels <em>and</em> drought survival, growth and yield, in controlled and ideally field conditions. Present the result to a biologist as a <em>model-generated hypothesis</em> with explicit caveats: "the model predicts X; here is the trade-off it ignores; here is the experiment that would confirm or refute it."</li>
+</ul>""",
+]
 
 
-# The answer boxes read better with a faint green fill, which the hand-built
-# mechanistic_model_answers.html uses. Applied only to the generated page so the
-# student page keeps its own (unused) rule.
-ANSWER_CSS_OLD = """  .callout.answer { border-left-color: var(--accent); color: var(--ink); margin-top: 12px; }
-  .callout.answer strong { color: var(--accent); }"""
+# One entry per <div class="callout q"> block in docs/marker_assisted_selection.html,
+# in page order. This is the first practical of the course, so the answers spell
+# out the reasoning rather than assuming any modelling background.
+MARKER_ASSISTED_SELECTION_ANSWERS = [
 
-ANSWER_CSS_NEW = """  .callout.answer { border-left-color: var(--accent); background: rgba(76,195,138,.09); color: var(--ink); margin-top: 12px; }
+# --- Step 1: reading the population table -------------------------------------
+"""<ul>
+<li><b>Rows and columns.</b> Each <b>row</b> is one individual plant in the population. Each of the columns labelled M0 to M49 is one <b>marker</b>, that is one fixed position in the DNA, and the 0 or 1 in the cell says which of the two variants that particular plant carries at that particular position. The last two columns are different in kind: they are not DNA at all, they are the two <b>phenotypes</b> we measured on the plant, its salt resistance and its yield. That mix is the whole point of the table. Everything that follows comes from asking whether any of the 0/1 columns lines up with one of the two measured columns.</li>
+</ul>""",
+
+# --- Step 2: the Manhattan plot ------------------------------------------------
+"""<ul>
+<li><b>What the plot shows, and why diversity matters.</b> Each bar is one marker, and its height is <code>-log10(p)</code> from a separate statistical test asking whether plants carrying a 1 at that marker have a different salt resistance from plants carrying a 0. A tall bar means that difference is unlikely to be a fluke. The population has to be genetically diverse because the test is a <em>comparison</em>: if every plant carried a 1 at a marker, there would be no 0 group to compare against, the test would have nothing to work with, and the bar would be flat. No variation means no information, however many plants you measure.</li>
+<li><b>The promising marker.</b> It is <b>Marker 12</b>, the single bar that climbs far above all the others and above the significance line. Click it and the scatter plot below separates cleanly into two horizontal bands: the plants with a 0 sit around 30 percent salt resistance, the plants with a 1 sit around 80. The two groups barely overlap, which is exactly what a marker with a large effect looks like. Try clicking a few other bars for contrast; there the two groups sit on top of each other and you cannot tell them apart.</li>
+<li><b>Growing the population.</b> At 3 plants the plot is noise: several bars look tall, and Marker 12 is not obviously special. As you drag towards 100, the bar at Marker 12 climbs higher and higher while every other bar stays low and flat. Nothing about the biology changed, only the amount of evidence. With few plants a coincidence is easy, so no marker can be distinguished from chance; with many plants a real difference accumulates evidence and the coincidences do not. This is why a GWAS needs hundreds or thousands of individuals, and why a peak found in a small population should be treated with suspicion.</li>
+</ul>""",
+
+# --- Step 4: running the backcrossing programme ---------------------------------
+"""<ul>
+<li><b>What to cross with, and what to select on.</b> Cross back to the <b>elite (agricultural) variety</b> every round, and keep the offspring with <b>Marker 12 = 1</b>. The reasoning has two halves that pull in opposite directions. Each cross to the elite parent replaces roughly half of the remaining donor genome with elite genome, so after a few rounds the plants are almost entirely elite and the yield climbs back towards the elite level. But that same random halving would also throw away the salt-resistance allele about half the time, which is why you filter: selecting on Marker 12 = 1 protects the one piece of donor DNA you actually wanted. Crossing back to the donor, or to the population itself, makes no progress towards elite yield, and selecting on any other marker does nothing to protect resistance.</li>
+<li><b>Why select on a marker rather than on the plant.</b> You can read a marker from a leaf sample of a seedling, days after germination, instead of growing the plant to maturity, and you never have to expose it to salt to find out whether it is resistant. That is faster, cheaper and non-destructive. It is also more reliable: a measured phenotype is the sum of the genetics and the environment, so a resistant plant in a bad spot can look sensitive and mislead you, whereas the marker reads the genetics directly. In this simulation you can see the environment as the noise term that scatters the points in the step 2 scatter plot.</li>
+<li><b>Reading success off the graph.</b> Success is <em>both</em> lines ending up where you want them, not one. Salt resistance should start high and stay high, near 80, round after round. Yield should start low, because the donor is a poor yielder, and climb towards the dashed elite target line as the elite genome is recovered. If salt resistance collapses you lost the allele; if yield flattens out well below the dashed line you are not backcrossing to the elite parent. Watch the round cards too: they tell you how many of the 20 offspring passed the filter each round.</li>
+<li><b>Crossing without a filter.</b> Salt resistance drifts down, usually in steps, and often collapses to around 30 within a few rounds. The reason is chance rather than selection: each offspring inherits each marker from one parent or the other at random, so an offspring of a resistant plant crossed with the elite has only a 50 percent chance of receiving the resistance allele. With no filter, the fraction of carriers halves on average every round, and once it reaches zero it cannot come back, because nothing in the remaining population carries the allele any more. This is the single most important thing the simulation shows: the cross alone does not preserve a trait, the <em>selection</em> does.</li>
+</ul>""",
+
+# --- Step 5: the yield Manhattan plot -------------------------------------------
+"""<ul>
+<li><b>Comparing the two plots.</b> They look completely different, and the difference does not go away as the population grows. The salt plot develops one dominant spike at Marker 12 that keeps climbing. The yield plot instead develops a whole cluster of modest bars, none of which dominates, and many of them stay near or below the significance line even at 100 plants. Adding plants sharpens the picture but never produces a single obvious winner.</li>
+<li><b>One marker or many.</b> Many. The evidence is in the shape of the plot. No single bar towers over the rest the way Marker 12 does. That pattern is what a <b>polygenic</b> trait looks like, one where many genes each contribute a small amount to the phenotype, and it is the normal situation for complex traits like yield, height or flowering time.</li>
+<li><b>What that means for marker assisted selection.</b> It largely breaks the method. Selecting on any one of those markers gains you only a sliver of the trait, and stacking them one at a time would take an impractical number of crossing rounds, with each round risking the loss of what you gained before. Worse, a marker with a small effect is hard to distinguish from a false positive, so you may spend rounds selecting on something that does nothing. The method needs a single marker carrying most of the effect, and yield does not have one. What you need instead is a way to use <em>all</em> the markers at once, adding up their small contributions into one number per plant, which is exactly what genomic selection does.</li>
+</ul>""",
+]
+
+
+# One entry per <div class="callout q"> block in docs/genomic_selection.html, in
+# page order. Follows directly on from the marker assisted selection practical.
+GENOMIC_SELECTION_ANSWERS = [
+
+# --- Step 1: what a prediction would need --------------------------------------
+"""<ul>
+<li><b>What you would need first.</b> You would need to know <em>how much each marker contributes to yield, and in which direction</em>. A new plant's DNA is just a row of 0s and 1s; on its own that tells you nothing. It only becomes a prediction once you can attach a number to each marker and add up the contributions. And the only way to learn those numbers is from a population like this one, where you know the markers <em>and</em> the measured yield for the same plants, so you can work out which marker values tend to travel with high yield. Note what this implies: you can never predict a phenotype from DNA alone. Somebody has to have grown and measured a training population first.</li>
+</ul>""",
+
+# --- Step 2: confirming the trait is polygenic ----------------------------------
+"""<ul>
+<li><b>Comparing the two plots.</b> The salt-resistance plot had one tall spike at Marker 12 that rose further and further above every other bar as the population grew. This one never produces that spike. Instead a group of markers at the left each reach a modest height, a few others dip in the opposite direction, and the rest stay flat. Growing the population makes the pattern cleaner but does not turn any bar into a winner, so this is not a problem you can solve by collecting more plants.</li>
+<li><b>Why marker assisted selection fails here, and the biology behind it.</b> Marker assisted selection needs a single marker that carries most of the effect, so that checking one position in the DNA tells you most of what you need to know. Here no marker does. Selecting on the tallest bar would capture only a small slice of the trait, and stacking the useful markers one at a time would take far too many crossing rounds. The underlying biology is that yield is not one thing. It is the end result of photosynthesis, root growth, water and nutrient uptake, flowering time, stress tolerance and much else, each controlled by its own genes. Traits built out of many small contributions are called <b>polygenic</b>, and most agriculturally important traits are polygenic. Salt resistance in the previous practical was the unusual case, not the typical one.</li>
+</ul>""",
+
+# --- Step 4: reading the learned weights ----------------------------------------
+"""<ul>
+<li><b>What one bar tells you.</b> The <b>direction</b> says which way that marker pushes: a bar above zero means plants carrying a 1 there tend to yield <em>more</em>, a bar below zero means they tend to yield <em>less</em>. The <b>height</b> says how big that push is, in the units of the trait. So a bar of +2 is the model saying "carrying a 1 at this marker is worth about 2 extra units of yield, holding the other markers fixed". A bar near zero means the model found no consistent effect for that marker.</li>
+<li><b>Which markers matter.</b> Once the model has enough training plants, the picture is clear: a block of about ten markers at the very left of the plot (markers 0 to 9) all stand well above zero, and a small block around markers 20 to 22 sits below zero. Those are the markers that raise and lower yield respectively. Everything else hovers around zero. Train on only 5 or 10 plants and this structure is buried in noise; drag the slider up and watch the real pattern emerge from the clutter. That is worth doing, because it shows you what "the model needs enough data" actually looks like.</li>
+<li><b>How this differs from a Manhattan plot.</b> This is the key conceptual point of the practical, and it is easy to slide past. The two plots look similar but the bar heights mean different things. In a Manhattan plot the height is <b>evidence</b>: how confident we are that a marker is associated with the trait at all. It is always positive, it says nothing about the direction of the effect, and it grows without limit as you add more plants, because more data means more certainty. Here the height is an <b>effect size</b>: how much yield that marker is worth, with a sign. It does not grow as you add plants, it converges on the true value. Another way to put it: a Manhattan plot answers "is this marker involved?", one marker at a time; the weights plot answers "how much is this marker worth?", for all markers at once and taking the others into account.</li>
+</ul>""",
+
+# --- Step 5: predicted versus actual ---------------------------------------------
+"""<ul>
+<li><b>Why the predictions are not perfect.</b> Several reasons stack up, and none of them can be trained away. The biggest is that the phenotype is not purely genetic: two plants with identical DNA still yield differently because of soil, water, light and chance, and no model reading only DNA can predict that part. On top of that the model has seen a limited number of training plants, so its 50 weights are estimates rather than truths; the markers we measured may not be the causal variants themselves, only positions that happen to sit near them; and the model assumes contributions simply add up, whereas real genes interact. The scatter around the diagonal is the honest visual summary of all of that, and a model that sat exactly on the line would be a warning sign, not a triumph.</li>
+<li><b>The unseen plants, and why they matter.</b> The yellow points should sit around the diagonal much like the blue ones, so yes, the model still works on plants it never saw. That is the result you actually care about. The blue training points are not evidence of anything, because the model was fitted to them: a model can score well there simply by memorising, which teaches you nothing about the next plant. Only the held-out points estimate what happens when you use the model for real, on seedlings whose yield nobody has measured, which is the entire purpose of the exercise. Set the training size very low and watch the two groups come apart: the model still tracks the blue points reasonably while the yellow ones scatter badly. That gap is overfitting, and testing on unseen plants is how you catch it.</li>
+</ul>""",
+
+# --- Step 6: the breeding cycles ---------------------------------------------------
+"""<ul>
+<li><b>Reading success off the graph.</b> Compare the two lines, not the green one on its own. Both programmes start from the same population, so any gap between them is caused by the selection and nothing else. The green line should climb steadily cycle after cycle while the blue control wanders roughly sideways, drifting up or down by chance. If the green line is not pulling away from the blue one, the selection is not doing anything, whatever the absolute yield happens to be. This is why the control matters: without it you could mistake ordinary variation between generations for progress.</li>
+<li><b>Passing the elite line.</b> The dashed line is the best variety farmers currently grow, so crossing it means the breeding programme has produced something better than today's best. It is possible because the elite variety is good but not perfect: it carries most of the favourable alleles but is missing one, and no single existing plant happens to combine every favourable allele at once. The variation to do better is already present in the population, scattered across different individuals. Selection does not create anything new; it <b>assembles</b> favourable alleles that were already there into one plant. That is also why progress eventually slows: once the favourable alleles are all fixed, there is nothing left to assemble.</li>
+<li><b>Would it work for a single-marker trait?</b> Yes, it would work, but it would be the wrong tool. The model would simply learn one large weight on Marker 12 and near-zero weights everywhere else, and selecting on the predicted value would amount to selecting on Marker 12. You would get the right answer by an expensive route: genotyping every marker and fitting a model in order to reproduce what a single marker test tells you directly and far more cheaply. There is also a real cost to the detour, since with a small training population the model may spread the effect across nearby markers or attach weight to markers that are only there by chance. The rule of thumb: use marker assisted selection when one marker explains most of the trait, and genomic selection when no single marker does.</li>
+<li><b>Limitations.</b> The most important one is that the model is only valid for the population it was trained on. Its weights are not statements about biology, they are statements about which markers happened to travel with the causal genes <em>in that population</em>. Apply it to unrelated material and those associations may be weaker, absent or reversed, and the predictions degrade badly. The same applies across environments: a model trained on yield in one climate can rank plants wrongly in another, because the genes that matter are not the same ones. Then there are the slower problems. The associations decay over generations as recombination separates markers from the genes they were standing in for, so the model has to be retrained on new measured plants every so often. Selecting hard on predictions shrinks genetic variation each cycle, so gains get smaller and the population becomes inbred, and a model that only knows about yield will happily drive yield up while quietly discarding disease resistance or drought tolerance that nobody told it to protect.</li>
+</ul>""",
+]
+
+
+# One entry per <div class="callout q"> block in docs/transcriptomics_clustering.html,
+# in page order. The specific numbers below were checked against the embedded
+# dataset, so they will match what students actually see on the page.
+TRANSCRIPTOMICS_CLUSTERING_ANSWERS = [
+
+# --- Step 1: the experimental design ---------------------------------------------
+"""<ul>
+<li><b>The three treatments and why compare them.</b> <b>MOCK</b> is the control: the plant is infiltrated with liquid but receives no bacteria at all. <b>AVR</b> is infection with an avirulent strain, one the plant recognises and successfully fights off. <b>VIR</b> is infection with a virulent strain, one that evades the plant's defences and causes disease. Having all three lets you separate three different things that would otherwise be tangled together. Comparing either infection against MOCK tells you what the bacteria did, as opposed to what the handling and infiltration did. Comparing AVR against VIR tells you what a <em>successful</em> defence looks like, as opposed to an unsuccessful one. Without MOCK you could not tell a defence response from a wounding response, and without the AVR/VIR pair you could not tell resistance from mere infection.</li>
+<li><b>Why several time points.</b> Because a defence response is a sequence of events, not a state. The plant has to detect the bacteria, pass the signal on, switch on transcription factors, and only then produce defence proteins, and those stages happen minutes to hours apart. A single snapshot would catch one frame of that and you would have no way of knowing which. Several time points let you see the order in which genes come on, which is the closest this kind of data gets to telling you what causes what, and they also protect you from picking the wrong moment: sample too early and nothing has happened yet, too late and the response is already over.</li>
+</ul>""",
+
+# --- Step 2: reading the clustered heatmap ------------------------------------------
+"""<ul>
+<li><b>Rows, columns and colours.</b> Each <b>row</b> is one of the 500 genes and each <b>column</b> is one of the 9 samples, one treatment at one time point. The <b>colour</b> of a cell is that gene's z-scored expression in that sample: red means the gene is more active than its own average across the nine samples, blue means less active, and pale means about average. Because the scores are computed per gene, colours are only comparable <em>along</em> a row. A red cell does not mean the gene is highly expressed in absolute terms, only that it is high for that gene.</li>
+<li><b>Is AVR closer to VIR or to MOCK? To VIR.</b> The dendrogram shows it twice over. At 1 hour, AVR_1 and VIR_1 merge with each other first, at a very short distance, and MOCK_1 only joins them afterwards. Among the later samples the same thing happens one level up: the two AVR samples form a pair, the two VIR samples form a pair, and those two pairs join <em>each other</em> before the MOCK pair joins them. Biologically this makes sense once you stop reading the names. Avirulent and virulent sound like opposites, but from the plant's point of view both mean bacteria are present: it detects them, mounts an attack, diverts resources away from growth. MOCK is the odd one out, because nothing is attacking it at all. The difference between winning and losing turns out to be smaller than the difference between being attacked and not being attacked.</li>
+<li><b>Treatment or time point? Both, at different levels, and this is the interesting part.</b> The very first split in the tree separates the three 1-hour samples from all six later ones, so at the coarsest level <b>time</b> dominates. But look inside the later group and the structure is entirely by <b>treatment</b>: AVR pairs with AVR, VIR with VIR, MOCK with MOCK, across time points. So time is the bigger effect overall while treatment is what organises the samples once the 1-hour block is set aside. The reason the 1-hour samples are so distinctive is worth pausing on: all three of them cluster together, including MOCK, so whatever makes them special cannot be the bacteria. It is the handling, wounding and infiltration that every plant went through, plus the time of day. The practical consequence is that you should always compare an infected sample against MOCK <em>at the same time point</em>, never against an earlier one.</li>
+<li><b>The clustering in your own words.</b> Something along these lines: the algorithm knew nothing about treatments or time points, it only saw 9 columns of numbers, and yet it recovered the design of the experiment. It put the earliest samples together because they share a strong handling response, and then grouped the rest by treatment, with the two infected treatments closer to each other than either is to the uninfected control. That is a genuinely useful result, and it doubles as a sanity check: if replicates or matching conditions had <em>not</em> grouped together, you would suspect a technical problem such as a mislabelled sample or a batch effect long before you started interpreting individual genes.</li>
+</ul>""",
+
+# --- Step 3: choosing a clustering --------------------------------------------------
+"""<ul>
+<li><b>How many clusters, and is there a right answer? No, there is not, and the honest answer is a judgement.</b> Four is a defensible choice at the default settings, because it gives four groups whose average profiles have visibly different shapes: one large group that peaks at 1 hour in every treatment, one large group that rises late, a small group of about 18 genes that rises specifically in AVR at 6 and 12 hours, and a small group of about 21 genes driven almost entirely by one unusual sample. Push the slider higher and you mostly cut the two big groups into smaller pieces with the same shape, which adds detail without adding meaning. The real test is not statistical, it is whether the groups you get are interpretable and whether your conclusions survive a change of settings. If a story only appears at one particular value of k, it is not a story.</li>
+<li><b>What changes when you switch the settings.</b> <b>Linkage</b> matters enormously here. <em>Average</em> and <em>complete</em> both give sensibly sized groups, with complete producing slightly more even ones, because it refuses to merge two clusters unless even their most distant members are close, which keeps clusters compact. <em>Single</em> linkage collapses: at k = 4 it hands you one cluster of 497 genes and three single-gene clusters. That is the classic failure called <b>chaining</b>. Single linkage merges two clusters as soon as their <em>closest</em> members are close, so one gene sitting between two groups is enough to fuse them, and the process snowballs until almost everything is in one clump, leaving only true outliers behind. <b>Distance</b>, by contrast, barely matters on this dataset, which is a surprise worth explaining. The values were z-scored per gene, so every gene is already on the same scale, and for vectors like that Euclidean distance is just a rescaling of correlation distance. The two give nearly identical trees here. On raw, unscaled expression they would differ a great deal, because Euclidean would separate genes by how strongly they are expressed while correlation would group genes by the shape of their response regardless of level.</li>
+<li><b>Which cluster to follow up, and how to decide.</b> The small cluster of about 18 genes that rises in AVR at 6 and 12 hours is the best candidate. The criterion is not that it changes a lot, but that it changes <em>where the biology is interesting</em>: it is high in the treatment where the plant successfully defends itself, much weaker in VIR, and flat in MOCK, so the handling cannot explain it. Compare that with the large cluster that peaks at 1 hour, which rises just as much in MOCK and therefore cannot be about the bacteria at all, and with the small cluster driven by a single odd sample, which looks striking but is most likely a technical artefact. So the decision rule is: prefer a cluster whose pattern lines up with a comparison you deliberately built into the experiment, be suspicious of one that is driven by a single sample, and check that the genes in it are more than a handful before you build a story on them. The next practical takes exactly this cluster and asks what the genes in it actually do.</li>
+</ul>""",
+
+# --- Step 4: the correlation network ---------------------------------------------------
+"""<ul>
+<li><b>What the threshold does.</b> It sets how strong a correlation has to be before two genes are joined, so it controls how much of the web survives. At 0.85 almost every gene is connected to something, roughly 15,000 edges among 489 genes, and the result is a hairball in which nothing stands out. Raise it to 0.95 and you are down to about 2,900 edges among 378 genes, with distinct knots becoming visible. At 0.99 only about 156 edges and 118 genes remain, leaving a few small, very tightly linked groups. Note that the threshold is a choice you make, not something the data tells you: too low and everything looks connected to everything, too high and you discard real relationships. Move it up and down and check whether the group you are interested in holds together across a range of values, because a knot that only exists at one threshold is not a finding.</li>
+<li><b>What an edge means biologically.</b> It means the two genes rise and fall together across the nine samples, which is evidence that they are <b>co-regulated</b>, that is switched on and off by the same signal, perhaps the same transcription factor, or as part of the same pathway or protein complex. That is a genuinely useful hint, and it is the basis of the guilt-by-association reasoning used to guess what an uncharacterised gene does. But be careful about what it does <em>not</em> mean. It is not evidence that the two proteins touch each other, nor that one controls the other, nor that either is doing anything causal. It also does not take much to produce: with only 9 samples, and a shared response as strong as the 1-hour handling effect, plenty of gene pairs will correlate above 0.95 for reasons that have nothing to do with a shared function. Correlation networks generate hypotheses; they do not test them.</li>
+<li><b>Relation to the hierarchical clusters. Yes, they largely agree, and they should.</b> Both are built from the same correlations between the same genes, so a set of genes that move together will show up as a branch in the tree and as a knot in the network. What differs is the shape of the answer. Hierarchical clustering forces every gene into exactly one group at whatever height you cut, whether or not it really belongs anywhere. The network drops genes with no strong partner altogether, so it is happy to leave a gene out, and it lets a gene sit between two knots and belong to both. So the network is better at showing you which genes are peripheral and which sit at a junction, while clustering is better when you want a tidy partition of every gene. Seeing the same grouping in both is reassuring, since it means the structure is in the data rather than in one method's assumptions.</li>
+<li><b>Which genes to study next, and what experiment.</b> Central genes are a reasonable place to start, but say why rather than just naming the top of the list. A gene with high <em>degree</em> is correlated with many others, so it may sit at the heart of a co-regulated module; a gene with high <em>betweenness</em> sits on the paths between different knots, which makes it a candidate for connecting two processes. Both are hypotheses about position in a correlation graph, not measured facts about regulation, so the proposal has to be tested. A concrete suggestion: take two or three high-centrality genes from the knot that corresponds to the AVR-specific cluster, check what is already known about them in a database such as UniProt, obtain or generate knockout and overexpression lines, repeat the same infection experiment with AVR, VIR and MOCK, and measure both the disease outcome and the expression of the genes they were correlated with. If knocking the gene out flattens the response of its neighbours, you have evidence that it really is upstream of them rather than merely correlated with them. And since the aim is resilient crops rather than <em>Arabidopsis</em>, the last step is to find the equivalent gene in a crop species, which is what the translational biology practical does.</li>
+</ul>""",
+]
+
+
+BADGE_OLD = '<div class="badge">Climate-Resilient Crops · Data Tutorial</div>'
+BADGE_NEW = '<div class="badge">Climate-Resilient Crops · Answer Model</div>'
+
+# Every student page closes its hero the same way: a "By the end of this practical"
+# paragraph, the learning-goals list, and a single link back to the index. The answer
+# page replaces all three with one intro paragraph and a two-link nav.
+HERO_RE = re.compile(
+    r' *<p style="text-align:left; max-width: \d+px; margin: 0 auto;">'
+    r'By the end of this practical.*?</ul>\n'
+    r' *<div class="nav">.*?</div>\n',
+    re.S,
+)
+
+# Anchor for the answer-callout styling. Present in every student page, and the
+# student pages deliberately do not carry a .callout.answer rule of their own.
+ANSWER_CSS_ANCHOR = "  .callout.q strong { color: var(--accent-2); }\n"
+ANSWER_CSS = """  .callout.answer { border-left-color: var(--accent); background: rgba(76,195,138,.09); color: var(--ink); margin-top: 12px; }
   .callout.answer strong { color: var(--accent); }
-  .callout.answer ul { margin: 6px 0 0; }"""
+  .callout.answer ul { margin: 6px 0 0; }
+"""
 
 
+# name:  the practical's <h1>, used to locate it in the student page
+# short: what the answer page calls itself, when the full <h1> is too long a title
+# tail:  the sentence that follows "(green box)." in the answer page's intro
 PAGES = {
+    "marker_assisted_selection": {
+        "name": "Marker Assisted Selection",
+        "answers": MARKER_ASSISTED_SELECTION_ANSWERS,
+        "tail": "All the interactive steps still work, so you can keep running the GWAS and "
+                "the breeding programme while you read, and the self-test quiz at the end is unchanged.",
+    },
+    "genomic_selection": {
+        "name": "Genomic Selection",
+        "answers": GENOMIC_SELECTION_ANSWERS,
+        "tail": "All the interactive steps still work, so you can keep retraining the model and "
+                "running breeding cycles while you read, and the self-test quiz at the end is unchanged.",
+    },
+    "transcriptomics_clustering": {
+        "name": "Transcriptomics &amp; Clustering",
+        "answers": TRANSCRIPTOMICS_CLUSTERING_ANSWERS,
+        "tail": "All the interactive steps still work, so you can keep re-clustering the data and "
+                "exploring the network while you read, and the self-test quiz at the end is unchanged.",
+    },
+    "mechanistic_model": {
+        "name": "Mechanistic Modelling of a Gene Regulatory Network",
+        "short": "Mechanistic Modelling",
+        "answers": MECHANISTIC_MODEL_ANSWERS,
+        "tail": "All the interactive steps still work, so you can keep simulating droughts and "
+                "knockouts while you read, and the self-test quiz at the end is unchanged.",
+    },
     "deep_learning": {
-        "src": "deep_learning.html",
-        "dst": "deep_learning_answers.html",
+        "name": "Deep Learning on Leaf Images",
         "answers": DEEP_LEARNING_ANSWERS,
-        "swaps": [
-            ("<title>Deep Learning on Leaf Images</title>",
-             "<title>Deep Learning on Leaf Images: Answer Model</title>"),
-            ('<div class="badge">EduXR · Plant Breeding</div>',
-             '<div class="badge">EduXR · Answer Model</div>'),
-            ("<h1>Deep Learning on Leaf Images</h1>",
-             "<h1>Deep Learning on Leaf Images: Answer Model</h1>"),
-            (DL_HERO_OLD, DL_HERO_NEW),
-        ],
+        "tail": "All the interactive steps still work, so you can keep training models while you "
+                "read, and the self-test quiz at the end is unchanged.",
     },
     "go_enrichment": {
-        "src": "go_enrichment.html",
-        "dst": "go_enrichment_answers.html",
+        "name": "GO Enrichment Analysis",
         "answers": GO_ENRICHMENT_ANSWERS,
-        "swaps": [
-            ("<title>GO Enrichment Analysis</title>",
-             "<title>GO Enrichment Analysis: Answer Model</title>"),
-            ('<div class="badge">EduXR · Plant Breeding</div>',
-             '<div class="badge">EduXR · Answer Model</div>'),
-            ("<h1>GO Enrichment Analysis</h1>",
-             "<h1>GO Enrichment Analysis: Answer Model</h1>"),
-            (GO_HERO_OLD, GO_HERO_NEW),
-            (ANSWER_CSS_OLD, ANSWER_CSS_NEW),
-        ],
+        "tail": "All the interactive steps still work, so you can keep clustering and re-running "
+                "the analysis while you read, and the self-test quiz at the end is unchanged.",
     },
     "translational_biology": {
-        "src": "translational_biology.html",
-        "dst": "translational_biology_answers.html",
+        "name": "Translational Biology",
         "answers": TRANSLATIONAL_BIOLOGY_ANSWERS,
-        "swaps": [
-            ("<title>Translational Biology</title>",
-             "<title>Translational Biology: Answer Model</title>"),
-            ('<div class="badge">EduXR &middot; Plant Breeding</div>',
-             '<div class="badge">EduXR &middot; Answer Model</div>'),
-            ("<h1>Translational Biology</h1>",
-             "<h1>Translational Biology: Answer Model</h1>"),
-            (TB_HERO_OLD, TB_HERO_NEW),
-            (ANSWER_CSS_OLD, ANSWER_CSS_NEW),
-        ],
+        "tail": "All the interactive steps still work, so you can keep looking genes up and "
+                "aligning proteins while you read, and the self-test quiz at the end is unchanged.",
     },
 }
 
 
+def _replace_once(html: str, old: str, new: str, where: str) -> str:
+    """Substitute a fixed string, refusing to guess if it is not there exactly once."""
+    if html.count(old) != 1:
+        raise SystemExit(
+            f"{where}: expected exactly one occurrence of {old[:60]!r}, found {html.count(old)}"
+        )
+    return html.replace(old, new)
+
+
 def build_page(key: str) -> None:
     page = PAGES[key]
-    src, dst = DOCS / page["src"], DOCS / page["dst"]
-    answers = page["answers"]
+    src, dst = DOCS / f"{key}.html", DOCS / f"{key}_answers.html"
+    answers, name = page["answers"], page["name"]
+    short = page.get("short", name)
     html = src.read_text(encoding="utf-8")
 
     blocks = list(re.finditer(r'<div class="callout q">.*?</div>', html, re.S))
     if len(blocks) != len(answers):
         raise SystemExit(
-            f"docs/{page['src']} has {len(blocks)} question blocks but "
+            f"docs/{src.name} has {len(blocks)} question blocks but "
             f"{len(answers)} answers are defined. Update {key} in this script."
         )
 
@@ -311,14 +448,28 @@ def build_page(key: str) -> None:
         )
         html = html[: block.end()] + rendered + html[block.end():]
 
-    # Header / title / navigation.
-    for old, new in page["swaps"]:
-        if html.count(old) != 1:
-            raise SystemExit(
-                f"docs/{page['src']}: expected exactly one occurrence of {old[:60]!r}, "
-                f"found {html.count(old)}"
-            )
-        html = html.replace(old, new)
+    # Title, heading and badge. The <title> is rewritten rather than suffixed, because
+    # a couple of student pages carry an extra phrase there that the answer page drops.
+    html, n = re.subn(r"<title>.*?</title>", f"<title>{short}: Answer Model</title>", html, count=1)
+    if n != 1:
+        raise SystemExit(f"docs/{src.name}: no <title> to replace")
+    html = _replace_once(html, f"<h1>{name}</h1>", f"<h1>{short}: Answer Model</h1>", src.name)
+    html = _replace_once(html, BADGE_OLD, BADGE_NEW, src.name)
+
+    # Learning goals and the back-link become the answer-model intro and nav.
+    hero = (
+        f'  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the '
+        f'{short} practical. Every ❓ question is followed by a worked model answer (green box). '
+        f'{page["tail"]}</p>\n'
+        f'  <div class="nav"><a href="{src.name}">&larr; Student version</a> &nbsp;·&nbsp; '
+        f'<a href="index.html">All practicals</a></div>\n'
+    )
+    html, n = HERO_RE.subn(lambda _: hero, html, count=1)
+    if n != 1:
+        raise SystemExit(f"docs/{src.name}: could not find the hero block to replace")
+
+    # Styling for the answer callouts, which only the generated page needs.
+    html = _replace_once(html, ANSWER_CSS_ANCHOR, ANSWER_CSS_ANCHOR + ANSWER_CSS, src.name)
 
     dst.write_text(html, encoding="utf-8")
     print(f"wrote {dst} ({dst.stat().st_size/1024:.0f} KB, "

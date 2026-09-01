@@ -53,6 +53,9 @@
              border-radius: 8px; margin: 16px 0; color: var(--muted); }
   .callout.q { border-left-color: var(--accent-2); }
   .callout.q strong { color: var(--accent-2); }
+  .callout.answer { border-left-color: var(--accent); background: rgba(76,195,138,.09); color: var(--ink); margin-top: 12px; }
+  .callout.answer strong { color: var(--accent); }
+  .callout.answer ul { margin: 6px 0 0; }
   .callout ul { margin: 8px 0 0; padding-left: 20px; }
   .callout li { margin: 4px 0; }
   .callout details { margin-top: 10px; }
@@ -60,10 +63,6 @@
   .callout details[open] summary { margin-bottom: 6px; }
   .callout details > :not(summary) { font-size: 13px; }
   .callout.info { border-left-color: var(--accent); color: var(--ink); }
-  /* used by the generated answer-model page */
-  .callout.answer { border-left-color: var(--accent); background: rgba(76,195,138,.09); color: var(--ink); margin-top: 12px; }
-  .callout.answer strong { color: var(--accent); }
-  .callout.answer ul { margin: 6px 0 0; }
 
   .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin: 18px 0; }
   .controls label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
@@ -151,9 +150,9 @@
 <body>
 
 <header class="hero">
-  <div class="badge">EduXR · Answer Model</div>
+  <div class="badge">Climate-Resilient Crops · Answer Model</div>
   <h1>GO Enrichment Analysis: Answer Model</h1>
-  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the GO-enrichment practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep clustering and re-running the analysis while you read, and the self-test quiz at the end is unchanged.</p>
+  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the GO Enrichment Analysis practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep clustering and re-running the analysis while you read, and the self-test quiz at the end is unchanged.</p>
   <div class="nav"><a href="go_enrichment.html">&larr; Student version</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a></div>
 </header>
 
@@ -480,7 +479,7 @@
   </section>
 
   <footer>
-    This HTML and JavaScript was created with the help of Claude Code, based on the original Jupyter notebooks.
+    This HTML and JavaScript was created with the help of Claude Code, based on the original Jupyter notebooks by Ben Noordijk.
   </footer>
 </div>
 

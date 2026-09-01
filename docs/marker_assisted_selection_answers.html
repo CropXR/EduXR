@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Marker Assisted Selection: Interactive Practical</title>
+<title>Marker Assisted Selection: Answer Model</title>
 <style>
   :root {
     --bg: #0f1720;
@@ -91,6 +91,9 @@
   }
   .callout.q { border-left-color: var(--accent-2); }
   .callout.q strong { color: var(--accent-2); }
+  .callout.answer { border-left-color: var(--accent); background: rgba(76,195,138,.09); color: var(--ink); margin-top: 12px; }
+  .callout.answer strong { color: var(--accent); }
+  .callout.answer ul { margin: 6px 0 0; }
   .callout ul { margin: 8px 0 0; padding-left: 20px; }
   .callout details { margin-top: 8px; }
   .callout details summary { cursor: pointer; color: var(--accent-3); font-size: 13px; width: fit-content; }
@@ -213,15 +216,10 @@
 <body>
 
 <header class="hero">
-  <div class="badge">Climate-Resilient Crops · Data Tutorial</div>
-  <h1>Marker Assisted Selection</h1>
-  <p style="text-align:left; max-width: 620px; margin: 0 auto;">By the end of this practical you will be able to:</p>
-  <ul style="text-align:left; color: var(--muted); max-width: 620px; margin: 8px auto 0; padding-left: 20px;">
-    <li>Explain what marker assisted selection is and how it differs from genomic selection</li>
-    <li>Describe how a computational method (a GWAS) guides which plants get crossed in a breeding programme</li>
-    <li>Interpret Manhattan plots and simple backcrossing schemes, and describe what each is used for</li>
-  </ul>
-  <div class="nav"><a href="index.html">&larr; All practicals</a></div>
+  <div class="badge">Climate-Resilient Crops · Answer Model</div>
+  <h1>Marker Assisted Selection: Answer Model</h1>
+  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the Marker Assisted Selection practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep running the GWAS and the breeding programme while you read, and the self-test quiz at the end is unchanged.</p>
+  <div class="nav"><a href="marker_assisted_selection.html">&larr; Student version</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a></div>
 </header>
 
 <div class="wrap">
@@ -254,6 +252,12 @@
       <strong>❓ Question</strong>
       <ul>
         <li>What do the rows and columns in the table above represent?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Rows and columns.</b> Each <b>row</b> is one individual plant in the population. Each of the columns labelled M0 to M49 is one <b>marker</b>, that is one fixed position in the DNA, and the 0 or 1 in the cell says which of the two variants that particular plant carries at that particular position. The last two columns are different in kind: they are not DNA at all, they are the two <b>phenotypes</b> we measured on the plant, its salt resistance and its yield. That mix is the whole point of the table. Everything that follows comes from asking whether any of the 0/1 columns lines up with one of the two measured columns.</li>
       </ul>
     </div>
   </section>
@@ -291,6 +295,14 @@
             Statistical tests become more reliable (more <em>powerful</em>) the more data points you give them, so the evidence for a real marker gets stronger as the population grows.
           </details>
         </li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>What the plot shows, and why diversity matters.</b> Each bar is one marker, and its height is <code>-log10(p)</code> from a separate statistical test asking whether plants carrying a 1 at that marker have a different salt resistance from plants carrying a 0. A tall bar means that difference is unlikely to be a fluke. The population has to be genetically diverse because the test is a <em>comparison</em>: if every plant carried a 1 at a marker, there would be no 0 group to compare against, the test would have nothing to work with, and the bar would be flat. No variation means no information, however many plants you measure.</li>
+      <li><b>The promising marker.</b> It is <b>Marker 12</b>, the single bar that climbs far above all the others and above the significance line. Click it and the scatter plot below separates cleanly into two horizontal bands: the plants with a 0 sit around 30 percent salt resistance, the plants with a 1 sit around 80. The two groups barely overlap, which is exactly what a marker with a large effect looks like. Try clicking a few other bars for contrast; there the two groups sit on top of each other and you cannot tell them apart.</li>
+      <li><b>Growing the population.</b> At 3 plants the plot is noise: several bars look tall, and Marker 12 is not obviously special. As you drag towards 100, the bar at Marker 12 climbs higher and higher while every other bar stays low and flat. Nothing about the biology changed, only the amount of evidence. With few plants a coincidence is easy, so no marker can be distinguished from chance; with many plants a real difference accumulates evidence and the coincidences do not. This is why a GWAS needs hundreds or thousands of individuals, and why a peak found in a small population should be treated with suspicion.</li>
       </ul>
     </div>
   </section>
@@ -355,6 +367,15 @@
         <li>Try a few rounds where you choose "don't filter (keep all)". What happens to salt resistance, and why?</li>
       </ul>
     </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>What to cross with, and what to select on.</b> Cross back to the <b>elite (agricultural) variety</b> every round, and keep the offspring with <b>Marker 12 = 1</b>. The reasoning has two halves that pull in opposite directions. Each cross to the elite parent replaces roughly half of the remaining donor genome with elite genome, so after a few rounds the plants are almost entirely elite and the yield climbs back towards the elite level. But that same random halving would also throw away the salt-resistance allele about half the time, which is why you filter: selecting on Marker 12 = 1 protects the one piece of donor DNA you actually wanted. Crossing back to the donor, or to the population itself, makes no progress towards elite yield, and selecting on any other marker does nothing to protect resistance.</li>
+      <li><b>Why select on a marker rather than on the plant.</b> You can read a marker from a leaf sample of a seedling, days after germination, instead of growing the plant to maturity, and you never have to expose it to salt to find out whether it is resistant. That is faster, cheaper and non-destructive. It is also more reliable: a measured phenotype is the sum of the genetics and the environment, so a resistant plant in a bad spot can look sensitive and mislead you, whereas the marker reads the genetics directly. In this simulation you can see the environment as the noise term that scatters the points in the step 2 scatter plot.</li>
+      <li><b>Reading success off the graph.</b> Success is <em>both</em> lines ending up where you want them, not one. Salt resistance should start high and stay high, near 80, round after round. Yield should start low, because the donor is a poor yielder, and climb towards the dashed elite target line as the elite genome is recovered. If salt resistance collapses you lost the allele; if yield flattens out well below the dashed line you are not backcrossing to the elite parent. Watch the round cards too: they tell you how many of the 20 offspring passed the filter each round.</li>
+      <li><b>Crossing without a filter.</b> Salt resistance drifts down, usually in steps, and often collapses to around 30 within a few rounds. The reason is chance rather than selection: each offspring inherits each marker from one parent or the other at random, so an offspring of a resistant plant crossed with the elite has only a 50 percent chance of receiving the resistance allele. With no filter, the fraction of carriers halves on average every round, and once it reaches zero it cannot come back, because nothing in the remaining population carries the allele any more. This is the single most important thing the simulation shows: the cross alone does not preserve a trait, the <em>selection</em> does.</li>
+      </ul>
+    </div>
   </section>
 
   <!-- STEP 5 -->
@@ -377,6 +398,14 @@
         <li>Grow the population to a large size. How does this Manhattan plot compare to the one you made for salt resistance in step 2?</li>
         <li>Does yield look like it is controlled by a single marker, or by many? What is your evidence from the plot?</li>
         <li>What would that mean for marker assisted selection of yield? (In the next practical you will meet a method built for exactly this situation: genomic selection.)</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Comparing the two plots.</b> They look completely different, and the difference does not go away as the population grows. The salt plot develops one dominant spike at Marker 12 that keeps climbing. The yield plot instead develops a whole cluster of modest bars, none of which dominates, and many of them stay near or below the significance line even at 100 plants. Adding plants sharpens the picture but never produces a single obvious winner.</li>
+      <li><b>One marker or many.</b> Many. The evidence is in the shape of the plot. No single bar towers over the rest the way Marker 12 does. That pattern is what a <b>polygenic</b> trait looks like, one where many genes each contribute a small amount to the phenotype, and it is the normal situation for complex traits like yield, height or flowering time.</li>
+      <li><b>What that means for marker assisted selection.</b> It largely breaks the method. Selecting on any one of those markers gains you only a sliver of the trait, and stacking them one at a time would take an impractical number of crossing rounds, with each round risking the loss of what you gained before. Worse, a marker with a small effect is hard to distinguish from a false positive, so you may spend rounds selecting on something that does nothing. The method needs a single marker carrying most of the effect, and yield does not have one. What you need instead is a way to use <em>all</em> the markers at once, adding up their small contributions into one number per plant, which is exactly what genomic selection does.</li>
       </ul>
     </div>
   </section>
