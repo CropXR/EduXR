@@ -369,14 +369,22 @@
     </div>
     <div class="chartbox">
       <canvas id="manhattan-yield" height="300"></canvas>
-      <p class="chart-hint">Manhattan plot for Yield, instead of Salt Resistance.</p>
+      <p class="chart-hint">Manhattan plot for Yield, instead of Salt Resistance. &#128070; Click a bar to inspect that marker below.</p>
+    </div>
+    <div id="scatter-yield-wrap" style="display:none">
+      <h3>Relation between Marker <span id="scatter-yield-marker">?</span> and Yield</h3>
+      <div class="chartbox">
+        <canvas id="scatter-yield" height="260"></canvas>
+      </div>
     </div>
     <div class="callout q">
       <strong>❓ Questions</strong>
       <ul>
         <li>Grow the population to a large size. How does this Manhattan plot compare to the one you made for salt resistance in step 2?</li>
+        <li>Click the tallest bars one by one. Does any single marker split the plants into a clear low-yield and high-yield group, the way Marker 12 did for salt resistance?</li>
         <li>Does yield look like it is controlled by a single marker, or by many? What is your evidence from the plot?</li>
         <li>What would that mean for marker assisted selection of yield? (In the next practical you will meet a method built for exactly this situation: genomic selection.)</li>
+        <li><b>Extra time?</b> Go back to the simulator in step 4 and try to breed for <em>maximum yield</em> instead of for salt resistance.</li>
       </ul>
     </div>
   </section>
@@ -595,10 +603,11 @@ function renderManhattan(){
   gwasCache = buildGwasData('salt', gwas.size);
   drawManhattan(document.getElementById('manhattan'), gwasCache.negLogP, 'salt', gwas.selected);
 }
-const gwasYield = { size: 3 };
+const gwasYield = { size: 3, selected: null };
+let gwasYieldCache = null;  // yield data, kept for its scatter plot
 function renderYieldManhattan(){
-  const d = buildGwasData('yield', gwasYield.size);
-  drawManhattan(document.getElementById('manhattan-yield'), d.negLogP, 'yield', null);
+  gwasYieldCache = buildGwasData('yield', gwasYield.size);
+  drawManhattan(document.getElementById('manhattan-yield'), gwasYieldCache.negLogP, 'yield', gwasYield.selected);
 }
 function drawManhattan(canvas, data, trait, selected){
   const {ctx, W, H} = setupCanvas(canvas, 300);
@@ -646,23 +655,46 @@ function drawManhattan(canvas, data, trait, selected){
 
   canvas._bars = { padL, padT, plotH, bw };
 }
-document.getElementById('manhattan').addEventListener('click', e=>{
-  const canvas = e.target;
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const {padL, bw} = canvas._bars;
-  const m = Math.floor((x-padL)/bw);
-  if (m>=0 && m<N_MARKERS){ gwas.selected = m; renderManhattan(); renderScatter(m); }
+// turn a click anywhere on a Manhattan plot into the marker index under the cursor
+function attachManhattanClick(canvasId, onPick){
+  document.getElementById(canvasId).addEventListener('click', e=>{
+    const canvas = e.currentTarget;
+    if (!canvas._bars) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const {padL, bw} = canvas._bars;
+    const m = Math.floor((x-padL)/bw);
+    if (m>=0 && m<N_MARKERS) onPick(m);
+  });
+}
+attachManhattanClick('manhattan', m=>{
+  gwas.selected = m; renderManhattan(); renderScatter(SCATTER_SALT, m);
 });
-function renderScatter(m){
-  document.getElementById('scatter-wrap').style.display='block';
-  document.getElementById('scatter-marker').textContent = m;
-  const canvas = document.getElementById('scatter');
+attachManhattanClick('manhattan-yield', m=>{
+  gwasYield.selected = m; renderYieldManhattan(); renderScatter(SCATTER_YIELD, m);
+});
+// the two scatter panels differ only in which data and labels they use
+const SCATTER_SALT = {
+  wrap:'scatter-wrap', markerLabel:'scatter-marker', canvas:'scatter', caption:'scatter-caption',
+  yLabel:'Salt resistance', traitName:'salt resistance', dotColor:'rgba(76,195,138,.85)',
+  data: ()=>gwasCache
+};
+const SCATTER_YIELD = {
+  wrap:'scatter-yield-wrap', markerLabel:'scatter-yield-marker', canvas:'scatter-yield',
+  yLabel:'Yield', dotColor:'rgba(242,193,78,.85)', caption:null,
+  data: ()=>gwasYieldCache
+};
+function renderScatter(cfg, m){
+  const dat = cfg.data();
+  if (!dat) return;
+  document.getElementById(cfg.wrap).style.display='block';
+  document.getElementById(cfg.markerLabel).textContent = m;
+  const canvas = document.getElementById(cfg.canvas);
   const {ctx, W, H} = setupCanvas(canvas, 260);
   const padL=46, padR=14, padT=16, padB=40;
   const plotW=W-padL-padR, plotH=H-padT-padB;
-  const xs = gwasCache.rows.map(r=>r[m]);
-  const ys = gwasCache.pheno;
+  const xs = dat.rows.map(r=>r[m]);
+  const ys = dat.pheno;
   const ymin = Math.min(...ys), ymax = Math.max(...ys);
   const yr = (ymax-ymin)||1;
   // axes
@@ -677,7 +709,7 @@ function renderScatter(m){
     const px = colX(v)+jitter;
     const py = padT+plotH - ((ys[i]-ymin)/yr)*plotH;
     meanY[v].push(ys[i]);
-    ctx.fillStyle = v===0? 'rgba(159,176,195,.8)':'rgba(76,195,138,.85)';
+    ctx.fillStyle = v===0? 'rgba(159,176,195,.8)' : cfg.dotColor;
     ctx.beginPath(); ctx.arc(px,py,4,0,2*Math.PI); ctx.fill();
   });
   // group means
@@ -693,29 +725,31 @@ function renderScatter(m){
   ctx.fillText('marker = 0', colX(0), padT+plotH+8);
   ctx.fillText('marker = 1', colX(1), padT+plotH+8);
   ctx.font='11px system-ui';
-  ctx.fillText('(black line = group average)', padL+plotW/2, padT+plotH+24);
+  ctx.fillText('(white line = group average)', padL+plotW/2, padT+plotH+24);
   // y title
   ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
-  ctx.fillText('Salt resistance',0,0); ctx.restore();
+  ctx.fillText(cfg.yLabel,0,0); ctx.restore();
 
+  if (!cfg.caption) return;
   const r = pearson(xs, ys);
   const p = corrPValue(r, xs.length);
-  const cap = document.getElementById('scatter-caption');
+  const cap = document.getElementById(cfg.caption);
   const strong = p < 0.001;
-  cap.innerHTML = `p-value ≈ <b>${p<1e-4 ? p.toExponential(1) : p.toFixed(4)}</b>. ` +
-    (strong ? 'The two groups clearly separate, so this marker <b>is</b> linked to the trait.'
-            : 'The two clouds overlap a lot, so there is little evidence this marker matters.');
+  cap.innerHTML = `p-value \u2248 <b>${p<1e-4 ? p.toExponential(1) : p.toFixed(4)}</b>. ` +
+    (strong ? `The two groups clearly separate, so this marker <b>is</b> linked to ${cfg.traitName}.`
+            : `The two clouds overlap a lot, so there is little evidence this marker matters for ${cfg.traitName}.`);
 }
 document.getElementById('gwas-size').addEventListener('input', e=>{
   gwas.size=+e.target.value;
   document.getElementById('gwas-size-val').textContent=gwas.size;
   renderManhattan();
-  if (gwas.selected!=null) renderScatter(gwas.selected);
+  if (gwas.selected!=null) renderScatter(SCATTER_SALT, gwas.selected);
 });
 document.getElementById('gwas-yield-size').addEventListener('input', e=>{
   gwasYield.size=+e.target.value;
   document.getElementById('gwas-yield-size-val').textContent=gwasYield.size;
   renderYieldManhattan();
+  if (gwasYield.selected!=null) renderScatter(SCATTER_YIELD, gwasYield.selected);
 });
 
 /* ============================================================
@@ -1006,9 +1040,10 @@ window.addEventListener('resize', ()=>{
   clearTimeout(rz);
   rz=setTimeout(()=>{
     renderManhattan();
-    if(gwas.selected!=null) renderScatter(gwas.selected);
+    if(gwas.selected!=null) renderScatter(SCATTER_SALT, gwas.selected);
     renderBcChart(bcState.rounds);   // redraw without wiping the student's rounds
     renderYieldManhattan();
+    if(gwasYield.selected!=null) renderScatter(SCATTER_YIELD, gwasYield.selected);
   },200);
 });
 </script>

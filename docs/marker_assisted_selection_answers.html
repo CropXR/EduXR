@@ -390,22 +390,33 @@
     </div>
     <div class="chartbox">
       <canvas id="manhattan-yield" height="300"></canvas>
-      <p class="chart-hint">Manhattan plot for Yield, instead of Salt Resistance.</p>
+      <p class="chart-hint">Manhattan plot for Yield, instead of Salt Resistance. &#128070; Click a bar to inspect that marker below.</p>
+    </div>
+    <div id="scatter-yield-wrap" style="display:none">
+      <h3>Relation between Marker <span id="scatter-yield-marker">?</span> and Yield</h3>
+      <div class="chartbox">
+        <canvas id="scatter-yield" height="260"></canvas>
+      </div>
     </div>
     <div class="callout q">
       <strong>❓ Questions</strong>
       <ul>
         <li>Grow the population to a large size. How does this Manhattan plot compare to the one you made for salt resistance in step 2?</li>
+        <li>Click the tallest bars one by one. Does any single marker split the plants into a clear low-yield and high-yield group, the way Marker 12 did for salt resistance?</li>
         <li>Does yield look like it is controlled by a single marker, or by many? What is your evidence from the plot?</li>
         <li>What would that mean for marker assisted selection of yield? (In the next practical you will meet a method built for exactly this situation: genomic selection.)</li>
+        <li><b>Extra time?</b> Go back to the simulator in step 4 and try to breed for <em>maximum yield</em> instead of for salt resistance.</li>
       </ul>
     </div>
     <div class="callout answer">
       <strong>✅ Answer</strong>
       <ul>
       <li><b>Comparing the two plots.</b> They look completely different, and the difference does not go away as the population grows. The salt plot develops one dominant spike at Marker 12 that keeps climbing. The yield plot instead develops a whole cluster of modest bars, none of which dominates, and many of them stay near or below the significance line even at 100 plants. Adding plants sharpens the picture but never produces a single obvious winner.</li>
+      <li><b>Clicking the tallest bars.</b> No, none of them does. Whichever bar you pick, the two clouds of points overlap heavily: plants with a 0 and plants with a 1 both spread over almost the whole range of yields, and the two group averages (the white lines) sit only a little apart. Compare that with Marker 12 in step 2, where the two groups formed two separate bands with a clear gap between them. The yield markers are not fake, each one really does shift the average slightly, but on its own each explains only a small part of why one plant yields more than another. That small shift is exactly why these bars stay modest instead of towering like Marker 12.</li>
       <li><b>One marker or many.</b> Many. The evidence is in the shape of the plot. No single bar towers over the rest the way Marker 12 does. That pattern is what a <b>polygenic</b> trait looks like, one where many genes each contribute a small amount to the phenotype, and it is the normal situation for complex traits like yield, height or flowering time.</li>
       <li><b>What that means for marker assisted selection.</b> It largely breaks the method. Selecting on any one of those markers gains you only a sliver of the trait, and stacking them one at a time would take an impractical number of crossing rounds, with each round risking the loss of what you gained before. Worse, a marker with a small effect is hard to distinguish from a false positive, so you may spend rounds selecting on something that does nothing. The method needs a single marker carrying most of the effect, and yield does not have one. What you need instead is a way to use <em>all</em> the markers at once, adding up their small contributions into one number per plant, which is exactly what genomic selection does.</li>
+      <li><b>Extra: breeding for maximum yield.</b> The first surprise is that the dashed elite line is a <b>ceiling</b>, not a target you can beat. Yield in this simulation is built from Markers 0 to 9, which each add to it, and Markers 20 to 22, which each subtract from it. The elite parent already carries a 1 at Markers 0 to 8 and a 0 at all three of the yield-lowering markers, so it is nearly the best plant these two parents can produce. It is missing only Marker 9, and the donor does not carry that one either. A cross can only shuffle the alleles the parents already have, it cannot invent one, so no amount of breeding here will take you above the elite level.<br>
+      Getting there is easy: cross to the elite variety every round and the yield line climbs towards the dashed line on its own, even with no filter at all, because every round replaces more donor genome with elite genome. If you filter on a yield marker instead (keeping Marker 20 = 0 to shed one of the donor's yield-lowering alleles, say, or one of Markers 0 to 8 = 1) yield climbs a little faster, but watch the green line while you do it: salt resistance drifts away and collapses, because you spent your one filter on something else. That is the real lesson of the exercise. Single-marker selection lets you protect exactly one thing per round, so with a trait built from a dozen markers you are always trading one gain against another. Selecting on Marker 12 = 1 and letting the backcrosses bring the yield back is the best compromise available to you here, and doing better than that needs a method that can weigh all the markers at once.</li>
       </ul>
     </div>
   </section>
@@ -624,10 +635,11 @@ function renderManhattan(){
   gwasCache = buildGwasData('salt', gwas.size);
   drawManhattan(document.getElementById('manhattan'), gwasCache.negLogP, 'salt', gwas.selected);
 }
-const gwasYield = { size: 3 };
+const gwasYield = { size: 3, selected: null };
+let gwasYieldCache = null;  // yield data, kept for its scatter plot
 function renderYieldManhattan(){
-  const d = buildGwasData('yield', gwasYield.size);
-  drawManhattan(document.getElementById('manhattan-yield'), d.negLogP, 'yield', null);
+  gwasYieldCache = buildGwasData('yield', gwasYield.size);
+  drawManhattan(document.getElementById('manhattan-yield'), gwasYieldCache.negLogP, 'yield', gwasYield.selected);
 }
 function drawManhattan(canvas, data, trait, selected){
   const {ctx, W, H} = setupCanvas(canvas, 300);
@@ -675,23 +687,46 @@ function drawManhattan(canvas, data, trait, selected){
 
   canvas._bars = { padL, padT, plotH, bw };
 }
-document.getElementById('manhattan').addEventListener('click', e=>{
-  const canvas = e.target;
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const {padL, bw} = canvas._bars;
-  const m = Math.floor((x-padL)/bw);
-  if (m>=0 && m<N_MARKERS){ gwas.selected = m; renderManhattan(); renderScatter(m); }
+// turn a click anywhere on a Manhattan plot into the marker index under the cursor
+function attachManhattanClick(canvasId, onPick){
+  document.getElementById(canvasId).addEventListener('click', e=>{
+    const canvas = e.currentTarget;
+    if (!canvas._bars) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const {padL, bw} = canvas._bars;
+    const m = Math.floor((x-padL)/bw);
+    if (m>=0 && m<N_MARKERS) onPick(m);
+  });
+}
+attachManhattanClick('manhattan', m=>{
+  gwas.selected = m; renderManhattan(); renderScatter(SCATTER_SALT, m);
 });
-function renderScatter(m){
-  document.getElementById('scatter-wrap').style.display='block';
-  document.getElementById('scatter-marker').textContent = m;
-  const canvas = document.getElementById('scatter');
+attachManhattanClick('manhattan-yield', m=>{
+  gwasYield.selected = m; renderYieldManhattan(); renderScatter(SCATTER_YIELD, m);
+});
+// the two scatter panels differ only in which data and labels they use
+const SCATTER_SALT = {
+  wrap:'scatter-wrap', markerLabel:'scatter-marker', canvas:'scatter', caption:'scatter-caption',
+  yLabel:'Salt resistance', traitName:'salt resistance', dotColor:'rgba(76,195,138,.85)',
+  data: ()=>gwasCache
+};
+const SCATTER_YIELD = {
+  wrap:'scatter-yield-wrap', markerLabel:'scatter-yield-marker', canvas:'scatter-yield',
+  yLabel:'Yield', dotColor:'rgba(242,193,78,.85)', caption:null,
+  data: ()=>gwasYieldCache
+};
+function renderScatter(cfg, m){
+  const dat = cfg.data();
+  if (!dat) return;
+  document.getElementById(cfg.wrap).style.display='block';
+  document.getElementById(cfg.markerLabel).textContent = m;
+  const canvas = document.getElementById(cfg.canvas);
   const {ctx, W, H} = setupCanvas(canvas, 260);
   const padL=46, padR=14, padT=16, padB=40;
   const plotW=W-padL-padR, plotH=H-padT-padB;
-  const xs = gwasCache.rows.map(r=>r[m]);
-  const ys = gwasCache.pheno;
+  const xs = dat.rows.map(r=>r[m]);
+  const ys = dat.pheno;
   const ymin = Math.min(...ys), ymax = Math.max(...ys);
   const yr = (ymax-ymin)||1;
   // axes
@@ -706,7 +741,7 @@ function renderScatter(m){
     const px = colX(v)+jitter;
     const py = padT+plotH - ((ys[i]-ymin)/yr)*plotH;
     meanY[v].push(ys[i]);
-    ctx.fillStyle = v===0? 'rgba(159,176,195,.8)':'rgba(76,195,138,.85)';
+    ctx.fillStyle = v===0? 'rgba(159,176,195,.8)' : cfg.dotColor;
     ctx.beginPath(); ctx.arc(px,py,4,0,2*Math.PI); ctx.fill();
   });
   // group means
@@ -722,29 +757,31 @@ function renderScatter(m){
   ctx.fillText('marker = 0', colX(0), padT+plotH+8);
   ctx.fillText('marker = 1', colX(1), padT+plotH+8);
   ctx.font='11px system-ui';
-  ctx.fillText('(black line = group average)', padL+plotW/2, padT+plotH+24);
+  ctx.fillText('(white line = group average)', padL+plotW/2, padT+plotH+24);
   // y title
   ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
-  ctx.fillText('Salt resistance',0,0); ctx.restore();
+  ctx.fillText(cfg.yLabel,0,0); ctx.restore();
 
+  if (!cfg.caption) return;
   const r = pearson(xs, ys);
   const p = corrPValue(r, xs.length);
-  const cap = document.getElementById('scatter-caption');
+  const cap = document.getElementById(cfg.caption);
   const strong = p < 0.001;
-  cap.innerHTML = `p-value ≈ <b>${p<1e-4 ? p.toExponential(1) : p.toFixed(4)}</b>. ` +
-    (strong ? 'The two groups clearly separate, so this marker <b>is</b> linked to the trait.'
-            : 'The two clouds overlap a lot, so there is little evidence this marker matters.');
+  cap.innerHTML = `p-value \u2248 <b>${p<1e-4 ? p.toExponential(1) : p.toFixed(4)}</b>. ` +
+    (strong ? `The two groups clearly separate, so this marker <b>is</b> linked to ${cfg.traitName}.`
+            : `The two clouds overlap a lot, so there is little evidence this marker matters for ${cfg.traitName}.`);
 }
 document.getElementById('gwas-size').addEventListener('input', e=>{
   gwas.size=+e.target.value;
   document.getElementById('gwas-size-val').textContent=gwas.size;
   renderManhattan();
-  if (gwas.selected!=null) renderScatter(gwas.selected);
+  if (gwas.selected!=null) renderScatter(SCATTER_SALT, gwas.selected);
 });
 document.getElementById('gwas-yield-size').addEventListener('input', e=>{
   gwasYield.size=+e.target.value;
   document.getElementById('gwas-yield-size-val').textContent=gwasYield.size;
   renderYieldManhattan();
+  if (gwasYield.selected!=null) renderScatter(SCATTER_YIELD, gwasYield.selected);
 });
 
 /* ============================================================
@@ -1035,9 +1072,10 @@ window.addEventListener('resize', ()=>{
   clearTimeout(rz);
   rz=setTimeout(()=>{
     renderManhattan();
-    if(gwas.selected!=null) renderScatter(gwas.selected);
+    if(gwas.selected!=null) renderScatter(SCATTER_SALT, gwas.selected);
     renderBcChart(bcState.rounds);   // redraw without wiping the student's rounds
     renderYieldManhattan();
+    if(gwasYield.selected!=null) renderScatter(SCATTER_YIELD, gwasYield.selected);
   },200);
 });
 </script>
