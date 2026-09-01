@@ -10,3 +10,5 @@ planning.md
 notebooks/*.obo
 notebooks/*.gaf
 notebooks/biotic_transcriptomics.txt
+data/_ensembl_cache/
+

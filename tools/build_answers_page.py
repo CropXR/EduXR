@@ -144,6 +144,56 @@ GO_ENRICHMENT_ANSWERS = [
 ]
 
 
+# One entry per <div class="callout q"> block in docs/translational_biology.html,
+# in page order. Same reading level as the page: this practical assumes very
+# little biology.
+TRANSLATIONAL_BIOLOGY_ANSWERS = [
+
+# --- Step 1: why look for the same gene twice --------------------------------
+"""<ul>
+<li><b>Why orthologues matter.</b> Turn it around and ask what you could do without them: almost nothing. Every result you produced this week is about <em>Arabidopsis</em>, and nobody grows <em>Arabidopsis</em>. Without a way of saying "this gene here corresponds to that gene there", a finding in the model plant stays in the model plant. The orthologue is the bridge. It tells a wheat breeder which of their 107,000 genes to look at, which one to screen their varieties for, which one to knock out or to select on. It also works in the other direction: if a gene is present and similar in many species, that is evidence it does something worth keeping, and a gene that only exists in <em>Arabidopsis</em> is a much weaker bet for a crop programme.</li>
+<li><b>Which difference matters most.</b> There is no single right answer, but the two that usually come first are <b>generation time</b> and <b>how easy it is to add or remove a gene</b>. Six to eight weeks from seed to seed against five to eight months means you can run six experiments in the time a wheat researcher runs one, and genetics is a subject where you often need several rounds of crossing before you learn anything. Being able to change a gene routinely is what lets you go from "this gene is correlated with resistance" to "this gene causes resistance", which is the step that actually settles the question. The genome size and the six sets of chromosomes matter too, but mostly because they make everything else harder: with six copies of every chromosome, knocking out one copy of a gene often changes nothing at all, which is a problem you will meet again in step 6.</li>
+</ul>""",
+
+# --- Step 2: orthologue or paralogue ------------------------------------------
+"""<ul>
+<li><b>The difference.</b> Both are pairs of genes that descend from one single gene in some ancestor. What separates them is the event that made the two copies. If the two copies were separated because <b>the species split in two</b>, they are <b>orthologues</b>. If the two copies were made because <b>the gene was copied inside one genome</b>, they are <b>paralogues</b>. That is the entire definition, and notice that it says nothing about how similar the two sequences are. Two paralogues can be nearly identical and two orthologues can be quite different; similarity is a clue to the history, not the history itself.</li>
+<li><b>Which one you want.</b> You want the <b>orthologue</b>. The reasoning is about what the two kinds of pair have been doing since they separated. Orthologues have been sitting in two different species, each doing the same job the ancestral gene did, because there is only one copy in each species and nothing else to take that job over. Paralogues sit side by side in one genome, where one copy is enough to keep the plant running, so the second copy is free to drift, pick up a new role, or stop working altogether. So the orthologue is the pair with a reason to have kept the same function, and the paralogue is the pair with a reason not to. That is a tendency rather than a law, which is what step 6 is about.</li>
+<li><b>Why the order of events changes everything.</b> In "copied in both", the split happened first. Every gene on the Arabidopsis side and every gene on the rice side meet at that split when you trace them upwards, so all four cross-species pairs are orthologues, and because there are two copies on each side that is a many-to-many relationship. In "copied before the split", the copying happened first. Trace A1 and R1 upwards and you meet a species split, so they are orthologues, and the same is true of A2 and R2. But trace A1 and R2 upwards and you go past both splits before the two paths meet, at the copying event, so those two are <b>paralogues even though they are in different species</b>. The four genes at the bottom are identical in both pictures. What differs is only which event you land on when you trace two of them back, and that is what the words are defined by. This is also exactly why the tree-based method in step 3 beats simply looking for the most similar sequence: A1 and R2 might well be each other's best match, and they would still be the wrong answer.</li>
+</ul>""",
+
+# --- Step 3: the real Compara result -------------------------------------------
+"""<ul>
+<li><b>Does your gene have orthologues?</b> Almost certainly yes: 479 of the 500 genes have at least one in these ten species, so if you picked at random you probably got one. Which species you got depends on the gene. Cabbage is the most reliable, missing for only 38 of the 500, which makes sense because it is in the same plant family as <em>Arabidopsis</em> and separated from it most recently. Barley is the least reliable, missing for 240 of them. The 21 genes with nothing anywhere are worth a look on their own.</li>
+<li><b>Why some genes have far more than others.</b> Try <code>AT1G79040</code> (PSBR) and then <code>AT3G53260</code> (PAL2) to see the extremes: 7 orthologues against 149. Several things drive the difference and they stack up. Some genes belong to <b>large families</b> that have been copied over and over in every lineage, so one <em>Arabidopsis</em> gene meets dozens of relatives in each species. Some genomes have been <b>doubled or tripled</b> more recently than others, which multiplies every gene in them at once. Some genes are so central to staying alive that every species has kept one, while others are specific to a way of life and get lost in species that do not need them. And some of the difference is not biology at all: a well-studied genome is annotated better than a poorly studied one, so it is easier to find orthologues in it.</li>
+<li><b>What can go wrong with similarity alone.</b> Step 2 gave the answer: the most similar sequence is not always the orthologue. In the "copied before the split" history, A1 and R2 are paralogues, yet nothing about their sequences announces that, and if the copying event was recent they may well look more alike than the true orthologue pair. Similarity also gets misread in the other direction: two orthologues that have both changed a lot no longer look like each other's best match, so a real relationship gets missed. Similarity is evidence about history, and treating evidence as if it were the conclusion is the mistake.</li>
+</ul>""",
+
+# --- Step 4: the counts on the tree ---------------------------------------------
+"""<ul>
+<li><b>What the tree shows.</b> The tree is a picture of how the ten species are related to each other. Each <b>branch point</b> is a moment in the past when one ancestral species split into two, and the further left a branch point is, the longer ago that happened. It is <em>not</em> a picture of your gene: the same tree is drawn no matter which gene you select. What changes with your gene is the annotation on the right. The <b>number</b> beside a species is how many genes in that species Ensembl calls orthologues of your one <em>Arabidopsis</em> gene, and the <b>colour</b> is the relationship it reports for them.</li>
+<li><b>Why the relationship differs.</b> It comes straight out of step 2, applied to the real tree. One-to-one means one copy on each side of the species split, so nothing was copied afterwards in either lineage. One-to-many means one copy stayed single in <em>Arabidopsis</em> while the other lineage copied it. Many-to-many means both lineages copied it. Compare the two contrasting genes: <code>AT1G79040</code> (PSBR) has at most two copies anywhere and is missing entirely from the grasses and moss, while <code>AT3G53260</code> (PAL2) is a member of a large family that has been copied repeatedly in every lineage, giving 54 copies in wheat alone. Same tree, same method, completely different picture, because the two genes have had completely different histories.</li>
+<li><b>Why wheat has more of everything.</b> Look at the table in step 1: bread wheat has <b>six sets of chromosomes</b> where <em>Arabidopsis</em> has two. Bread wheat formed when three related grass species combined their whole genomes, so it carries three near-complete copies of a grass genome at once. Every gene is therefore present roughly three times before you even start counting gene families, and in this dataset wheat averages 8.8 orthologues per gene where every other species averages between 1.5 and 3.6. This is the single most common reason a crop gives you a one-to-many result, and it is not a quirk of wheat: potato, soybean, maize and cabbage have all been through genome doublings of their own.</li>
+<li><b>Nothing found.</b> Two quite different things could be true, and they call for different responses. Either the gene <b>genuinely is not there</b>, because it was lost in that lineage or never existed before it, or the gene <b>is there and we failed to find it</b>, because the genome is incompletely sequenced, badly annotated, or the sequence has changed so much that the search no longer recognises it. Check the second one first, because it is much more common and much cheaper to check. A good test is to look at the neighbours on the tree: CAB1 has 54 orthologues in wheat and 3 in rice but <b>none in barley</b>, and it is not credible that barley alone among the grasses lost a photosynthesis gene. That is an annotation gap, not biology. When a whole branch of the tree comes back empty, that is when a real loss becomes the better explanation.</li>
+</ul>""",
+
+# --- Step 5: the alignment ------------------------------------------------------
+"""<ul>
+<li><b>Do you agree?</b> For most pairs, yes, and the reason is the <em>pattern</em> rather than the percentage. What convinces you is a long stretch of the protein matching almost letter for letter, running the full length of both sequences, with the mismatches scattered as single positions rather than piled up in one place. Two unrelated proteins do not do that. Around 20 to 25 percent of positions match by chance alone between any two protein sequences, so a figure near that means nothing, while 87 percent running end to end between two species that separated 150 million years ago is not something chance produces.</li>
+<li><b>Why it is not perfect.</b> The two lineages have been evolving separately ever since the species split, and two different kinds of change accumulate. <b>Single differing positions</b> come from point mutations, where one letter of the DNA changed and the amino acid at that position changed with it. Most of these are harmless, which is why they survive; notice how many of them are the "similar" colour, meaning the replacement amino acid has much the same chemical character and the protein carries on working. <b>Gaps</b> come from a different kind of event: a piece of DNA was inserted into one lineage or deleted from the other, so one protein has a stretch the other does not. Gaps in the middle of a protein are relatively rare because losing a chunk of a working protein usually breaks it, and you will notice that most gaps sit near the ends.</li>
+<li><b>Close against distant.</b> The closer the species, the higher the identity and the fewer the gaps. For CAB1 the cabbage orthologue comes in around 97 percent while the rice one is around 87 percent, and that ordering follows the tree in step 4 exactly: less time since the split means less time to accumulate change. This is worth noticing because it is the same logic running in reverse. We use trees to interpret sequences, and sequence differences are how the trees were built in the first place.</li>
+<li><b>Conserved and variable regions.</b> The regions that match almost perfectly are almost always the parts that <em>have</em> to be right: the active site of an enzyme, the surface where the protein grips another molecule, the core that holds it folded. A mutation there breaks the protein and the plant carrying it does worse, so those changes never spread. The messy regions are the parts where the exact sequence matters less, such as flexible linkers between the working parts, or the signal at the start of the protein that says which compartment of the cell to send it to, where the general character matters but the individual letters do not. So an alignment is not only evidence about ancestry, it is also a rough map of which parts of a protein matter, which is genuinely useful if you are deciding where to aim a mutation.</li>
+</ul>""",
+
+# --- Step 6: doing it for real, and the caveat -----------------------------------
+"""<ul>
+<li><b>The literature check.</b> What you find depends entirely on the gene, and the honest outcome for most of them is that <b>nothing has been published</b> on the crop orthologue at all. That is itself the answer to why this practical exists. Where you do find something, the usual pattern is a broad match with a specific mismatch: the crop gene turns out to be involved in the same general process, but switched on at a different time, in a different tissue, or in response to a different stress. Treat a match as encouragement rather than proof, and treat a mismatch as interesting rather than as an error, because a gene that has been repurposed in a crop is worth understanding. Also check what kind of evidence you have found: a paper that measured the gene is worth far more than a database entry that inferred its function from the <em>Arabidopsis</em> gene, which would just be your own assumption handed back to you.</li>
+<li><b>Knocking out one of three copies.</b> Most likely <b>nothing visible happens</b>, and your experiment tells you nothing. The other two copies are still there and still doing the job, so the plant carries on as before. This is called redundancy and it is the standard frustration of working in wheat: the six sets of chromosomes that make the genome big also mean that single knockouts are usually silent. The consequences are practical. You may need to knock out all three copies together to see any effect at all, which is far more work. A negative result from a single knockout is close to uninformative, so you should not publish one as evidence that the gene does not matter. And if you have to choose, it can be smarter to work in a crop with fewer genome copies first, such as barley or rice, and move to wheat once you know what you are looking for.</li>
+<li><b>The experiment.</b> A reasonable answer chains the whole week together and stays concrete. For example: the clustering put a group of genes together that rise in the AVR treatment at 6 and 12 hours but not in MOCK, GO enrichment says that group is enriched for programmed cell death, and Ensembl gives orthologues of the three strongest of those genes in barley, which is a real crop with only two sets of chromosomes. So: obtain or generate knockout lines for those three barley orthologues, infect them and wild-type barley with a comparable pathogen, and measure both the disease itself and the process the GO term pointed at, for instance by staining for cell death, at the same time points the original experiment used. Include a mock-inoculated control at every time point, for the reason step 4 of the GO practical made painfully clear. The point to get across is the shape of the argument: <em>clustering says which genes move together, GO says what they are probably doing, the orthologue says where to test it, and only the experiment says whether it is true.</em></li>
+</ul>""",
+]
+
+
 DL_HERO_OLD = """  <p style="text-align:left; max-width: 660px; margin: 0 auto;">By the end of this practical you will be able to:</p>
   <ul style="text-align:left; color: var(--muted); max-width: 660px; margin: 8px auto 0; padding-left: 20px;">
     <li>Discuss how and why to use train/test splits for training machine learning models</li>
@@ -161,10 +211,22 @@ GO_HERO_OLD = """  <p style="text-align:left; max-width: 660px; margin: 0 auto;"
     <li>Describe how GO enrichment is applied in combination with clustering</li>
     <li>List how GO enrichment can be used to propose new experiments</li>
   </ul>
-  <div class="nav"><a href="deep_learning.html">&larr; Deep Learning</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a></div>"""
+  <div class="nav"><a href="deep_learning.html">&larr; Deep Learning</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a> &nbsp;·&nbsp; <a href="translational_biology.html">Translational Biology &rarr;</a></div>"""
 
 GO_HERO_NEW = """  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the GO-enrichment practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep clustering and re-running the analysis while you read, and the self-test quiz at the end is unchanged.</p>
   <div class="nav"><a href="go_enrichment.html">&larr; Student version</a> &nbsp;·&nbsp; <a href="index.html">All practicals</a></div>"""
+
+TB_HERO_OLD = """  <p style="text-align:left; max-width: 660px; margin: 0 auto;">By the end of this practical you will be able to:</p>
+  <ul style="text-align:left; color: var(--muted); max-width: 660px; margin: 8px auto 0; padding-left: 20px;">
+    <li>Describe what an orthologue is, and how it differs from a paralogue</li>
+    <li>Describe how orthologues are found, and read the result</li>
+    <li>Explain how orthologues are used to carry a finding from <em>A. thaliana</em> across to a crop</li>
+  </ul>
+  <div class="nav"><a href="go_enrichment.html">&larr; GO Enrichment</a> &nbsp;&middot;&nbsp; <a href="index.html">All practicals</a></div>"""
+
+TB_HERO_NEW = """  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the translational-biology practical. Every \u2753 question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep looking genes up and aligning proteins while you read, and the self-test quiz at the end is unchanged.</p>
+  <div class="nav"><a href="translational_biology.html">&larr; Student version</a> &nbsp;&middot;&nbsp; <a href="index.html">All practicals</a></div>"""
+
 
 # The answer boxes read better with a faint green fill, which the hand-built
 # mechanistic_model_answers.html uses. Applied only to the generated page so the
@@ -204,6 +266,21 @@ PAGES = {
             ("<h1>GO Enrichment Analysis</h1>",
              "<h1>GO Enrichment Analysis: Answer Model</h1>"),
             (GO_HERO_OLD, GO_HERO_NEW),
+            (ANSWER_CSS_OLD, ANSWER_CSS_NEW),
+        ],
+    },
+    "translational_biology": {
+        "src": "translational_biology.html",
+        "dst": "translational_biology_answers.html",
+        "answers": TRANSLATIONAL_BIOLOGY_ANSWERS,
+        "swaps": [
+            ("<title>Translational Biology</title>",
+             "<title>Translational Biology: Answer Model</title>"),
+            ('<div class="badge">EduXR &middot; Plant Breeding</div>',
+             '<div class="badge">EduXR &middot; Answer Model</div>'),
+            ("<h1>Translational Biology</h1>",
+             "<h1>Translational Biology: Answer Model</h1>"),
+            (TB_HERO_OLD, TB_HERO_NEW),
             (ANSWER_CSS_OLD, ANSWER_CSS_NEW),
         ],
     },

@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Translational Biology: Answer Model</title>
+<style>
+  :root {
+    --bg: #0f1720;
+    --panel: #172230;
+    --panel-2: #1e2c3d;
+    --ink: #e9eef5;
+    --muted: #9fb0c3;
+    --line: #2c3e54;
+    --accent: #4cc38a;
+    --accent-2: #f2c14e;
+    --accent-3: #5b9bd5;
+    --danger: #e2725b;
+    --radius: 14px;
+    --shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1b2a3d 0%, var(--bg) 55%);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+
+  header.hero { padding: 56px 20px 40px; text-align: center; max-width: 900px; margin: 0 auto; }
+  header.hero .badge {
+    display: inline-block; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; margin-bottom: 18px;
+  }
+  header.hero h1 { font-size: clamp(28px, 5vw, 46px); margin: 0 0 12px; line-height: 1.15; }
+  header.hero p { color: var(--muted); font-size: 18px; max-width: 680px; margin: 0 auto; }
+  header.hero .nav { margin-top: 16px; font-size: 15px; }
+
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .step { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+          box-shadow: var(--shadow); padding: 26px 28px; margin: 26px 0; }
+  .step h2 { margin: 0 0 6px; font-size: 24px; display: flex; align-items: center; gap: 12px; }
+  .step h2 .num { flex: none; width: 34px; height: 34px; display: grid; place-items: center;
+                  background: var(--accent); color: #06281b; border-radius: 10px; font-size: 17px; font-weight: 700; }
+  .step .lead { color: var(--ink); margin-top: 0; }
+  .step h3 { margin: 22px 0 8px; font-size: 17px; color: var(--ink); }
+
+  .callout { border-left: 3px solid var(--accent-3); background: var(--panel-2); padding: 12px 16px;
+             border-radius: 8px; margin: 16px 0; color: var(--muted); }
+  .callout.q { border-left-color: var(--accent-2); }
+  .callout.q strong { color: var(--accent-2); }
+  .callout ul { margin: 8px 0 0; padding-left: 20px; }
+  .callout li { margin: 4px 0; }
+  .callout details { margin-top: 10px; }
+  .callout details summary { cursor: pointer; color: var(--accent-3); font-size: 13px; width: fit-content; font-weight: 600; }
+  .callout details[open] summary { margin-bottom: 6px; }
+  .callout details > :not(summary) { font-size: 13px; }
+  .callout.info { border-left-color: var(--accent); color: var(--ink); }
+  /* used by the generated answer-model page */
+  .callout.answer { border-left-color: var(--accent); background: rgba(76,195,138,.09); color: var(--ink); margin-top: 12px; }
+  .callout.answer strong { color: var(--accent); }
+  .callout.answer ul { margin: 6px 0 0; }
+
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin: 18px 0; }
+  .controls label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  input[type="range"] { accent-color: var(--accent); }
+  select { background: #0d1520; color: var(--ink); border: 1px solid var(--line); border-radius: 8px;
+           padding: 7px 10px; font-size: 14px; font-family: inherit; max-width: 100%; }
+  button { background: var(--accent); color: #06281b; border: none; border-radius: 10px; padding: 10px 16px;
+           font-size: 15px; font-weight: 600; cursor: pointer; transition: transform .05s ease, filter .15s ease; }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: translateY(1px); }
+  button.secondary { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); font-size: 14px; padding: 8px 14px; }
+
+  /* segmented toggle */
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; flex-wrap: wrap; }
+  .seg button { background: var(--panel-2); color: var(--muted); border: none; border-radius: 0;
+                padding: 7px 13px; font-size: 13px; font-weight: 600; border-left: 1px solid var(--line); }
+  .seg button:first-child { border-left: none; }
+  .seg button.on { background: var(--accent); color: #06281b; }
+  .seg button:hover { filter: none; }
+  .seg-label { font-size: 13px; color: var(--muted); margin-right: 2px; }
+  /* cluster picker: each button carries its own cluster colour when selected */
+  .seg.clusters button.on { color: #08131c; }
+
+  canvas { max-width: 100%; display: block; }
+  .chartbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 14px 0; }
+  .chart-hint { font-size: 13px; color: var(--muted); text-align: center; margin: 6px 0 0; }
+
+  .tablescroll { overflow-x: auto; border-radius: 10px; border: 1px solid var(--line); max-height: 460px; }
+  table.markers { border-collapse: collapse; font-size: 13px; width: 100%; }
+  table.markers th, table.markers td { padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.markers thead th { position: sticky; top: 0; background: var(--panel-2); color: var(--muted); font-weight: 600; z-index: 2; }
+  table.markers td.rowlab, table.markers th.rowlab { text-align: left; color: var(--accent-2); font-weight: 600; }
+  table.markers td.term { text-align: left; white-space: normal; min-width: 240px; }
+  table.markers tbody tr:hover { background: rgba(91,155,213,.08); }
+
+
+  .genecard { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin: 14px 0; }
+  .genecard h4 { margin: 0 0 4px; font-size: 18px; color: var(--accent); }
+  .genecard .sub { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+  .genecard code { color: var(--accent); background: #0d1520; padding: 1px 5px; border-radius: 4px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 10px 0; }
+
+  .facts { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
+  .fact { flex: 1 1 150px; background: #0d1520; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .fact .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .fact .v { font-size: 22px; font-weight: 700; color: var(--ink); }
+
+  .quiz { margin-top: 10px; }
+  .quiz .qitem { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; background: var(--panel-2); }
+  .quiz .qitem p.qtext { margin: 0 0 10px; font-weight: 600; }
+  .quiz .opt { display: block; width: 100%; text-align: left; background: #0d1520; border: 1px solid var(--line); color: var(--ink);
+               border-radius: 8px; padding: 9px 12px; margin: 6px 0; cursor: pointer; font-weight: 500; }
+  .quiz .opt:hover { border-color: var(--accent-3); filter: none; }
+  .quiz .opt.correct { border-color: var(--accent); background: rgba(76,195,138,.14); }
+  .quiz .opt.wrong { border-color: var(--danger); background: rgba(226,114,91,.14); }
+  .quiz .explain { font-size: 13px; color: var(--muted); margin: 8px 0 0; display: none; }
+  .quiz .explain.show { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 30px 20px 60px; }
+  @media (max-width: 640px) { .step { padding: 20px 16px; } }
+
+
+  /* relationship-type chips: one colour per cardinality, used in the table,
+     the gene-tree diagram and the species tree so they read as one idea */
+  .chip { display: inline-block; border-radius: 5px; padding: 1px 8px; font-weight: 700;
+          font-size: 12px; color: #08131c; white-space: nowrap; }
+  .chip.t1 { background: #4cc38a; }
+  .chip.t2 { background: #f2c14e; }
+  .chip.t3 { background: #e2a0d0; }
+  .chip.t0 { background: #56687d; color: #e9eef5; }
+  .chip.para { background: #e2725b; color: #10202f; }
+
+  /* identity read as a bar as well as a number, so a scan down the column works */
+  .idbar { position: relative; min-width: 88px; height: 16px; background: #0d1520;
+           border-radius: 4px; overflow: hidden; display: inline-block; vertical-align: middle; }
+  .idbar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent-3); opacity: .55; }
+  .idbar b { position: relative; font-size: 12px; font-weight: 700; line-height: 16px; padding-left: 6px; }
+
+  .sptable td.sp { text-align: left; }
+  .sptable td.sp em { color: var(--muted); font-style: italic; font-size: 12px; display: block; }
+  .sptable td.gid { text-align: left; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+
+  svg.diagram { display: block; width: 100%; height: auto; }
+  svg.diagram text { font-family: system-ui, sans-serif; fill: var(--ink); }
+  svg.diagram text.muted { fill: var(--muted); }
+  svg.diagram .branch { stroke: #6d8399; stroke-width: 2; fill: none; }
+
+  /* protein alignment: monospace, wrapped in fixed-width blocks */
+  .aln { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px;
+         line-height: 1.45; overflow-x: auto; background: #0b131c; border: 1px solid var(--line);
+         border-radius: 10px; padding: 14px 16px; margin: 14px 0; white-space: pre; }
+  .aln .lab { color: var(--muted); }
+  .aln .same { color: #7ee2b0; font-weight: 700; }
+  .aln .sim  { color: #9dc7f0; }
+  .aln .diff { color: #cfd9e4; }
+  .aln .gap  { color: #5b6b7d; }
+  .aln .mid  { color: #6f8296; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  /* type-to-search gene picker: a native select cannot be searched reliably
+     across browsers, and there are 500 genes to find one in */
+  .combo { position: relative; display: inline-block; }
+  .combo input { background: #0d1520; color: var(--ink); border: 1px solid var(--line);
+                 border-radius: 8px; padding: 7px 10px; font-size: 14px; font-family: inherit;
+                 width: 320px; max-width: 100%; }
+  .combo input:focus { outline: none; border-color: var(--accent); }
+  .combo input.unknown { border-color: var(--danger); }
+  .combo-list { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; min-width: 100%;
+                max-height: 264px; overflow-y: auto; background: var(--panel-2);
+                border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); }
+  .combo-list div { padding: 7px 10px; font-size: 14px; cursor: pointer; white-space: nowrap; }
+  .combo-list div.on, .combo-list div:hover { background: rgba(76,195,138,.18); }
+  .combo-list div .sym { color: var(--accent); font-weight: 600; }
+  .combo-list div.none { color: var(--muted); cursor: default; background: none; }
+
+  .linkbtn { display: inline-block; background: #0d1520; border: 1px solid var(--line);
+            color: var(--ink); border-radius: 8px; padding: 8px 14px; text-decoration: none; font-weight: 600; font-size: 14px; }
+  .linkbtn:hover { border-color: var(--accent-3); }
+
+  .legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; font-style: normal; }
+</style>
+<script src="go_data.js"></script>
+<script src="ortholog_data.js"></script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="badge">EduXR &middot; Answer Model</div>
+  <h1>Translational Biology: Answer Model</h1>
+  <p style="max-width: 660px; margin: 0 auto;">This is the answered version of the translational-biology practical. Every ❓ question is followed by a worked model answer (green box). All the interactive steps still work, so you can keep looking genes up and aligning proteins while you read, and the self-test quiz at the end is unchanged.</p>
+  <div class="nav"><a href="translational_biology.html">&larr; Student version</a> &nbsp;&middot;&nbsp; <a href="index.html">All practicals</a></div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============================================================ STEP 1 -->
+  <section class="step">
+    <h2><span class="num">1</span> Why you would go looking for the same gene twice</h2>
+    <p class="lead">
+      In the previous practical you ended up with a group of <em>Arabidopsis thaliana</em>
+      genes that respond to a bacterial infection, and a suggestion of what those genes are
+      doing. That is a real result. It is also a result about a small roadside weed that
+      nobody eats and nobody grows.
+    </p>
+    <p>
+      Almost everything we know about how plants defend themselves was worked out in
+      <em>Arabidopsis</em>, and there is a good reason for that. Compare it with bread wheat,
+      one of the crops the answer is eventually meant for.
+    </p>
+
+    <div class="tablescroll">
+      <table class="markers">
+        <thead><tr><th class="rowlab"></th><th><em>Arabidopsis thaliana</em></th><th>Bread wheat</th></tr></thead>
+        <tbody>
+          <tr><td class="rowlab">Genome size</td><td>135 million bases</td><td>16,000 million bases</td></tr>
+          <tr><td class="rowlab">Sets of chromosomes</td><td>2</td><td>6</td></tr>
+          <tr><td class="rowlab">Protein-coding genes</td><td>about 27,000</td><td>about 107,000</td></tr>
+          <tr><td class="rowlab">Seed to seed</td><td>6 to 8 weeks</td><td>5 to 8 months</td></tr>
+          <tr><td class="rowlab">Space for 1,000 plants</td><td>a bench</td><td>a field</td></tr>
+          <tr><td class="rowlab">Adding or removing a gene</td><td>routine</td><td>slow and often variety-specific</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      That is why the experiments happen in <em>Arabidopsis</em>. A PhD student can run six
+      generations in the time a wheat breeder runs one, in a growth cabinet instead of a field.
+      The catch is obvious: the finding is now in the wrong plant. Getting it into the right
+      one means finding, in wheat, the gene that corresponds to the <em>Arabidopsis</em> gene
+      you care about. That gene is called an <strong>orthologue</strong>, and this practical is
+      about what that word means, how you find one, and how far you can trust it.
+    </p>
+
+    <p style="font-size:14px;color:var(--muted);margin-bottom:6px;">
+      The 500 genes from the previous two practicals, looked up in Ensembl Plants:
+    </p>
+    <div class="facts" id="step1-facts"></div>
+
+    <div class="callout q">
+      <strong>&#10067; Questions</strong>
+      <ul>
+        <li>Why is finding orthologues of <em>A. thaliana</em> genes important for crop
+          resilience research? Try to phrase it as what you would <em>not</em> be able to do
+          without them.</li>
+        <li>Look at the numbers above. Which of the differences between the two plants do you
+          think matters most for how quickly research gets done, and why?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Why orthologues matter.</b> Turn it around and ask what you could do without them: almost nothing. Every result you produced this week is about <em>Arabidopsis</em>, and nobody grows <em>Arabidopsis</em>. Without a way of saying "this gene here corresponds to that gene there", a finding in the model plant stays in the model plant. The orthologue is the bridge. It tells a wheat breeder which of their 107,000 genes to look at, which one to screen their varieties for, which one to knock out or to select on. It also works in the other direction: if a gene is present and similar in many species, that is evidence it does something worth keeping, and a gene that only exists in <em>Arabidopsis</em> is a much weaker bet for a crop programme.</li>
+      <li><b>Which difference matters most.</b> There is no single right answer, but the two that usually come first are <b>generation time</b> and <b>how easy it is to add or remove a gene</b>. Six to eight weeks from seed to seed against five to eight months means you can run six experiments in the time a wheat researcher runs one, and genetics is a subject where you often need several rounds of crossing before you learn anything. Being able to change a gene routinely is what lets you go from "this gene is correlated with resistance" to "this gene causes resistance", which is the step that actually settles the question. The genome size and the six sets of chromosomes matter too, but mostly because they make everything else harder: with six copies of every chromosome, knocking out one copy of a gene often changes nothing at all, which is a problem you will meet again in step 6.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================ STEP 2 -->
+  <section class="step">
+    <h2><span class="num">2</span> Orthologue or paralogue: it depends on the history</h2>
+    <p class="lead">
+      Two genes in two different genomes can look almost identical and still not be the pair
+      you want. Whether they are depends entirely on <em>how</em> the two copies came to exist,
+      and there are only two ways that happens.
+    </p>
+    <p>
+      <strong>A species splits in two.</strong> One ancestral population becomes two separate
+      species. Every gene the ancestor had is now sitting in both of them, one copy each. The
+      two copies start out identical and slowly drift apart as the two species go their own
+      way. A pair of genes related like this is called a pair of <strong>orthologues</strong>.
+    </p>
+    <p>
+      <strong>A gene gets copied inside one genome.</strong> Copying accidents are common in
+      plants: a stretch of DNA gets duplicated, or a chromosome, or occasionally the entire
+      genome at once. Afterwards that one genome carries two copies of the same gene. A pair
+      of genes related like this is called a pair of <strong>paralogues</strong>.
+    </p>
+    <p>
+      Both kinds of pair descend from one ancestral gene, so both will look similar and both
+      will turn up if you simply search for lookalike sequences. Only one of the two is the
+      pair you want when you are moving a result from <em>Arabidopsis</em> into a crop. The
+      diagram below lets you build the history yourself and see what comes out.
+    </p>
+
+    <div class="controls">
+      <span class="seg-label">History:</span>
+      <div class="seg" id="scenario-seg"></div>
+    </div>
+
+    <div class="chartbox">
+      <div id="scenario-svg"></div>
+      <p class="chart-hint" id="scenario-cap"></p>
+      <div class="legend">
+        <span><i style="background:#5b9bd5"></i> species split</span>
+        <span><i style="background:#e2725b"></i> gene copied</span>
+        <span><i style="background:#4cc38a"></i> orthologues</span>
+        <span><i style="background:#e2725b;opacity:.6"></i> paralogues</span>
+      </div>
+    </div>
+
+    <div id="scenario-pairs" class="genecard"></div>
+
+    <div class="callout q">
+      <strong>&#10067; Questions</strong>
+      <ul>
+        <li>In your own words, what is the difference between an orthologue and a paralogue?
+          What has to have happened for a pair to be one rather than the other?</li>
+        <li>You want to know which wheat gene does the job that your <em>Arabidopsis</em> gene
+          does. Which of the two kinds of pair are you after, and why does the other kind not
+          answer your question?</li>
+        <li>Compare the last two histories. The four genes at the bottom are the same in both,
+          and only the order of events changed. Why does that change which pairs are
+          orthologues?</li>
+      </ul>
+      <details>
+        <summary>&#128161; Hint if the last one will not come out</summary>
+        <p>Pick two genes, put a finger on each, and trace both fingers upwards until they
+        meet. The question is only ever what kind of event you land on when they do.</p>
+      </details>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>The difference.</b> Both are pairs of genes that descend from one single gene in some ancestor. What separates them is the event that made the two copies. If the two copies were separated because <b>the species split in two</b>, they are <b>orthologues</b>. If the two copies were made because <b>the gene was copied inside one genome</b>, they are <b>paralogues</b>. That is the entire definition, and notice that it says nothing about how similar the two sequences are. Two paralogues can be nearly identical and two orthologues can be quite different; similarity is a clue to the history, not the history itself.</li>
+      <li><b>Which one you want.</b> You want the <b>orthologue</b>. The reasoning is about what the two kinds of pair have been doing since they separated. Orthologues have been sitting in two different species, each doing the same job the ancestral gene did, because there is only one copy in each species and nothing else to take that job over. Paralogues sit side by side in one genome, where one copy is enough to keep the plant running, so the second copy is free to drift, pick up a new role, or stop working altogether. So the orthologue is the pair with a reason to have kept the same function, and the paralogue is the pair with a reason not to. That is a tendency rather than a law, which is what step 6 is about.</li>
+      <li><b>Why the order of events changes everything.</b> In "copied in both", the split happened first. Every gene on the Arabidopsis side and every gene on the rice side meet at that split when you trace them upwards, so all four cross-species pairs are orthologues, and because there are two copies on each side that is a many-to-many relationship. In "copied before the split", the copying happened first. Trace A1 and R1 upwards and you meet a species split, so they are orthologues, and the same is true of A2 and R2. But trace A1 and R2 upwards and you go past both splits before the two paths meet, at the copying event, so those two are <b>paralogues even though they are in different species</b>. The four genes at the bottom are identical in both pictures. What differs is only which event you land on when you trace two of them back, and that is what the words are defined by. This is also exactly why the tree-based method in step 3 beats simply looking for the most similar sequence: A1 and R2 might well be each other's best match, and they would still be the wrong answer.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================ STEP 3 -->
+  <section class="step">
+    <h2><span class="num">3</span> How an orthologue is actually found</h2>
+    <p class="lead">
+      Nobody has written down a list of which wheat gene corresponds to which
+      <em>Arabidopsis</em> gene. There are hundreds of thousands of genes involved and the two
+      plants last shared an ancestor around 150 million years ago. The correspondence has to be
+      worked out from the sequences, and there are two ways of doing it.
+    </p>
+    <p>
+      <strong>Best match in both directions.</strong> Take the protein your
+      <em>Arabidopsis</em> gene codes for and search all wheat proteins for the one that looks
+      most like it. Then turn around: take that wheat protein and search all
+      <em>Arabidopsis</em> proteins. If you land back on the gene you started from, the two are
+      each other's best match and you call them orthologues. This is quick and it is what
+      "reciprocal best hit" means. It also assumes there is exactly one best answer on each
+      side, which step 2 should make you suspicious of.
+    </p>
+    <p>
+      <strong>Build the family tree.</strong> Collect every similar sequence from every species
+      you have, build a tree of how they are related, and then go through the tree branch point
+      by branch point deciding whether each one was a species split or a copying event. That is
+      the same exercise you just did by hand in step 2, done automatically for tens of
+      thousands of gene families. It is slower and it is what <strong>Ensembl Compara</strong>
+      does, and it is where the one-to-one, one-to-many and many-to-many labels come from.
+    </p>
+    <p>
+      Everything below this point is that second method's real output. Pick one of the 500
+      genes from the previous practicals and see what Ensembl has for it.
+    </p>
+
+    <h3>Pick a gene</h3>
+    <p style="font-size:14px;color:var(--muted);margin-top:0;">
+      Steps 4 and 5 follow this choice, so you can come back and change it at any time. If you
+      picked a gene you liked in the GO enrichment practical, use that one.
+    </p>
+    <div class="controls">
+      <label>Gene:
+        <span class="combo">
+          <input id="gene-input" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="type a gene id or a name, e.g. AT1G29930 or CAB1" />
+          <div class="combo-list" id="gene-list" hidden></div>
+        </span>
+      </label>
+      <button class="secondary" id="gene-random">&#127922; Random gene</button>
+    </div>
+
+    <div class="genecard" id="gene-card"></div>
+
+    <div class="tablescroll">
+      <table class="markers sptable" id="orth-table"></table>
+    </div>
+    <p class="chart-hint" style="text-align:left">
+      <strong>Identity</strong> is the percentage of the <em>Arabidopsis</em> protein that is
+      exactly the same in the other species. <strong>High confidence</strong> is Ensembl's own
+      flag for the orthologues its tree supports most strongly.
+    </p>
+
+    <div class="callout q">
+      <strong>&#10067; Questions</strong>
+      <ul>
+        <li>Does the gene you picked have orthologues? In which species?</li>
+        <li>Repeat this for a few more genes, including some you pick at random rather than
+          choose. Why do you think some genes have far more orthologues than others?</li>
+        <li>Both methods above rely only on how similar two sequences are. What could go wrong
+          with that, given what you saw in step 2?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Does your gene have orthologues?</b> Almost certainly yes: 479 of the 500 genes have at least one in these ten species, so if you picked at random you probably got one. Which species you got depends on the gene. Cabbage is the most reliable, missing for only 38 of the 500, which makes sense because it is in the same plant family as <em>Arabidopsis</em> and separated from it most recently. Barley is the least reliable, missing for 240 of them. The 21 genes with nothing anywhere are worth a look on their own.</li>
+      <li><b>Why some genes have far more than others.</b> Try <code>AT1G79040</code> (PSBR) and then <code>AT3G53260</code> (PAL2) to see the extremes: 7 orthologues against 149. Several things drive the difference and they stack up. Some genes belong to <b>large families</b> that have been copied over and over in every lineage, so one <em>Arabidopsis</em> gene meets dozens of relatives in each species. Some genomes have been <b>doubled or tripled</b> more recently than others, which multiplies every gene in them at once. Some genes are so central to staying alive that every species has kept one, while others are specific to a way of life and get lost in species that do not need them. And some of the difference is not biology at all: a well-studied genome is annotated better than a poorly studied one, so it is easier to find orthologues in it.</li>
+      <li><b>What can go wrong with similarity alone.</b> Step 2 gave the answer: the most similar sequence is not always the orthologue. In the "copied before the split" history, A1 and R2 are paralogues, yet nothing about their sequences announces that, and if the copying event was recent they may well look more alike than the true orthologue pair. Similarity also gets misread in the other direction: two orthologues that have both changed a lot no longer look like each other's best match, so a real relationship gets missed. Similarity is evidence about history, and treating evidence as if it were the conclusion is the mistake.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================ STEP 4 -->
+  <section class="step">
+    <h2><span class="num">4</span> The same gene, mapped onto the tree of plants</h2>
+    <p class="lead">
+      The table in step 3 is a list, and a list hides the thing that explains it. These ten
+      species are not ten independent samples: they are the tips of a tree, some of them close
+      cousins and some of them separated by hundreds of millions of years. Putting the counts
+      back on the tree usually makes the pattern obvious.
+    </p>
+    <p>
+      Each branch point below is a species split. The number beside each species is how many
+      orthologues of your selected gene Ensembl finds there, and the colour is the relationship
+      it reports. A species with nothing at all is worth as much of your attention as one with
+      six.
+    </p>
+
+    <div class="chartbox">
+      <div id="tree-svg"></div>
+      <p class="chart-hint" id="tree-cap"></p>
+      <div class="legend">
+        <span><i style="background:#4cc38a"></i> one-to-one</span>
+        <span><i style="background:#f2c14e"></i> one-to-many</span>
+        <span><i style="background:#e2a0d0"></i> many-to-many</span>
+        <span><i style="background:#56687d"></i> none found</span>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:var(--muted);margin-bottom:6px;">
+      Two genes from the same dataset that behave very differently. Load one, look at the tree,
+      then load the other:
+    </p>
+    <div class="controls">
+      <div class="seg" id="contrast-seg"></div>
+    </div>
+
+    <div class="callout q">
+      <strong>&#10067; Questions</strong>
+      <ul>
+        <li>What does this tree actually show? Be precise: what is a branch point, and what is
+          a number beside a species?</li>
+        <li>Why are orthologous relations sometimes one-to-one, sometimes one-to-many and
+          sometimes many-to-many? Use the two contrasting genes above to make the point.</li>
+        <li>Wheat almost always has more copies than the other species. Look back at the table
+          in step 1 for a reason why.</li>
+        <li>If a species shows no orthologue at all, name two quite different things that could
+          be true. Which would you check first?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>What the tree shows.</b> The tree is a picture of how the ten species are related to each other. Each <b>branch point</b> is a moment in the past when one ancestral species split into two, and the further left a branch point is, the longer ago that happened. It is <em>not</em> a picture of your gene: the same tree is drawn no matter which gene you select. What changes with your gene is the annotation on the right. The <b>number</b> beside a species is how many genes in that species Ensembl calls orthologues of your one <em>Arabidopsis</em> gene, and the <b>colour</b> is the relationship it reports for them.</li>
+      <li><b>Why the relationship differs.</b> It comes straight out of step 2, applied to the real tree. One-to-one means one copy on each side of the species split, so nothing was copied afterwards in either lineage. One-to-many means one copy stayed single in <em>Arabidopsis</em> while the other lineage copied it. Many-to-many means both lineages copied it. Compare the two contrasting genes: <code>AT1G79040</code> (PSBR) has at most two copies anywhere and is missing entirely from the grasses and moss, while <code>AT3G53260</code> (PAL2) is a member of a large family that has been copied repeatedly in every lineage, giving 54 copies in wheat alone. Same tree, same method, completely different picture, because the two genes have had completely different histories.</li>
+      <li><b>Why wheat has more of everything.</b> Look at the table in step 1: bread wheat has <b>six sets of chromosomes</b> where <em>Arabidopsis</em> has two. Bread wheat formed when three related grass species combined their whole genomes, so it carries three near-complete copies of a grass genome at once. Every gene is therefore present roughly three times before you even start counting gene families, and in this dataset wheat averages 8.8 orthologues per gene where every other species averages between 1.5 and 3.6. This is the single most common reason a crop gives you a one-to-many result, and it is not a quirk of wheat: potato, soybean, maize and cabbage have all been through genome doublings of their own.</li>
+      <li><b>Nothing found.</b> Two quite different things could be true, and they call for different responses. Either the gene <b>genuinely is not there</b>, because it was lost in that lineage or never existed before it, or the gene <b>is there and we failed to find it</b>, because the genome is incompletely sequenced, badly annotated, or the sequence has changed so much that the search no longer recognises it. Check the second one first, because it is much more common and much cheaper to check. A good test is to look at the neighbours on the tree: CAB1 has 54 orthologues in wheat and 3 in rice but <b>none in barley</b>, and it is not credible that barley alone among the grasses lost a photosynthesis gene. That is an annotation gap, not biology. When a whole branch of the tree comes back empty, that is when a real loss becomes the better explanation.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================ STEP 5 -->
+  <section class="step">
+    <h2><span class="num">5</span> Look at the sequences yourself</h2>
+    <p class="lead">
+      Ensembl says these two genes are orthologues. That claim rests entirely on their
+      sequences, so it is worth putting them side by side and forming your own opinion instead
+      of taking the label on trust.
+    </p>
+    <p>
+      An <strong>alignment</strong> writes the two proteins one above the other and slides them
+      along until as many positions as possible line up, inserting gaps where one of the two
+      has gained or lost a stretch. Each letter is one amino acid, the building blocks a
+      protein is made of. The alignment below is computed in your browser when you press the
+      button, using the same kind of algorithm the databases use.
+    </p>
+    <p style="font-size:14px;color:var(--muted);">
+      This uses the gene you picked in step 3. For each species the page carries the
+      <strong>closest</strong> of its orthologues, which is the one worth looking at; the rest are
+      still listed with their identities in the table above. Sequences are available for six of
+      the ten species.
+    </p>
+
+    <div class="genecard" id="aln-gene-card"></div>
+
+    <div class="controls" id="aln-controls">
+      <label>Compare <span id="aln-gene-name"></span> with:
+        <select id="aln-species"></select>
+      </label>
+      <button id="aln-run">Align the two proteins</button>
+    </div>
+
+    <div class="facts" id="aln-facts"></div>
+    <div class="aln" id="aln-out"><span class="lab">Press the button to build the alignment.</span></div>
+    <p class="chart-hint" style="text-align:left">The identity figure counts identical positions as a share of the <em>Arabidopsis</em> protein, which is how Ensembl counts it too, so it matches the number in the table in step 3.</p>
+    <div class="legend">
+      <span><i style="background:#7ee2b0"></i> identical</span>
+      <span><i style="background:#9dc7f0"></i> different, but a chemically similar amino acid</span>
+      <span><i style="background:#cfd9e4"></i> different</span>
+      <span><i style="background:#5b6b7d"></i> gap, present in one protein only</span>
+    </div>
+
+    <div class="callout q">
+      <strong>&#10067; Questions</strong>
+      <ul>
+        <li>Looking at this alignment, do you agree that these two genes are orthologues? What
+          in the picture makes you say so?</li>
+        <li>Why is the alignment not a perfect match? Give a reason for the single differing
+          positions and a reason for the gaps.</li>
+        <li>Align the same gene against a close relative and against a distant one. What
+          changes, and does the amount of change fit the tree in step 4?</li>
+        <li>Some regions match almost perfectly while others are a mess. What might that tell
+          you about those parts of the protein?</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>Do you agree?</b> For most pairs, yes, and the reason is the <em>pattern</em> rather than the percentage. What convinces you is a long stretch of the protein matching almost letter for letter, running the full length of both sequences, with the mismatches scattered as single positions rather than piled up in one place. Two unrelated proteins do not do that. Around 20 to 25 percent of positions match by chance alone between any two protein sequences, so a figure near that means nothing, while 87 percent running end to end between two species that separated 150 million years ago is not something chance produces.</li>
+      <li><b>Why it is not perfect.</b> The two lineages have been evolving separately ever since the species split, and two different kinds of change accumulate. <b>Single differing positions</b> come from point mutations, where one letter of the DNA changed and the amino acid at that position changed with it. Most of these are harmless, which is why they survive; notice how many of them are the "similar" colour, meaning the replacement amino acid has much the same chemical character and the protein carries on working. <b>Gaps</b> come from a different kind of event: a piece of DNA was inserted into one lineage or deleted from the other, so one protein has a stretch the other does not. Gaps in the middle of a protein are relatively rare because losing a chunk of a working protein usually breaks it, and you will notice that most gaps sit near the ends.</li>
+      <li><b>Close against distant.</b> The closer the species, the higher the identity and the fewer the gaps. For CAB1 the cabbage orthologue comes in around 97 percent while the rice one is around 87 percent, and that ordering follows the tree in step 4 exactly: less time since the split means less time to accumulate change. This is worth noticing because it is the same logic running in reverse. We use trees to interpret sequences, and sequence differences are how the trees were built in the first place.</li>
+      <li><b>Conserved and variable regions.</b> The regions that match almost perfectly are almost always the parts that <em>have</em> to be right: the active site of an enzyme, the surface where the protein grips another molecule, the core that holds it folded. A mutation there breaks the protein and the plant carrying it does worse, so those changes never spread. The messy regions are the parts where the exact sequence matters less, such as flexible linkers between the working parts, or the signal at the start of the protein that says which compartment of the cell to send it to, where the general character matters but the individual letters do not. So an alignment is not only evidence about ancestry, it is also a rough map of which parts of a protein matter, which is genuinely useful if you are deciding where to aim a mutation.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================ STEP 6 -->
+  <section class="step">
+    <h2><span class="num">6</span> Do it for real, and know what it does not tell you</h2>
+    <p class="lead">
+      Everything so far ran on data packaged into this page. Ensembl Plants is where that data
+      came from and where you would go in practice, so open the real pages for the gene you
+      picked. These three links are built from your selection in step 3 and go straight there.
+    </p>
+    <div class="controls" id="ensembl-links"></div>
+    <ul>
+      <li><strong>Summary</strong> is the gene itself: where it sits in the genome, what it is
+        called, and what is known about it.</li>
+      <li><strong>Orthologues</strong> is the table from step 3, for all of Ensembl's species
+        rather than ten. Each row has a <strong>View Sequence Alignment</strong> link, which is
+        the real version of step 5. Try it on a species this page does not carry.</li>
+      <li><strong>Gene tree</strong> is the evolutionary history the orthologues were derived
+        from, and the real version of the diagram you built in step 2. Blue nodes are species
+        splits and red nodes are gene copies, the same colours used here.</li>
+    </ul>
+
+    <p>
+      One last thing, and it is the thing that most often trips people up.
+      <strong>Orthologue means shared ancestry, not shared job.</strong> The definition is
+      entirely about history: these two genes descend from one gene in one ancestor. That is
+      all it claims. It is a good bet that they still do something similar, because that is
+      usually how it works out, and it is only a bet.
+    </p>
+    <p>
+      Genes drift into new roles. A gene may be switched on in the root in one species and in
+      the leaf in another, or matter enormously to a plant that lives in the cold and not at
+      all to one that does not. When a gene sits in a family of near-identical copies, as most
+      of the ones you just looked at do, the copies often divide the original job between them,
+      so no single one of them is the equivalent of your <em>Arabidopsis</em> gene. The
+      orthologue is where you start looking in the crop. Whether it does the same thing is a
+      question you answer with an experiment.
+    </p>
+
+    <div class="callout q">
+      <strong>&#10067; Questions</strong>
+      <ul>
+        <li>Take one of your orthologues and see whether you can find any published work on it.
+          Does what people report about it match what the gene does in <em>A. thaliana</em>?</li>
+        <li>Suppose the orthologue in wheat turns out to have three near-identical copies, and
+          you can only afford to knock out one of them. What would you expect to happen, and
+          what would that do to your experiment?</li>
+        <li>Pulling the week together: you have a cluster of co-expressed genes, a GO term that
+          describes them, and now orthologues in a crop. Write down, in three or four
+          sentences, the experiment you would propose next.</li>
+      </ul>
+    </div>
+    <div class="callout answer">
+      <strong>✅ Answer</strong>
+      <ul>
+      <li><b>The literature check.</b> What you find depends entirely on the gene, and the honest outcome for most of them is that <b>nothing has been published</b> on the crop orthologue at all. That is itself the answer to why this practical exists. Where you do find something, the usual pattern is a broad match with a specific mismatch: the crop gene turns out to be involved in the same general process, but switched on at a different time, in a different tissue, or in response to a different stress. Treat a match as encouragement rather than proof, and treat a mismatch as interesting rather than as an error, because a gene that has been repurposed in a crop is worth understanding. Also check what kind of evidence you have found: a paper that measured the gene is worth far more than a database entry that inferred its function from the <em>Arabidopsis</em> gene, which would just be your own assumption handed back to you.</li>
+      <li><b>Knocking out one of three copies.</b> Most likely <b>nothing visible happens</b>, and your experiment tells you nothing. The other two copies are still there and still doing the job, so the plant carries on as before. This is called redundancy and it is the standard frustration of working in wheat: the six sets of chromosomes that make the genome big also mean that single knockouts are usually silent. The consequences are practical. You may need to knock out all three copies together to see any effect at all, which is far more work. A negative result from a single knockout is close to uninformative, so you should not publish one as evidence that the gene does not matter. And if you have to choose, it can be smarter to work in a crop with fewer genome copies first, such as barley or rice, and move to wheat once you know what you are looking for.</li>
+      <li><b>The experiment.</b> A reasonable answer chains the whole week together and stays concrete. For example: the clustering put a group of genes together that rise in the AVR treatment at 6 and 12 hours but not in MOCK, GO enrichment says that group is enriched for programmed cell death, and Ensembl gives orthologues of the three strongest of those genes in barley, which is a real crop with only two sets of chromosomes. So: obtain or generate knockout lines for those three barley orthologues, infect them and wild-type barley with a comparable pathogen, and measure both the disease itself and the process the GO term pointed at, for instance by staining for cell death, at the same time points the original experiment used. Include a mock-inoculated control at every time point, for the reason step 4 of the GO practical made painfully clear. The point to get across is the shape of the argument: <em>clustering says which genes move together, GO says what they are probably doing, the orthologue says where to test it, and only the experiment says whether it is true.</em></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================ QUIZ -->
+  <section class="step">
+    <h2><span class="num">&#10003;</span> Check your understanding</h2>
+    <div class="quiz" id="quiz"></div>
+  </section>
+
+  <footer>
+    This HTML and JavaScript was created with the help of Claude Code, based on the original Jupyter notebooks.
+    Orthologue data from Ensembl Plants Compara.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   Data comes from two files.
+
+   ortholog_data.js (generated by tools/build_ortholog_data.py):
+     ORTH_SPECIES  [latin, common, clade, has sequences]
+     ORTH_TREE     species phylogeny, leaves index ORTH_SPECIES, -1 is Arabidopsis
+     ORTH          gene -> [[species, ortholog gene, type, identity, high conf], ...]
+     ORTH_PARALOGS gene -> paralogs within Arabidopsis
+     ORTH_SEQ      gene -> protein sequence, for every Arabidopsis gene and its
+                   closest orthologue in each species we have sequences for
+
+   go_data.js (shared with the GO enrichment practical, so the two pages cannot
+   disagree about which 500 genes they are talking about):
+     GENES, GO_SYMBOL, GO_TERMS, GO_DIRECT
+   ============================================================ */
+const TYPE_NAME  = {1:'one-to-one', 2:'one-to-many', 3:'many-to-many'};
+const TYPE_COL   = {1:'#4cc38a', 2:'#f2c14e', 3:'#e2a0d0', 0:'#56687d'};
+const COL_SPLIT  = '#5b9bd5';
+const COL_COPY   = '#e2725b';
+
+const el = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const label = g => GO_SYMBOL[g] && GO_SYMBOL[g] !== g ? g + ' (' + GO_SYMBOL[g] + ')' : g;
+const rowsFor = g => ORTH[g] || [];
+
+let selected = 'AT1G29930';
+
+/* ============================================================
+   Step 1: what the 500 genes look like once they are looked up
+   ============================================================ */
+function drawStep1(){
+  const withAny = GENES.filter(g => rowsFor(g).length).length;
+  const inSpecies = i => GENES.filter(g => rowsFor(g).some(r => r[0] === i)).length;
+  const total = GENES.reduce((n,g) => n + rowsFor(g).length, 0);
+  const wheat = ORTH_SPECIES.findIndex(s => s[1] === 'Bread wheat');
+  const rice  = ORTH_SPECIES.findIndex(s => s[1] === 'Rice');
+  const facts = [
+    ['have an orthologue somewhere', withAny + ' of 500'],
+    ['have one in bread wheat', inSpecies(wheat) + ' of 500'],
+    ['have one in rice', inSpecies(rice) + ' of 500'],
+    ['orthologues in total, in 10 species', total.toLocaleString()],
+  ];
+  el('step1-facts').innerHTML = facts.map(([k,v]) =>
+    '<div class="fact"><div class="v">' + v + '</div><div class="k">' + k + '</div></div>').join('');
+}
+
+/* ============================================================
+   Step 2: build the history yourself
+
+   Each scenario is a little tree. Internal nodes are either 'S' (the species
+   split) or 'D' (the gene was copied). Everything the panel says underneath is
+   derived from the tree rather than written out by hand, so the diagram and the
+   verdicts can never disagree.
+   ============================================================ */
+const SP_NAMES = ['Arabidopsis', 'Rice'];
+const SCENARIOS = [
+  { name: 'nothing copied',
+    tree: {ev:'S', kids:[{leaf:'A1', sp:0}, {leaf:'R1', sp:1}]},
+    cap: 'The simplest case. One ancestral gene, one species split, one copy left in each species.' },
+  { name: 'copied in rice',
+    tree: {ev:'S', kids:[{leaf:'A1', sp:0},
+                         {ev:'D', kids:[{leaf:'R1', sp:1}, {leaf:'R2', sp:1}]}]},
+    cap: 'After the two species separated, the gene was copied in the rice lineage only. Rice now carries two copies where Arabidopsis carries one.' },
+  { name: 'copied in both',
+    tree: {ev:'S', kids:[{ev:'D', kids:[{leaf:'A1', sp:0}, {leaf:'A2', sp:0}]},
+                         {ev:'D', kids:[{leaf:'R1', sp:1}, {leaf:'R2', sp:1}]}]},
+    cap: 'The gene was copied separately in both lineages after the split. Four genes now, two on each side.' },
+  { name: 'copied before the split',
+    tree: {ev:'D', kids:[{ev:'S', kids:[{leaf:'A1', sp:0}, {leaf:'R1', sp:1}]},
+                         {ev:'S', kids:[{leaf:'A2', sp:0}, {leaf:'R2', sp:1}]}]},
+    cap: 'The same four genes as the previous history, but the copying happened first, in the shared ancestor, and the species split afterwards. Only the order of the two events changed.' },
+];
+let scenario = 0;
+
+function leavesOf(node, out){
+  out = out || [];
+  if(node.leaf) out.push(node); else node.kids.forEach(k => leavesOf(k, out));
+  return out;
+}
+
+/* Which pairs are orthologues is decided the way a database decides it: walk up
+   from both genes and look at the event where the two paths meet. A species
+   split means orthologues, a copying event means paralogues. */
+function pairsOf(tree){
+  const pairs = [];
+  (function walk(node){
+    if(node.leaf) return;
+    node.kids.forEach(walk);
+    const groups = node.kids.map(k => leavesOf(k));
+    for(let i = 0; i < groups.length; i++)
+      for(let j = i + 1; j < groups.length; j++)
+        groups[i].forEach(a => groups[j].forEach(b => {
+          // how many genes of each gene's own species sit on its own side of
+          // this branch point: that is what one-to-many is counting
+          const m = groups[i].filter(x => x.sp === a.sp).length;
+          const n = groups[j].filter(x => x.sp === b.sp).length;
+          pairs.push({a, b, ev: node.ev,
+                      card: node.ev === 'S'
+                        ? (m === 1 && n === 1 ? 1 : (m === 1 || n === 1 ? 2 : 3))
+                        : 0});
+        }));
+  })(tree);
+  return pairs;
+}
+
+function drawScenario(){
+  const sc = SCENARIOS[scenario], tree = sc.tree;
+  const leaves = leavesOf(tree);
+  const W = 640, H = 260, top = 34, bottom = H - 56;
+
+  // x from leaf order, y from depth; internal nodes sit above their children
+  let k = 0;
+  const place = (node, depth) => {
+    node.depth = depth;
+    if(node.leaf){ node.x = 90 + (k++) * (W - 180) / Math.max(leaves.length - 1, 1); return; }
+    node.kids.forEach(c => place(c, depth + 1));
+    node.x = node.kids.reduce((s,c) => s + c.x, 0) / node.kids.length;
+  };
+  place(tree, 0);
+  let maxDepth = 0;
+  (function d(n){ maxDepth = Math.max(maxDepth, n.depth); if(!n.leaf) n.kids.forEach(d); })(tree);
+  const yOf = n => n.leaf ? bottom : top + n.depth * (bottom - top) / (maxDepth + 0.6);
+
+  let svg = '';
+  (function draw(node){
+    if(node.leaf) return;
+    const y = yOf(node);
+    node.kids.forEach(c => {
+      const cy = yOf(c);
+      svg += '<path class="branch" d="M' + node.x + ' ' + y + ' L' + c.x + ' ' + y +
+             ' L' + c.x + ' ' + cy + '"/>';
+      draw(c);
+    });
+    svg += '<circle cx="' + node.x + '" cy="' + y + '" r="7" fill="' +
+           (node.ev === 'S' ? COL_SPLIT : COL_COPY) + '"/>';
+    svg += '<text x="' + (node.x + 13) + '" y="' + (y + 4) + '" font-size="12" class="muted">' +
+           (node.ev === 'S' ? 'species split' : 'gene copied') + '</text>';
+  })(tree);
+
+  leaves.forEach(l => {
+    svg += '<circle cx="' + l.x + '" cy="' + bottom + '" r="6" fill="#e9eef5"/>';
+    svg += '<text x="' + l.x + '" y="' + (bottom + 24) + '" font-size="14" font-weight="700" text-anchor="middle">' + l.leaf + '</text>';
+    svg += '<text x="' + l.x + '" y="' + (bottom + 41) + '" font-size="12" text-anchor="middle" class="muted">' + SP_NAMES[l.sp] + '</text>';
+  });
+  svg += '<text x="8" y="' + (top + 4) + '" font-size="12" class="muted">past</text>';
+  svg += '<text x="8" y="' + (bottom + 4) + '" font-size="12" class="muted">now</text>';
+
+  el('scenario-svg').innerHTML =
+    '<svg class="diagram" viewBox="0 0 ' + W + ' ' + H + '" role="img">' + svg + '</svg>';
+  el('scenario-cap').textContent = sc.cap;
+
+  const pairs = pairsOf(tree);
+  // Arabidopsis first in every cross-species pair, so the table reads one way
+  pairs.forEach(p => { if(p.a.sp > p.b.sp){ const t = p.a; p.a = p.b; p.b = t; } });
+  const cross = pairs.filter(p => p.a.sp !== p.b.sp);
+  const within = pairs.filter(p => p.a.sp === p.b.sp);
+  const row = p => '<tr><td class="rowlab">' + p.a.leaf + ' and ' + p.b.leaf + '</td>' +
+    '<td>' + (p.ev === 'S' ? 'a species split' : 'a gene copy') + '</td>' +
+    '<td>' + (p.ev === 'S' ? '<span class="chip t' + p.card + '">orthologues, ' + TYPE_NAME[p.card] + '</span>'
+                           : '<span class="chip para">paralogues</span>') + '</td></tr>';
+  el('scenario-pairs').innerHTML =
+    '<h4>Every pair of genes in this history</h4>' +
+    '<p class="sub">Reading the tree upwards from each pair until the two paths meet.</p>' +
+    '<div class="tablescroll"><table class="markers"><thead><tr>' +
+    '<th class="rowlab">Pair</th><th>They meet at</th><th>So they are</th></tr></thead><tbody>' +
+    cross.map(row).join('') + within.map(row).join('') + '</tbody></table></div>';
+}
+
+function initScenarios(){
+  el('scenario-seg').innerHTML = SCENARIOS.map((s,i) =>
+    '<button data-i="' + i + '"' + (i === 0 ? ' class="on"' : '') + '>' + s.name + '</button>').join('');
+  el('scenario-seg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    scenario = +b.dataset.i;
+    [...el('scenario-seg').children].forEach((c,i) => c.classList.toggle('on', i === scenario));
+    drawScenario();
+  });
+  drawScenario();
+}
+
+/* ============================================================
+   Step 3: the real Ensembl Compara result for one gene
+   ============================================================ */
+function goTermsOf(gene){
+  return (GO_DIRECT[gene] || [])
+    .map(([i]) => GO_TERMS[i])
+    .sort((a,b) => b[2] - a[2])          // most specific first
+    .slice(0, 4)
+    .map(t => t[1]);
+}
+
+function drawGeneCard(){
+  const rows = rowsFor(selected);
+  const species = new Set(rows.map(r => r[0]));
+  const para = ORTH_PARALOGS[selected] || 0;
+  const terms = goTermsOf(selected);
+  el('gene-card').innerHTML =
+    '<h4>' + esc(GO_SYMBOL[selected] || selected) + '</h4>' +
+    '<p class="sub"><code>' + selected + '</code> &middot; <em>Arabidopsis thaliana</em></p>' +
+    '<p style="margin:0 0 8px">' +
+      (terms.length ? 'Known to be involved in ' + terms.map(esc).join(', ') + '.'
+                    : 'This gene has no biological-process annotation in the Gene Ontology.') +
+    '</p>' +
+    '<div class="facts" style="margin-bottom:0">' +
+      '<div class="fact"><div class="v">' + rows.length + '</div><div class="k">orthologues found</div></div>' +
+      '<div class="fact"><div class="v">' + species.size + ' of 10</div><div class="k">species with one</div></div>' +
+      '<div class="fact"><div class="v">' + para + '</div><div class="k">paralogues in <em>Arabidopsis</em></div></div>' +
+    '</div>';
+}
+
+function drawTable(){
+  const rows = rowsFor(selected);
+  const t = el('orth-table');
+  if(!rows.length){
+    t.innerHTML = '<tbody><tr><td class="empty">Ensembl finds no orthologue of ' + selected +
+      ' in any of these ten species. That is a result in itself, and step 4 is where to think about why.</td></tr></tbody>';
+    return;
+  }
+  t.innerHTML =
+    '<thead><tr><th class="rowlab">Species</th><th>Orthologue</th><th>Relationship</th>' +
+    '<th>Identity</th><th>High confidence</th></tr></thead><tbody>' +
+    rows.map(([sp, gene, type, ident, hc]) => {
+      const s = ORTH_SPECIES[sp];
+      return '<tr><td class="sp">' + s[1] + '<em>' + s[2] + '</em></td>' +
+        '<td class="gid">' + esc(gene) + '</td>' +
+        '<td><span class="chip t' + type + '">' + TYPE_NAME[type] + '</span></td>' +
+        '<td><span class="idbar"><i style="width:' + ident + '%"></i><b>' + ident + '%</b></span></td>' +
+        '<td>' + (hc ? 'yes' : '&ndash;') + '</td></tr>';
+    }).join('') + '</tbody>';
+}
+
+/* ============================================================
+   Step 4: the same counts, put back on the species tree
+   ============================================================ */
+function drawTree(){
+  const rows = rowsFor(selected);
+  const perSpecies = {};
+  rows.forEach(([sp,, type]) => {
+    const e = perSpecies[sp] || (perSpecies[sp] = {n: 0, type: 0});
+    e.n++;
+    e.type = Math.max(e.type, type);   // the loosest relationship reported
+  });
+
+  // lay the tree out left to right: x from depth, y from leaf order
+  const leaves = [];
+  (function collect(n){ n[1].length ? n[1].forEach(collect) : leaves.push(n); })(ORTH_TREE);
+  let maxDepth = 0;
+  (function depth(n, d){ n.d = d; maxDepth = Math.max(maxDepth, d); n[1].forEach(c => depth(c, d + 1)); })(ORTH_TREE, 0);
+
+  const rowH = 32, padTop = 18, stepX = 74, labelX = maxDepth * stepX + 24;
+  const H = leaves.length * rowH + padTop * 2, W = 720;
+  let i = 0;
+  (function place(n){
+    n.x = n.d * stepX + 20;
+    if(!n[1].length){ n.y = padTop + (i++) * rowH + rowH / 2; return; }
+    n[1].forEach(place);
+    n.y = (n[1][0].y + n[1][n[1].length - 1].y) / 2;
+  })(ORTH_TREE);
+
+  let svg = '';
+  (function draw(n){
+    n[1].forEach(c => {
+      svg += '<path class="branch" d="M' + n.x + ' ' + n.y + ' L' + n.x + ' ' + c.y +
+             ' L' + (c[1].length ? c.x : labelX - 10) + ' ' + c.y + '"/>';
+      draw(c);
+    });
+    if(n[1].length && n !== ORTH_TREE)
+      svg += '<text x="' + (n.x + 5) + '" y="' + (n.y - 7) + '" font-size="11" class="muted">' + n[0] + '</text>';
+  })(ORTH_TREE);
+
+  leaves.forEach(l => {
+    const idx = l[2], mine = idx === -1, info = perSpecies[idx];
+    const col = mine ? '#e9eef5' : TYPE_COL[info ? info.type : 0];
+    svg += '<circle cx="' + (labelX - 10) + '" cy="' + l.y + '" r="5" fill="' + col + '"/>';
+    svg += '<text x="' + labelX + '" y="' + (l.y + 4) + '" font-size="14"' +
+           (mine ? ' font-weight="700"' : '') + '>' + l[0] + '</text>';
+    const x = labelX + 130;
+    if(mine){
+      svg += '<text x="' + x + '" y="' + (l.y + 4) + '" font-size="13" fill="#4cc38a">the gene you picked</text>';
+    } else if(info){
+      svg += '<rect x="' + x + '" y="' + (l.y - 10) + '" width="' + (info.n > 9 ? 26 : 20) +
+             '" height="20" rx="5" fill="' + col + '"/>';
+      svg += '<text x="' + (x + (info.n > 9 ? 13 : 10)) + '" y="' + (l.y + 4) +
+             '" font-size="13" font-weight="700" fill="#08131c" text-anchor="middle">' + info.n + '</text>';
+      svg += '<text x="' + (x + 34) + '" y="' + (l.y + 4) + '" font-size="13" class="muted">' +
+             TYPE_NAME[info.type] + '</text>';
+    } else {
+      svg += '<text x="' + x + '" y="' + (l.y + 4) + '" font-size="13" class="muted">none found</text>';
+    }
+  });
+
+  el('tree-svg').innerHTML =
+    '<svg class="diagram" viewBox="0 0 ' + W + ' ' + H + '" role="img">' + svg + '</svg>';
+  const nsp = new Set(rows.map(r => r[0])).size;
+  el('tree-cap').textContent = label(selected) + ': ' + rows.length + ' orthologue' +
+    (rows.length === 1 ? '' : 's') + ' across ' + nsp + ' of the 10 species.';
+}
+
+/* Two genes from the dataset whose trees look nothing alike. Chosen from the
+   data rather than named here, so they stay true if the data is rebuilt. */
+function initContrast(){
+  const scored = GENES.filter(g => rowsFor(g).length).map(g => {
+    const rows = rowsFor(g);
+    return {g, n: rows.length, species: new Set(rows.map(r => r[0])).size};
+  });
+  const few = scored.filter(s => s.species >= 6).sort((a,b) => a.n - b.n)[0];
+  const many = scored.slice().sort((a,b) => b.n - a.n)[0];
+  const picks = [[few.g, few.n + ' orthologues'], [many.g, many.n + ' orthologues']];
+  el('contrast-seg').innerHTML = picks.map(([g, note]) =>
+    '<button data-g="' + g + '">' + label(g) + ': ' + note + '</button>').join('');
+  el('contrast-seg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    select(b.dataset.g);
+    el('tree-svg').scrollIntoView({behavior:'smooth', block:'center'});
+  });
+}
+
+/* ============================================================
+   Step 6: send them to the real thing, for the gene they picked
+   ============================================================ */
+function drawLinks(){
+  const base = 'https://plants.ensembl.org/Arabidopsis_thaliana/Gene/';
+  const links = [['Summary', 'Summary'], ['Orthologues', 'Compara_Ortholog'], ['Gene tree', 'Compara_Tree']];
+  el('ensembl-links').innerHTML =
+    '<span class="seg-label">Open ' + label(selected) + ' on Ensembl Plants:</span>' +
+    links.map(([text, page]) =>
+      '<a class="linkbtn" target="_blank" rel="noopener" href="' +
+      base + page + '?g=' + selected + '">' + text + ' &#8599;</a>').join(' ');
+}
+
+/* ============================================================
+   Step 5: align two proteins, here in the browser
+
+   Needleman-Wunsch with affine gaps (Gotoh) and the BLOSUM62 scoring table,
+   the same combination the sequence databases use. Gaps at the two ends are
+   free, so a protein that is simply longer at one end does not drag the whole
+   alignment out of register.
+   ============================================================ */
+const AA = 'ARNDCQEGHILKMFPSTWYVBZX*';
+const BLOSUM62_RAW = [
+ '4 -1 -2 -2 0 -1 -1 0 -2 -1 -1 -1 -1 -2 -1 1 0 -3 -2 0 -2 -1 0 -4',
+ '-1 5 0 -2 -3 1 0 -2 0 -3 -2 2 -1 -3 -2 -1 -1 -3 -2 -3 -1 0 -1 -4',
+ '-2 0 6 1 -3 0 0 0 1 -3 -3 0 -2 -3 -2 1 0 -4 -2 -3 3 0 -1 -4',
+ '-2 -2 1 6 -3 0 2 -1 -1 -3 -4 -1 -3 -3 -1 0 -1 -4 -3 -3 4 1 -1 -4',
+ '0 -3 -3 -3 9 -3 -4 -3 -3 -1 -1 -3 -1 -2 -3 -1 -1 -2 -2 -1 -3 -3 -2 -4',
+ '-1 1 0 0 -3 5 2 -2 0 -3 -2 1 0 -3 -1 0 -1 -2 -1 -2 0 3 -1 -4',
+ '-1 0 0 2 -4 2 5 -2 0 -3 -3 1 -2 -3 -1 0 -1 -3 -2 -2 1 4 -1 -4',
+ '0 -2 0 -1 -3 -2 -2 6 -2 -4 -4 -2 -3 -3 -2 0 -2 -2 -3 -3 -1 -2 -1 -4',
+ '-2 0 1 -1 -3 0 0 -2 8 -3 -3 -1 -2 -1 -2 -1 -2 -2 2 -3 0 0 -1 -4',
+ '-1 -3 -3 -3 -1 -3 -3 -4 -3 4 2 -3 1 0 -3 -2 -1 -3 -1 3 -3 -3 -1 -4',
+ '-1 -2 -3 -4 -1 -2 -3 -4 -3 2 4 -2 2 0 -3 -2 -1 -2 -1 1 -4 -3 -1 -4',
+ '-1 2 0 -1 -3 1 1 -2 -1 -3 -2 5 -1 -3 -1 0 -1 -3 -2 -2 0 1 -1 -4',
+ '-1 -1 -2 -3 -1 0 -2 -3 -2 1 2 -1 5 0 -2 -1 -1 -1 -1 1 -3 -1 -1 -4',
+ '-2 -3 -3 -3 -2 -3 -3 -3 -1 0 0 -3 0 6 -4 -2 -2 1 3 -1 -3 -3 -1 -4',
+ '-1 -2 -2 -1 -3 -1 -1 -2 -2 -3 -3 -1 -2 -4 7 -1 -1 -4 -3 -2 -2 -1 -2 -4',
+ '1 -1 1 0 -1 0 0 0 -1 -2 -2 0 -1 -2 -1 4 1 -3 -2 -2 0 0 0 -4',
+ '0 -1 0 -1 -1 -1 -1 -2 -2 -1 -1 -1 -1 -2 -1 1 5 -2 -2 0 -1 -1 0 -4',
+ '-3 -3 -4 -4 -2 -2 -3 -2 -2 -3 -2 -3 -1 1 -4 -3 -2 11 2 -3 -4 -3 -2 -4',
+ '-2 -2 -2 -3 -2 -1 -2 -3 2 -1 -1 -2 -1 3 -3 -2 -2 2 7 -1 -3 -2 -1 -4',
+ '0 -3 -3 -3 -1 -2 -2 -3 -3 3 1 -2 1 -1 -2 -2 0 -3 -1 4 -3 -2 -1 -4',
+ '-2 -1 3 4 -3 0 1 -1 0 -3 -4 0 -3 -3 -2 0 -1 -4 -3 -3 4 1 -1 -4',
+ '-1 0 0 1 -3 3 4 -2 0 -3 -3 1 -1 -3 -1 0 -1 -3 -2 -2 1 4 -1 -4',
+ '0 -1 -1 -1 -2 -1 -1 -1 -1 -1 -1 -1 -1 -1 -2 0 0 -2 -1 -1 -1 -1 -1 -4',
+ '-4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 1',
+].map(r => r.split(' ').map(Number));
+const AA_INDEX = new Int8Array(128).fill(AA.indexOf('X'));
+for(let i = 0; i < AA.length; i++) AA_INDEX[AA.charCodeAt(i)] = i;
+const sub = (a, b) => BLOSUM62_RAW[AA_INDEX[a.charCodeAt(0)]][AA_INDEX[b.charCodeAt(0)]];
+
+function align(a, b){
+  const n = a.length, m = b.length, W = m + 1, NEG = -1e9, GO = 11, GE = 1;
+  const size = (n + 1) * W;
+  const M = new Float32Array(size), X = new Float32Array(size), Y = new Float32Array(size);
+  const pM = new Uint8Array(size), pX = new Uint8Array(size), pY = new Uint8Array(size);
+  X[0] = Y[0] = NEG;
+  for(let i = 1; i <= n; i++){ const k = i * W; M[k] = NEG; Y[k] = NEG; X[k] = 0; pX[k] = 1; }
+  for(let j = 1; j <= m; j++){ M[j] = NEG; X[j] = NEG; Y[j] = 0; pY[j] = 2; }
+
+  for(let i = 1; i <= n; i++){
+    const k = i * W, kp = k - W, ai = a[i - 1];
+    for(let j = 1; j <= m; j++){
+      let best = M[kp + j - 1], p = 0;
+      if(X[kp + j - 1] > best){ best = X[kp + j - 1]; p = 1; }
+      if(Y[kp + j - 1] > best){ best = Y[kp + j - 1]; p = 2; }
+      M[k + j] = best + sub(ai, b[j - 1]); pM[k + j] = p;
+
+      let bx = X[kp + j] - GE, px = 1, t;
+      if((t = M[kp + j] - GO - GE) > bx){ bx = t; px = 0; }
+      if((t = Y[kp + j] - GO - GE) > bx){ bx = t; px = 2; }
+      X[k + j] = bx; pX[k + j] = px;
+
+      let by = Y[k + j - 1] - GE, py = 2;
+      if((t = M[k + j - 1] - GO - GE) > by){ by = t; py = 0; }
+      if((t = X[k + j - 1] - GO - GE) > by){ by = t; py = 1; }
+      Y[k + j] = by; pY[k + j] = py;
+    }
+  }
+
+  // free end gaps: finish wherever the last matched column scores best
+  let bi = n, bj = m, bs = -Infinity;
+  for(let j = 0; j <= m; j++) if(M[n * W + j] > bs){ bs = M[n * W + j]; bi = n; bj = j; }
+  for(let i = 0; i <= n; i++) if(M[i * W + m] > bs){ bs = M[i * W + m]; bi = i; bj = m; }
+
+  let ta = a.slice(bi).split(''), tb = b.slice(bj).split('');
+  while(ta.length < tb.length) ta.push('-');
+  while(tb.length < ta.length) tb.push('-');
+  const outA = ta, outB = tb;
+
+  let i = bi, j = bj, state = 0;
+  while(i > 0 && j > 0){
+    if(state === 0){
+      const p = pM[i * W + j];
+      outA.unshift(a[i - 1]); outB.unshift(b[j - 1]);
+      i--; j--; state = p;
+    } else if(state === 1){
+      const p = pX[i * W + j];
+      outA.unshift(a[i - 1]); outB.unshift('-');
+      i--; state = p;
+    } else {
+      const p = pY[i * W + j];
+      outA.unshift('-'); outB.unshift(b[j - 1]);
+      j--; state = p;
+    }
+  }
+  const la = a.slice(0, i).split(''), lb = b.slice(0, j).split('');
+  while(la.length < lb.length) la.unshift('-');
+  while(lb.length < la.length) lb.unshift('-');
+  return [la.concat(outA).join(''), lb.concat(outB).join('')];
+}
+
+function classOf(x, y){
+  if(x === '-' || y === '-') return 'gap';
+  if(x === y) return 'same';
+  return sub(x, y) > 0 ? 'sim' : 'diff';
+}
+
+function renderAlignment(topName, botName, A, B){
+  const width = 60, pad = Math.max(topName.length, botName.length, 8);
+  const runs = line => {                      // group by class to keep the DOM small
+    let out = '', cls = null, buf = '';
+    line.forEach(([ch, c]) => {
+      if(c !== cls){ if(buf) out += '<span class="' + cls + '">' + buf + '</span>'; cls = c; buf = ''; }
+      buf += ch;
+    });
+    return out + (buf ? '<span class="' + cls + '">' + buf + '</span>' : '');
+  };
+  let html = '', ia = 0, ib = 0;
+  for(let s = 0; s < A.length; s += width){
+    const ta = [], tm = [], tb = [];
+    const startA = ia + 1, startB = ib + 1;
+    for(let k = s; k < Math.min(s + width, A.length); k++){
+      const c = classOf(A[k], B[k]);
+      ta.push([A[k], c]); tb.push([B[k], c]);
+      tm.push([c === 'same' ? '|' : c === 'sim' ? ':' : ' ', 'mid']);
+      if(A[k] !== '-') ia++;
+      if(B[k] !== '-') ib++;
+    }
+    const lab = (t, p) => '<span class="lab">' + t.padEnd(pad) + ' ' + String(p).padStart(5) + '  </span>';
+    html += lab(topName, startA) + runs(ta) + '\n'
+          + '<span class="lab">' + ' '.repeat(pad + 8) + '</span>' + runs(tm) + '\n'
+          + lab(botName, startB) + runs(tb) + '\n\n';
+  }
+  return html;
+}
+
+/* The alignment follows the gene picked in step 3. Only the closest orthologue
+   per species ships with the page, so at most one row per species survives the
+   filter, and four of the ten species have no sequences at all. */
+function drawAlignPanel(){
+  // one partner per species, the closest. A sequence shipped for some other
+  // gene's benefit can happen to sit in this gene's list too, and offering two
+  // rows for one species and one for the next is just confusing.
+  const best = {};
+  rowsFor(selected).forEach(r => {
+    if(ORTH_SEQ[r[1]] && (!best[r[0]] || r[3] > best[r[0]][3])) best[r[0]] = r;
+  });
+  const partners = ORTH_SPECIES.map((_s, i) => best[i]).filter(Boolean);
+  const haveMine = !!ORTH_SEQ[selected];
+  el('aln-out').innerHTML = '<span class="lab">Press the button to build the alignment.</span>';
+  el('aln-facts').innerHTML = '';
+
+  if(!haveMine || !partners.length){
+    el('aln-controls').style.display = 'none';
+    el('aln-species').innerHTML = '';
+    const noneAnywhere = rowsFor(selected).length === 0;
+    el('aln-gene-card').innerHTML =
+      '<h4>' + esc(GO_SYMBOL[selected] || selected) + '</h4>' +
+      '<p class="empty">' + (noneAnywhere
+        ? 'Ensembl finds no orthologue of <code>' + selected + '</code> in any of these ten species, so there is nothing to align here. Step 4 is the place to think about why that might be.'
+        : '<code>' + selected + '</code> has orthologues only in species this page carries no sequences for. Pick another gene in step 3, or use the Ensembl link in step 6 to see the alignment on the real site.') +
+      '</p>';
+    return;
+  }
+
+  el('aln-controls').style.display = '';
+  el('aln-gene-name').textContent = label(selected);
+  el('aln-gene-card').innerHTML =
+    '<h4>' + esc(GO_SYMBOL[selected] || selected) + '</h4>' +
+    '<p class="sub"><code>' + selected + '</code> &middot; ' + ORTH_SEQ[selected].length +
+    ' amino acids &middot; closest orthologue available in ' + partners.length +
+    ' species</p>';
+  el('aln-species').innerHTML = partners
+    .map(([sp, g,, ident]) => '<option value="' + g + '">' + ORTH_SPECIES[sp][1] +
+         ' &middot; ' + g + ' (' + ident + '% identity)</option>').join('');
+}
+
+function runAlignment(){
+  const gene = selected, other = el('aln-species').value;
+  const a = ORTH_SEQ[gene], b = ORTH_SEQ[other];
+  if(!a || !b){ el('aln-out').innerHTML = '<span class="lab">No sequence available.</span>'; return; }
+  el('aln-out').innerHTML = '<span class="lab">Aligning...</span>';
+  setTimeout(() => {
+    const [A, B] = align(a, b);
+    let same = 0, sim = 0, gaps = 0;
+    for(let k = 0; k < A.length; k++){
+      const c = classOf(A[k], B[k]);
+      if(c === 'same') same++; else if(c === 'sim') sim++; else if(c === 'gap') gaps++;
+    }
+    // identity is counted the way Ensembl counts it, as a share of the
+    // Arabidopsis protein rather than of the alignment, so this figure agrees
+    // with the one in the table in step 3
+    el('aln-facts').innerHTML = [
+      [A.length, 'columns in the alignment'],
+      [Math.round(100 * same / a.length) + '%', 'of the <em>Arabidopsis</em> protein is identical'],
+      [same, 'identical positions'],
+      [sim, 'similar but not identical'],
+      [gaps, 'gap positions'],
+    ].map(([v, k]) => '<div class="fact"><div class="v">' + v + '</div><div class="k">' + k + '</div></div>').join('');
+    el('aln-out').innerHTML = renderAlignment(GO_SYMBOL[gene] || gene, other, A, B);
+  }, 20);
+}
+
+function initAlignment(){
+  el('aln-run').addEventListener('click', runAlignment);
+}
+
+/* ============================================================
+   Quiz
+   ============================================================ */
+const QUIZ = [
+  {
+    q: "A gene in Arabidopsis and a gene in wheat both descend from a single gene in the last common ancestor of the two species. What are they to each other?",
+    opts: [
+      "Orthologues, because a species split separated the two copies.",
+      "Paralogues, because there are now two copies of one ancestral gene.",
+      "Neither, since the term only applies within a single genome.",
+    ],
+    correct: 0,
+    why: "A species split is exactly what makes a pair orthologous. Paralogues come from the other event, a gene being copied inside one genome."
+  },
+  {
+    q: "Your Arabidopsis gene has four orthologues in bread wheat. What is the most likely reason?",
+    opts: [
+      "Ensembl could not decide which wheat gene was right, so it listed four.",
+      "The gene matters so much to the plant that evolution kept spare copies.",
+      "The gene was copied in the wheat lineage after the two species split.",
+    ],
+    correct: 2,
+    why: "Bread wheat carries six sets of chromosomes rather than two, so most Arabidopsis genes meet several wheat copies. All four descend from the ancestral gene through the same species split, which is what one-to-many means."
+  },
+  {
+    q: "Why is building a gene family tree better than just taking the best match in both directions?",
+    opts: [
+      "It compares the DNA rather than the protein, which is a more reliable signal.",
+      "It can tell a species split from a gene copy, which a best match cannot.",
+      "It searches many more species at once, so each match has more support.",
+    ],
+    correct: 1,
+    why: "A best match only knows which sequences look alike. A tree recovers the order of events, and that order is the whole difference between an orthologue and a paralogue."
+  },
+  {
+    q: "An Arabidopsis protein and its rice orthologue align at 62% identity. What can you safely conclude?",
+    opts: [
+      "One of the two is a paralogue, since real orthologues match far more closely.",
+      "The rice gene carries out the same job in rice that the Arabidopsis gene does.",
+      "The two have been changing separately ever since the species split apart.",
+    ],
+    correct: 2,
+    why: "Identity measures how much sequence has stayed the same, nothing more. Arabidopsis and rice separated around 150 million years ago, so 62% is a perfectly ordinary figure for a real orthologue, and it says nothing about function."
+  },
+  {
+    q: "You have found the wheat orthologue of a defence gene you studied in Arabidopsis. What have you established?",
+    opts: [
+      "That wheat becomes more resistant if you increase that gene's expression.",
+      "Where to start looking in wheat, but not yet what the gene does there.",
+      "That the wheat gene has the same function, because orthologues keep theirs.",
+    ],
+    correct: 1,
+    why: "Orthology is a statement about ancestry, not about function. It is a strong lead and a good place to spend an experiment, which is different from an answer."
+  },
+];
+function renderQuiz(){
+  const root = el('quiz');
+  QUIZ.forEach((item, qi) => {
+    const div = document.createElement('div'); div.className = 'qitem';
+    div.innerHTML = '<p class="qtext">' + (qi + 1) + '. ' + item.q + '</p>';
+    item.opts.forEach((o, oi) => {
+      const b = document.createElement('button'); b.className = 'opt'; b.textContent = o;
+      b.addEventListener('click', () => {
+        div.querySelectorAll('.opt').forEach(x => { x.disabled = true; });
+        b.classList.add(oi === item.correct ? 'correct' : 'wrong');
+        if(oi !== item.correct) div.querySelectorAll('.opt')[item.correct].classList.add('correct');
+        div.querySelector('.explain').classList.add('show');
+      });
+      div.appendChild(b);
+    });
+    const ex = document.createElement('p'); ex.className = 'explain'; ex.textContent = '💡 ' + item.why;
+    div.appendChild(ex);
+    root.appendChild(div);
+  });
+}
+
+/* ============================================================
+   Wiring + init
+   ============================================================ */
+function select(gene){
+  selected = gene;
+  el('gene-input').value = label(gene);
+  el('gene-input').classList.remove('unknown');
+  drawGeneCard();
+  drawTable();
+  drawTree();
+  drawAlignPanel();
+  drawLinks();
+}
+
+/* A type-to-search picker rather than a 500-entry dropdown, so a student who
+   found a gene in an earlier practical can go straight to it. Matching is on
+   the identifier and on the gene name, anywhere in the string. */
+const GENE_LIST = GENES.slice().sort();
+let matches = [], highlight = -1;
+
+function comboMatch(q){
+  q = q.trim().toLowerCase();
+  const hits = [];
+  for(let i = 0; i < GENE_LIST.length && hits.length < 80; i++){
+    const g = GENE_LIST[i], sym = GO_SYMBOL[g] || '';
+    if(!q || g.toLowerCase().indexOf(q) >= 0 || sym.toLowerCase().indexOf(q) >= 0) hits.push(g);
+  }
+  return hits;
+}
+
+function comboOpen(q){
+  matches = comboMatch(q);
+  highlight = matches.length ? 0 : -1;
+  comboPaint();
+  el('gene-list').hidden = false;
+}
+
+function comboPaint(){
+  el('gene-list').innerHTML = matches.length
+    ? matches.map((g, i) => {
+        const sym = GO_SYMBOL[g];
+        return '<div data-g="' + g + '"' + (i === highlight ? ' class="on"' : '') + '>' + g +
+          (sym && sym !== g ? ' <span class="sym">' + esc(sym) + '</span>' : '') + '</div>';
+      }).join('')
+    : '<div class="none">Nothing matches that. Try part of an identifier, such as AT3G, or part of a name, such as PAL.</div>';
+  const on = el('gene-list').querySelector('.on');
+  if(on) on.scrollIntoView({block: 'nearest'});
+}
+
+function comboClose(){
+  el('gene-list').hidden = true;
+  el('gene-input').value = label(selected);
+  el('gene-input').classList.remove('unknown');
+}
+
+function initGenePicker(){
+  const input = el('gene-input'), list = el('gene-list');
+  input.addEventListener('focus', () => { input.select(); comboOpen(''); });
+  input.addEventListener('input', () => {
+    comboOpen(input.value);
+    input.classList.toggle('unknown', !matches.length);
+  });
+  input.addEventListener('keydown', e => {
+    if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      e.preventDefault();
+      if(!matches.length) return;
+      highlight = (highlight + (e.key === 'ArrowDown' ? 1 : matches.length - 1)) % matches.length;
+      comboPaint();
+    } else if(e.key === 'Enter'){
+      e.preventDefault();
+      if(highlight >= 0){ select(matches[highlight]); list.hidden = true; input.blur(); }
+    } else if(e.key === 'Escape'){
+      comboClose(); input.blur();
+    }
+  });
+  // mousedown rather than click, so the choice registers before the input blurs
+  list.addEventListener('mousedown', e => {
+    const row = e.target.closest('[data-g]'); if(!row) return;
+    e.preventDefault();
+    select(row.dataset.g);
+    list.hidden = true;
+  });
+  input.addEventListener('blur', () => setTimeout(comboClose, 0));
+  el('gene-random').addEventListener('click', () => {
+    select(GENES[Math.floor(Math.random() * GENES.length)]);
+  });
+}
+
+drawStep1();
+initScenarios();
+initGenePicker();
+initContrast();
+initAlignment();
+renderQuiz();
+select(ORTH[ 'AT1G29930' ] ? 'AT1G29930' : GENES.find(g => rowsFor(g).length) || GENES[0]);
+</script>
+
+</body>
+</html>
