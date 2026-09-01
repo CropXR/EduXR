@@ -612,8 +612,8 @@
 <script>
 /* ============================================================
    Week 3 Practical 1, Deep learning on leaf images.
-   Ported from notebooks/W3_practical_1_deep_learning.ipynb and the
-   dsplantbreeding package:
+   Ported from the original W3 notebook and the dsplantbreeding package
+   (both removed from this repo; see git history):
      - the CNN matches Models.py::train_dl_model exactly
        (Conv2D 32 3x3 relu -> MaxPool 4x4 -> Flatten -> Dense 128 relu
         -> Dense 1 sigmoid, Adam lr=1e-3, binary crossentropy, batch 32)
@@ -758,7 +758,7 @@ const labelOf = i => LEAF_LABELS[i];
 const countHealthy = ids => ids.reduce((n, i) => n + (LEAF_LABELS[i] === 0 ? 1 : 0), 0);
 
 /* ============================================================
-   Metrics, mirrors dsplantbreeding/metrics.py
+   Metrics, mirror the removed dsplantbreeding/metrics.py
    ============================================================ */
 function confusion(labels, scores, threshold){
   let TP = 0, FP = 0, FN = 0, TN = 0;
