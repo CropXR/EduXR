@@ -159,7 +159,6 @@
       <strong>❓ Questions</strong>
       <ul>
         <li>Have a look at the paper. Which gene(s) are important for drought resistance, and which for white-fly resistance?</li>
-        <li>What do the two different kinds of arrows represent?</li>
         <li>Follow the arrows: how do you think the network will respond when there is <em>no</em> drought stress at all?</li>
       </ul>
     </div>
@@ -230,7 +229,7 @@
     <div class="callout q">
       <strong>❓ Questions</strong>
       <ul>
-        <li>Can you explain why the response is different when the drought lasts longer?</li>
+        <li>Can you explain why the response is different when the drought lasts longer? Why would this make biological sense?</li>
         <li>Does this model reflect the true underlying biology? In what ways does it, and in what ways doesn't it?</li>
         <li>Which gene(s) do you think you could knock out to change the response? Test your idea in the next step.</li>
       </ul>
@@ -254,7 +253,7 @@
       <strong>❓ Questions</strong>
       <ul>
         <li>Which combination(s) of knocked-out genes give the plant the "best" phenotype according to this model, keeping its defence even under a long drought?</li>
-        <li>Would doing this be realistic biologically? What could go wrong that this model doesn't capture?</li>
+        <li>Would doing this be realistic biologically? What could go wrong that this model doesn't capture? Before you answer, look up what else the hormone ABA does in a plant.</li>
         <li>What experiment would you propose next to test the model's prediction, and how would you explain your finding to a plant biologist?</li>
       </ul>
     </div>
@@ -543,14 +542,14 @@ const QUIZ = [
     why: "A mechanistic model starts from prior biological knowledge (which gene activates or represses which) written as equations, then simulates the dynamics. Data-driven methods instead search measurements for patterns."
   },
   {
-    q: "Drought raises ABA, which ends up lowering ICS1. Through the network, why?",
+    q: "You want to know what a drought twice as long would do to defence. Why build this bottom-up ODE model instead of clustering the expression data, as in the earlier practicals?",
     opts: [
-      "ABA directly activates ICS1 by binding to it.",
-      "ABA switches on ANAC019 and GENEC, which repress ICS1.",
-      "ICS1 has nothing to do with ABA in this model.",
+      "Clustering needs many more samples than this experiment provides.",
+      "Only causal rules let you simulate a drought nobody measured.",
+      "Clustering cannot be applied to time-series data at all.",
     ],
     correct: 1,
-    why: "ABA activates ABF2→ANAC019 and also GENEC. Both ANAC019 and GENEC repress ICS1, so more ABA means less ICS1, and therefore less SA and less BGL2 defence."
+    why: "Clustering is descriptive: it groups genes by how similar their measured profiles are, so it can only describe conditions you actually ran. The ODE model encodes cause and effect instead (ABA activates ABF2, ANAC019 represses ICS1), so you can change the input, such as a longer drought or a missing gene, and it computes what follows. That is what lets you ask 'what if' questions. The price is that you must know the mechanism up front, which clustering does not require."
   },
   {
     q: "A brief drought pulse barely dents BGL2, but a long one strongly suppresses it. Why?",

@@ -97,6 +97,17 @@
 
   .topgenes { font-size: 13px; color: var(--muted); margin-top: 10px; }
   .topgenes code { color: var(--accent); background: #0d1520; padding: 1px 5px; border-radius: 4px; }
+  .topgenes a { text-decoration: none; }
+  .topgenes .muted-note { opacity: .75; }
+  .topgenes a code { border: 1px solid var(--line); }
+  .topgenes a:hover code { border-color: var(--accent); }
+
+  .genelist { display: flex; flex-wrap: wrap; gap: 6px; max-height: 188px; overflow-y: auto;
+              margin-top: 10px; padding: 2px; }
+  .genelist a { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+                color: var(--accent); background: #0d1520; border: 1px solid var(--line);
+                border-radius: 4px; padding: 2px 6px; text-decoration: none; }
+  .genelist a:hover { border-color: var(--accent); }
 
   .quiz { margin-top: 10px; }
   .quiz .qitem { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; background: var(--panel-2); }
@@ -128,8 +139,7 @@
   <ul style="text-align:left; color: var(--muted); max-width: 640px; margin: 8px auto 0; padding-left: 20px;">
     <li>Describe how hierarchical clustering is applied to a transcriptomics dataset</li>
     <li>Explain the goal of unsupervised machine learning when used on gene expression data</li>
-    <li>Read a clustered heatmap and reason about which samples are most alike</li>
-    <li>Appreciate that there is often no single "best" clustering, since the number of clusters is a judgement call</li>
+    <li>Appreciate that there is often no single "best" clustering.</li>
   </ul>
   <div class="nav"><a href="index.html">&larr; All practicals</a></div>
 </header>
@@ -142,13 +152,7 @@
     <p class="lead">In this practical we explore real RNA-seq data from the study
       <a href="https://doi.org/10.1371/journal.pone.0074183" target="_blank" rel="noopener"><em>High-Throughput RNA Sequencing of Pseudomonas-Infected Arabidopsis Reveals Hidden Transcriptome Complexity and Novel Splice Variants</em></a>
       by Howard <em>et&nbsp;al.</em> (2013). Open the paper in a new tab, because you will keep coming back to it to connect what you see here with the plant biology from the lectures.</p>
-    <p>The researchers took <em>Arabidopsis</em> plants and applied <strong>three treatments</strong>:</p>
-    <ul>
-      <li><strong>MOCK</strong>: a control, the plant is handled the same way but receives no bacteria.</li>
-      <li><strong>AVR</strong>: infection with an <em>avirulent</em> strain of <em>Pseudomonas</em>: the plant's immune system recognises it and mounts a defence.</li>
-      <li><strong>VIR</strong>: infection with a <em>virulent</em> strain: it evades or suppresses the plant's defences and causes disease.</li>
-    </ul>
-    <p>Each treatment was sampled at <strong>three time points</strong> (1, 6 and 12&nbsp;hours), giving <strong>9 samples</strong> in total. For each sample we have the expression of the same <strong>500 genes</strong>. The numbers are <em>z-scored per gene</em>: for every gene the nine values were rescaled to have mean&nbsp;0, so a positive number means "higher than that gene's average" and a negative number means "lower than average". This lets us compare the <em>shape</em> of a gene's response across samples rather than its absolute level.</p>
+    <p>The researchers took <em>Arabidopsis</em> plants and applied <strong>three treatments</strong>. Each treatment was sampled at <strong>three time points</strong> (1, 6 and 12&nbsp;hours), giving <strong>9 samples</strong> in total. For each sample we have the expression of the same <strong>500 genes</strong>. The numbers are <em>z-scored per gene</em>: for every gene the nine values were rescaled to have mean&nbsp;0, so a positive number means "higher than that gene's average" and a negative number means "lower than average". This lets us compare the <em>shape</em> of a gene's response across samples rather than its absolute level.</p>
     <div class="tablescroll" id="data-table"></div>
     <p class="chart-hint">A small slice of the data: rows are genes, columns are the 9 samples, numbers are z-scored expression.</p>
     <div class="callout q">
@@ -157,6 +161,10 @@
         <li>Look at the paper. What are the three treatments, and what is the goal of comparing them?</li>
         <li>Why do you think the plants were sampled at several time points instead of just one?</li>
       </ul>
+      <details>
+        <summary>💡 Hint on where to find the treatments</summary>
+        <p>In the paper, scroll down to <strong>Results</strong> and look at the section called <strong>Dataset</strong>. The very first paragraph there lists what was infiltrated into the leaves for each of the three treatments. While you read it, ask yourself which treatment received no bacteria at all, and what the difference is between the two bacterial strains, because that difference is the reason the experiment was designed with three treatments rather than two.</p>
+      </details>
     </div>
   </section>
 
@@ -182,8 +190,8 @@
         <li>Explain the clustering in your own words: what does it tell you about the relationships between the samples?</li>
       </ul>
       <details>
-        <summary>💡 Hint for the avirulent-vs-virulent question</summary>
-        <p>Don't decide from the names alone. Two of the three treatments involve actually infecting the plant with <em>Pseudomonas</em> bacteria, while one does not, so which treatment is really the odd one out? Now look at the dendrogram at each time point: which two samples get merged together first (at the shortest distance)? Think about what a plant's cells are busy doing when they detect any bacterial attack, versus when nothing is there at all.</p>
+        <summary>💡 Hint on reading the dendrogram</summary>
+        <p>Do not answer this one from the names of the treatments. To work out how far apart two samples are, start at each of them and follow the tree upwards until the two paths meet. The height at which they join is the distance the algorithm found between them, so the lower they meet, the more alike they are. Go through the tree in that order: which two samples get merged together first, which sample joins them next, and which one is left until last? Read that off the tree using only the data. Once you have that order, go back to the biology and ask which explanation fits what you found.</p>
       </details>
     </div>
   </section>
@@ -228,6 +236,14 @@
       <canvas id="clusterbar" height="200"></canvas>
       <p class="chart-hint" id="clusterbar-cap">Number of genes in each cluster.</p>
     </div>
+    <div class="chartbox">
+      <div class="controls" style="margin:0">
+        <span class="seg-label">Which genes are in cluster:</span>
+        <div class="seg" id="cluster-seg"></div>
+      </div>
+      <div class="genelist" id="cluster-genes"></div>
+      <p class="chart-hint" id="cluster-genes-cap"></p>
+    </div>
     <div class="callout info">
       <strong>Notice</strong> how the number of clusters, and even which genes end up together, shift as you move the cut and switch the distance or linkage. There is rarely one obviously correct answer, and choosing a clustering is a judgement call that depends on the biological question you are asking.
     </div>
@@ -237,9 +253,10 @@
         <li>How many clusters do you think is most appropriate for this dataset? Why? Is there a single right answer?</li>
         <li>Switch between the linkage and distance options. What differences do you observe, and can you explain them?</li>
         <li>Which cluster(s) of genes would be most interesting to study further, and how would you decide?</li>
+        <li>Try to link a cluster back to the underlying biology. Look at the coloured block a cluster forms in the heatmap: in which treatments and at which time points are those genes high, and in which are they low? What function do you think the genes in that cluster might be carrying out for the plant?</li>
       </ul>
     </div>
-    <p>If you have extra time, pick a few genes from an interesting cluster and look them up in a database such as <a href="https://www.uniprot.org/" target="_blank" rel="noopener">UniProt</a>. Can you link them to a biological process involved in stress response, and does that match what the Howard <em>et&nbsp;al.</em> paper reports?</p>
+    <p>If you have extra time, pick a cluster in the list above and click a few of its genes. Each one opens that gene in <a href="https://www.uniprot.org/" target="_blank" rel="noopener">UniProt</a>, where you can read what the protein is thought to do. Can you link them to a biological process involved in stress response, does the whole cluster tell a consistent story, and does it match what the Howard <em>et&nbsp;al.</em> paper reports?</p>
   </section>
 
   <!-- STEP 4 -->
@@ -271,7 +288,8 @@
       <ul>
         <li>What happens to the network as you change the correlation threshold?</li>
         <li>What could it mean, biologically, that two genes are connected by an edge?</li>
-        <li>Is there a relationship between the hierarchical clusters from step 3 and the tightly connected knots you see here?</li>
+        <li>Think it through rather than looking it up: <em>would you expect</em> the hierarchical clusters from step 3 and the tightly connected knots here to correspond to each other? Why, or why not?</li>
+        <li>What can you learn from a network that you cannot learn from clustering, and what can you learn from clustering that you cannot learn from a network?</li>
         <li>The colouring highlights "central" genes. If you worked with a plant biologist, which genes would you suggest studying next, and what experiment would you propose?</li>
       </ul>
     </div>
@@ -570,7 +588,7 @@ function drawHeatmap(){
 /* ============================================================
    STEP 3 — dendrogram explorer + genes-per-cluster bar
    ============================================================ */
-const explorer = { metric:'correlation', method:'average', k:4 };
+const explorer = { metric:'correlation', method:'average', k:4, sel:0 };
 // Integrated figure: gene dendrogram (+ cut) | cluster sidebar | heatmap | sample dendrogram.
 // The dendrogram leaves line up row-for-row with the heatmap, so students see exactly which
 // genes fall into which cluster and how that maps onto the coloured blocks in the heatmap.
@@ -665,6 +683,29 @@ function drawClusterFigure(){
   ctx.fillText('500 genes', 0, 0); ctx.restore();
 
   drawClusterBar(clusterOf, k);
+  renderClusterGenes(clusterOf, k);
+}
+// The gene names behind one cluster, so students can look a few of them up.
+function renderClusterGenes(clusterOf, k){
+  if (explorer.sel >= k) explorer.sel = 0;
+  const seg = document.getElementById('cluster-seg');
+  seg.innerHTML = '';
+  for (let c=0;c<k;c++){
+    const b = document.createElement('button');
+    b.textContent = c+1;
+    if (c === explorer.sel){ b.classList.add('on'); b.style.background = TAB10[c%10]; b.style.color = '#08121c'; }
+    b.addEventListener('click', ()=>{ explorer.sel = c; renderClusterGenes(clusterOf, k); });
+    seg.appendChild(b);
+  }
+  const members = [];
+  for (let i=0;i<N_GENES;i++) if (clusterOf[i] === explorer.sel) members.push(GENES[i]);
+  const list = document.getElementById('cluster-genes');
+  list.innerHTML = members.map(g =>
+    `<a href="https://www.uniprot.org/uniprotkb?query=${g}" target="_blank" rel="noopener">${g}</a>`
+  ).join('');
+  document.getElementById('cluster-genes-cap').textContent =
+    `The ${members.length} gene${members.length===1?'':'s'} in cluster ${explorer.sel+1}. `
+    + `Click one to open it in UniProt in a new tab.`;
 }
 function drawClusterBar(clusterOf, k){
   const canvas = document.getElementById('clusterbar');
@@ -782,7 +823,9 @@ function buildNetwork(){
     `Drag nodes, scroll to zoom, hover for a gene name.`;
   const top=[...active].sort((a,b)=>score[b]-score[a]).slice(0,8);
   document.getElementById('net-top').innerHTML =
-    `<b>Top genes by ${mode}:</b> ` + top.map(i=>`<code>${GENES[i]}</code>`).join(' ');
+    `<b>Top genes by ${mode}:</b> ` + top.map(i=>
+      `<a href="https://www.uniprot.org/uniprotkb?query=${GENES[i]}" target="_blank" rel="noopener"><code>${GENES[i]}</code></a>`
+    ).join(' ') + ' <span class="muted-note">Click one to open it in UniProt.</span>';
 }
 
 /* ============================================================
