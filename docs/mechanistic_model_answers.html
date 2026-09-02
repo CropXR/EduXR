@@ -157,7 +157,6 @@
       <strong>❓ Questions</strong>
       <ul>
         <li>Have a look at the paper. Which gene(s) are important for drought resistance, and which for white-fly resistance?</li>
-        <li>What do the two different kinds of arrows represent?</li>
         <li>Follow the arrows: how do you think the network will respond when there is <em>no</em> drought stress at all?</li>
       </ul>
     </div>
@@ -165,7 +164,6 @@
       <strong>✅ Answer</strong>
       <ul>
       <li><b>Drought resistance</b> runs through the ABA branch: drought raises the hormone <b>ABA</b>, which drives <b>ABF2 → ANAC019</b> and <b>GENEC</b>. <b>White-fly (biotic) resistance</b> is the salicylic-acid pathway <b>ICS1 → SA → BGL2</b>; <b>BGL2</b> is the defence marker we read out. The clever bit the paper highlights is the <em>link</em> between them: the drought (ABA) branch represses the defence (ICS1) branch.</li>
-      <li><b>Arrows:</b> a green solid arrow means the source gene <b>activates</b> (switches on) its target; a red dashed arrow means it <b>represses</b> (switches off) its target.</li>
       <li><b>No drought:</b> with drought = 0, ABA stays low, so ABF2, ANAC019 and GENEC stay low. Nothing is repressing ICS1, so ICS1 is expressed → SA is produced → BGL2 is high. The resting plant is <b>fully defended</b>.</li>
       </ul>
     </div>
@@ -251,7 +249,7 @@
     <div class="callout q">
       <strong>❓ Questions</strong>
       <ul>
-        <li>Can you explain why the response is different when the drought lasts longer?</li>
+        <li>Can you explain why the response is different when the drought lasts longer? Why would this make biological sense?</li>
         <li>Does this model reflect the true underlying biology? In what ways does it, and in what ways doesn't it?</li>
         <li>Which gene(s) do you think you could knock out to change the response? Test your idea in the next step.</li>
       </ul>
@@ -260,6 +258,7 @@
       <strong>✅ Answer</strong>
       <ul>
       <li><b>Why it differs:</b> a sustained drought holds ABA, and therefore ANAC019 and GENEC, high for a long time. Their combined repression keeps ICS1 switched off long enough for ICS1, SA and BGL2 to actually decay away. So defence collapses for the duration of the drought, and only recovers once the drought ends. The key variable is not <em>whether</em> the repressors turn on, but for <em>how long</em>.</li>
+      <li><b>Why that makes biological sense:</b> the plant has a limited budget of energy, carbon and nitrogen, and both responses are expensive. Under a real, prolonged drought the immediate threat to survival is water loss, so it makes sense to spend everything on closing stomata, adjusting osmotic balance and protecting tissue, even though the price is a temporarily lowered guard against attackers. The two branches are not independent processes that happen to interfere; the repression of ICS1 by the ABA branch looks like a deliberate switch that <em>prioritises</em> one stress over the other. Combine this with the previous step and you get the full logic: brief dry spells are ignored, and only a drought that persists is worth paying for. The uncomfortable consequence for agriculture is that a drought-stressed crop is a more vulnerable crop, which is exactly the trade-off breeders would like to break.</li>
       <li><b>Does it reflect biology?</b> Qualitatively yes: it captures a real, documented trade-off (drought signalling suppressing salicylic-acid defence) and the sensible logic that only prolonged stress flips the switch. But it is a heavy simplification: only a handful of genes, deterministic with no noise, fixed Hill parameters and arbitrary interaction strengths, no feedback loops, no tissue or spatial detail, and no fitness cost attached. Treat it as a caricature that is useful for reasoning, not as ground truth.</li>
       <li><b>Which genes to knock out:</b> to protect defence, target the repressors of ICS1, namely <b>ANAC019</b> and/or <b>GENEC</b>, or cut the signal at its source by knocking out <b>ABA</b>. (Test in the next step.)</li>
       </ul>
@@ -283,15 +282,17 @@
       <strong>❓ Questions</strong>
       <ul>
         <li>Which combination(s) of knocked-out genes give the plant the "best" phenotype according to this model, keeping its defence even under a long drought?</li>
-        <li>Would doing this be realistic biologically? What could go wrong that this model doesn't capture?</li>
+        <li>Would doing this be realistic biologically? What could go wrong that this model doesn't capture? Before you answer, look up what else the hormone ABA does in a plant.</li>
         <li>What experiment would you propose next to test the model's prediction, and how would you explain your finding to a plant biologist?</li>
       </ul>
     </div>
     <div class="callout answer">
       <strong>✅ Answer</strong>
       <ul>
-      <li><b>Best knockouts:</b> silence the two repressors of ICS1, that is <b>ANAC019 and GENEC together</b>. Then even a long drought cannot switch ICS1 off, so SA and BGL2 stay high and the plant keeps its white-fly defence throughout. Knocking out <b>ABA</b> also works, by removing the drought signal before it ever reaches the repressors. Note the trap: knocking out ICS1, SA or BGL2 themselves <em>destroys</em> defence, the opposite of what you want.</li>
-      <li><b>Realistic?</b> Not straightforwardly. Defence is metabolically costly, so a plant that can never dial it down may waste resources it needs to survive drought, hurting growth or yield, a cost this model does not include. Transcription factors like ANAC019 are also pleiotropic (they regulate many other genes), so knocking them out likely has side effects far beyond this little network. The model also ignores off-target effects, environment and gene-gene redundancy.</li>
+      <li><b>Best knockouts:</b> silence the two repressors of ICS1, that is <b>ANAC019 and GENEC together</b>. Then even a long drought cannot switch ICS1 off, so SA and BGL2 stay high and the plant keeps its white-fly defence throughout. Knocking out <b>ABA</b> also works <em>in the model</em>, by removing the drought signal before it ever reaches the repressors, but hold that thought until the next question. Note the trap: knocking out ICS1, SA or BGL2 themselves <em>destroys</em> defence, the opposite of what you want.</li>
+      <li><b>Realistic?</b> Not straightforwardly. Defence is metabolically costly, so a plant that can never dial it down may waste resources it needs to survive drought, hurting growth or yield, a cost this model does not include.</li>
+      <li><b>The ABA knockout in particular is a bad idea,</b> and it is worth being specific about why, because in the model it looks like the cleanest solution of all. In the diagram ABA is drawn as a single node with two outgoing arrows, as though its only job were to feed this pathway. In a real plant ABA is one of the central hormones, and it is <em>pleiotropic</em>, meaning one molecule with many different jobs. It is what closes the stomata when water runs short, which is the plant's single most important drought response, so a plant without ABA keeps its pores wide open and dries out faster than a normal plant. It also controls seed dormancy, so seeds germinate at the wrong moment, and it feeds into cold and salt tolerance, root growth and leaf senescence. So a knockout that the model scores as a success (defence stays high) would in reality give you a plant that keeps its white-fly resistance and then dies of the drought. The general lesson: the model contains only the arrows somebody drew, and a node's real biological connections are almost always broader than the ones in the diagram. The more central and upstream a component is, the more true that is, which is why intervening on a specific downstream regulator is usually safer than intervening on a hormone.</li>
+      <li><b>Other things the model leaves out.</b> Transcription factors such as ANAC019 are pleiotropic too, just less spectacularly so than ABA, so they carry the same risk on a smaller scale. Beyond that: off-target edits, redundancy between genes (another gene may quietly take over the repression), differences between tissues and developmental stages, and the fact that a greenhouse is not a field.</li>
       <li><b>Next experiment and communication:</b> create the knockout line (for example by CRISPR, or use an existing mutant), then measure both traits under a real drought: white-fly resistance and SA/BGL2 levels <em>and</em> drought survival, growth and yield, in controlled and ideally field conditions. Present the result to a biologist as a <em>model-generated hypothesis</em> with explicit caveats: "the model predicts X; here is the trade-off it ignores; here is the experiment that would confirm or refute it."</li>
       </ul>
     </div>
@@ -580,14 +581,14 @@ const QUIZ = [
     why: "A mechanistic model starts from prior biological knowledge (which gene activates or represses which) written as equations, then simulates the dynamics. Data-driven methods instead search measurements for patterns."
   },
   {
-    q: "Drought raises ABA, which ends up lowering ICS1. Through the network, why?",
+    q: "You want to know what a drought twice as long would do to defence. Why build this bottom-up ODE model instead of clustering the expression data, as in the earlier practicals?",
     opts: [
-      "ABA directly activates ICS1 by binding to it.",
-      "ABA switches on ANAC019 and GENEC, which repress ICS1.",
-      "ICS1 has nothing to do with ABA in this model.",
+      "Clustering needs many more samples than this experiment provides.",
+      "Only causal rules let you simulate a drought nobody measured.",
+      "Clustering cannot be applied to time-series data at all.",
     ],
     correct: 1,
-    why: "ABA activates ABF2→ANAC019 and also GENEC. Both ANAC019 and GENEC repress ICS1, so more ABA means less ICS1, and therefore less SA and less BGL2 defence."
+    why: "Clustering is descriptive: it groups genes by how similar their measured profiles are, so it can only describe conditions you actually ran. The ODE model encodes cause and effect instead (ABA activates ABF2, ANAC019 represses ICS1), so you can change the input, such as a longer drought or a missing gene, and it computes what follows. That is what lets you ask 'what if' questions. The price is that you must know the mechanism up front, which clustering does not require."
   },
   {
     q: "A brief drought pulse barely dents BGL2, but a long one strongly suppresses it. Why?",
