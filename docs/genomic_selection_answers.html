@@ -307,7 +307,7 @@
     <div class="callout answer">
       <strong>✅ Answer</strong>
       <ul>
-      <li><b>Why the predictions are not perfect.</b> Several reasons stack up, and none of them can be trained away. The biggest is that the phenotype is not purely genetic: two plants with identical DNA still yield differently because of soil, water, light and chance, and no model reading only DNA can predict that part. On top of that the model has seen a limited number of training plants, so its 50 weights are estimates rather than truths; the markers we measured may not be the causal variants themselves, only positions that happen to sit near them; and the model assumes contributions simply add up, whereas real genes interact. The scatter around the diagonal is the honest visual summary of all of that, and a model that sat exactly on the line would be a warning sign, not a triumph.</li>
+      <li><b>Why the predictions are not perfect.</b> Several reasons stack up, and none of them can be trained away. The biggest is that the phenotype is not purely genetic: two plants with identical DNA still yield differently because of soil, water, light and chance, and no model reading only DNA can predict that part. On top of that the model has seen a limited number of training plants, so its 50 weights are estimates rather than truths; and the markers we measured may not be the causal variants themselves, only positions that happen to sit near them. The scatter around the diagonal is the honest visual summary of all of that, and a model that sat exactly on the line would be a warning sign, not a triumph.</li>
       <li><b>The unseen plants, and why they matter.</b> The yellow points should sit around the diagonal much like the blue ones, so yes, the model still works on plants it never saw. That is the result you actually care about. The blue training points are not evidence of anything, because the model was fitted to them: a model can score well there simply by memorising, which teaches you nothing about the next plant. Only the held-out points estimate what happens when you use the model for real, on seedlings whose yield nobody has measured, which is the entire purpose of the exercise. Set the training size very low and watch the two groups come apart: the model still tracks the blue points reasonably while the yellow ones scatter badly. That gap is overfitting, and testing on unseen plants is how you catch it.</li>
       </ul>
     </div>
@@ -342,7 +342,17 @@
         <li>Today's elite variety is already very good. What does it mean that genomic selection can push the yield past that dashed line?</li>
         <li>Do you think genomic selection would also work for a trait controlled by a single marker, like salt resistance? Why or why not?</li>
         <li>Could you think of some limitations of genomic selection? </li>
+        <li>Here is one limitation worth working out for yourself. The model predicts by multiplying each marker by its weight and adding all 50 contributions together, so a marker always contributes the same amount no matter what the other markers are doing. Biologists use the word <strong>epistasis</strong> for the case where the effect of one gene depends on which allele is present at another gene. Can our model capture epistasis? And what would that mean for its predictions?</li>
       </ul>
+      <details>
+        <summary>💡 Hint: a pathway with two steps</summary>
+        <p>Imagine a plant makes a useful compound in two steps, each carried out by its own enzyme,
+        and that there is a marker for an improved version of each of the two enzymes. The improved
+        second enzyme can only work on what the first step hands it, so on its own it barely helps.
+        Only a plant carrying both improved enzymes gets the full benefit, which is more than the two
+        separate effects added together. Now ask yourself what weight the model would learn for each
+        of those two markers.</p>
+      </details>
     </div>
     <div class="callout answer">
       <strong>✅ Answer</strong>
@@ -351,6 +361,7 @@
       <li><b>Passing the elite line.</b> The dashed line is the best variety farmers currently grow, so crossing it means the breeding programme has produced something better than today's best. It is possible because the elite variety is good but not perfect: it carries most of the favourable alleles but is missing one, and no single existing plant happens to combine every favourable allele at once. The variation to do better is already present in the population, scattered across different individuals. Selection does not create anything new; it <b>assembles</b> favourable alleles that were already there into one plant. That is also why progress eventually slows: once the favourable alleles are all fixed, there is nothing left to assemble.</li>
       <li><b>Would it work for a single-marker trait?</b> Yes, it would work, but it would be the wrong tool. The model would simply learn one large weight on Marker 12 and near-zero weights everywhere else, and selecting on the predicted value would amount to selecting on Marker 12. You would get the right answer by an expensive route: genotyping every marker and fitting a model in order to reproduce what a single marker test tells you directly and far more cheaply. There is also a real cost to the detour, since with a small training population the model may spread the effect across nearby markers or attach weight to markers that are only there by chance. The rule of thumb: use marker assisted selection when one marker explains most of the trait, and genomic selection when no single marker does.</li>
       <li><b>Limitations.</b> The most important one is that the model is only valid for the population it was trained on. Its weights are not statements about biology, they are statements about which markers happened to travel with the causal genes <em>in that population</em>. Apply it to unrelated material and those associations may be weaker, absent or reversed, and the predictions degrade badly. The same applies across environments: a model trained on yield in one climate can rank plants wrongly in another, because the genes that matter are not the same ones. Then there are the slower problems. The associations decay over generations as recombination separates markers from the genes they were standing in for, so the model has to be retrained on new measured plants every so often. Selecting hard on predictions shrinks genetic variation each cycle, so gains get smaller and the population becomes inbred, and a model that only knows about yield will happily drive yield up while quietly discarding disease resistance or drought tolerance that nobody told it to protect.</li>
+      <li><b>Epistasis.</b> No, this model cannot capture it. The prediction is one fixed weight per marker, added up, so the marker for the improved second enzyme contributes the same amount whether or not the plant also carries the improved first one, and there is no term that can switch on only when both are present. The model does the best it can by splitting the joint effect across the two weights, which is roughly right on average but wrong for individual plants: it overestimates plants carrying only one of the pair and underestimates plants carrying both. That matters for breeding, because the allele combinations worth chasing are exactly the ones the model cannot see.</li>
       </ul>
     </div>
   </section>
@@ -930,6 +941,16 @@ const QUIZ = [
     ],
     correct: 1,
     why: "The learned weights reflect the training population. On genetically distant material the marker-trait relationships can differ, so accuracy drops and the model may need retraining."
+  },
+  {
+    q: "Two markers only raise yield when their favourable alleles occur together. What does our additive model do with that?",
+    opts: [
+      "It captures it automatically, as soon as enough plants have been measured for training.",
+      "It cannot represent it, and mispredicts individual plants.",
+      "It sets both markers to a weight of zero and ignores them from then on.",
+    ],
+    correct: 1,
+    why: "The prediction is a fixed weight per marker, added up. Nothing switches on only when both favourable alleles are present, so the joint effect gets smeared across the two weights."
   },
 ];
 function renderQuiz(){

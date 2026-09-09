@@ -317,7 +317,17 @@
         <li>Today's elite variety is already very good. What does it mean that genomic selection can push the yield past that dashed line?</li>
         <li>Do you think genomic selection would also work for a trait controlled by a single marker, like salt resistance? Why or why not?</li>
         <li>Could you think of some limitations of genomic selection? </li>
+        <li>Here is one limitation worth working out for yourself. The model predicts by multiplying each marker by its weight and adding all 50 contributions together, so a marker always contributes the same amount no matter what the other markers are doing. Biologists use the word <strong>epistasis</strong> for the case where the effect of one gene depends on which allele is present at another gene. Can our model capture epistasis? And what would that mean for its predictions?</li>
       </ul>
+      <details>
+        <summary>💡 Hint: a pathway with two steps</summary>
+        <p>Imagine a plant makes a useful compound in two steps, each carried out by its own enzyme,
+        and that there is a marker for an improved version of each of the two enzymes. The improved
+        second enzyme can only work on what the first step hands it, so on its own it barely helps.
+        Only a plant carrying both improved enzymes gets the full benefit, which is more than the two
+        separate effects added together. Now ask yourself what weight the model would learn for each
+        of those two markers.</p>
+      </details>
     </div>
   </section>
 
@@ -896,6 +906,16 @@ const QUIZ = [
     ],
     correct: 1,
     why: "The learned weights reflect the training population. On genetically distant material the marker-trait relationships can differ, so accuracy drops and the model may need retraining."
+  },
+  {
+    q: "Two markers only raise yield when their favourable alleles occur together. What does our additive model do with that?",
+    opts: [
+      "It captures it automatically, as soon as enough plants have been measured for training.",
+      "It cannot represent it, and mispredicts individual plants.",
+      "It sets both markers to a weight of zero and ignores them from then on.",
+    ],
+    correct: 1,
+    why: "The prediction is a fixed weight per marker, added up. Nothing switches on only when both favourable alleles are present, so the joint effect gets smeared across the two weights."
   },
 ];
 function renderQuiz(){
